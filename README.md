@@ -103,13 +103,40 @@ music-community/
 
 ---
 
-## 개발 시작 (추후 작성)
+## 개발 시작
+
+### 로컬 포트
+
+| 앱 | 포트 | URL |
+|----|------|-----|
+| API (NestJS) | 3030 | http://localhost:3030 |
+| Web (Next.js) | 3031 | http://localhost:3031 |
+
+포트는 각 앱의 `.env` 파일에서 설정합니다.
+
+| 파일 | 변수 |
+|------|------|
+| `apps/api/.env` | `PORT=3030` |
+| `apps/web/.env.local` | `PORT=3031` |
+
+최초 설정 시 `.env.example`을 복사해 사용하세요.
 
 ```bash
-# 설치
-pnpm install
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
+```
 
-# 개발 서버
+### 실행
+
+```bash
+# API
+cd apps/api
+pnpm install
+pnpm start:dev
+
+# Web (다른 터미널)
+cd apps/web
+pnpm install
 pnpm dev
 ```
 
