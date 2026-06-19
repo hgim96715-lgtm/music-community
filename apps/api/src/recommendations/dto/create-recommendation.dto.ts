@@ -31,7 +31,7 @@ export class CreateRecommendationDto {
   @IsNotEmpty()
   artist: string;
 
-  /** YouTube / Spotify embed URL */
+  /** YouTube / Spotify / Apple Music embed URL */
   @IsString()
   @IsNotEmpty()
   embedUrl: string;
