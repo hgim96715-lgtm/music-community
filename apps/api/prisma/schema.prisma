@@ -1,0 +1,33 @@
+generator client {
+    provider = "prisma-client"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model Recommendation {
+    id        String     @id @default(uuid())
+    title     String
+    artist    String
+    embedUrl  String
+    reason    String
+    moods     String[]
+    hidden    Boolean    @default(false)
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    reactions Reaction[]
+}
+
+model Reaction {
+    id               String   @id @default(uuid())
+    recommendationId String
+    type             String   @default("like")
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+
+    recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+    @@index([recommendationId])
+}
