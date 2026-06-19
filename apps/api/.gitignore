@@ -43,7 +43,7 @@ lerna-debug.log*
 .env.local
 
 # Prisma 7 generated client
-/generated
+/src/generated
 
 # temp directory
 .temp
