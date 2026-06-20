@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { signOutAction } from "@/app/actions/auth";
 import { formatTodayLine } from "@/lib/date";
 import Link from "next/link";
+import UploadButton from "../UploadButton";
 
 export default async function AppHeader() {
   const session = await auth();
@@ -41,13 +42,7 @@ export default async function AppHeader() {
               로그인
             </Link>
           )}
-
-          <Link
-            href="/new"
-            className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-          >
-            올리기
-          </Link>
+             <UploadButton isLoggedIn={!!session?.user} />
         </div>
       </div>
     </header>

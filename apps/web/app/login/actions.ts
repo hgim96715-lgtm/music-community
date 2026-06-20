@@ -2,6 +2,13 @@
 
 import { signIn } from "@/auth";
 
-export async function signInWithGoogle() {
-  await signIn("google", { redirectTo: "/" });
+function safeRedirectPath(path: string | undefined): string {
+  if (path?.startsWith("/") && !path.startsWith("//")) {
+    return path;
+  }
+  return "/";
+}
+
+export async function signInWithGoogle(redirectTo?: string) {
+  await signIn("google", { redirectTo: safeRedirectPath(redirectTo) });
 }
