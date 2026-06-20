@@ -1,6 +1,6 @@
 'use client';
 
-import { createRecommendation } from "@/lib/api";
+import { createRecommendation } from "./action";
 import { getMoodPalette } from "@/lib/moods";
 import { Mood, MOODS } from "@/lib/types";
 import { ArrowLeftIcon } from "lucide-react";
@@ -39,6 +39,7 @@ export default function NewPage(){
             setError("분위기 태그를 1~3개 선택해주세요.");
             return;
         }
+        
 
         setSubmitting(true);
         try{
