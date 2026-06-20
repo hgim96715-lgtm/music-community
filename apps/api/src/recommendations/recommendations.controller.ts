@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { RecommendationsService } from './recommendations.service';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AdminGuard } from 'src/auth/admin.guard';
 
 @Controller('recommendations')
 export class RecommendationsController {
@@ -11,6 +13,7 @@ export class RecommendationsController {
         return this.recommendationsService.findAll();
     }
 
+    @UseGuards(JwtAuthGuard)
     @Post()
     create(@Body() dto:CreateRecommendationDto){
         return this.recommendationsService.create(dto);
