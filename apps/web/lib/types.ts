@@ -46,3 +46,17 @@ export type CreateRecommendationBody = {
   reason: string;
   moods: Mood[];
 };
+
+/** API `CreateRecommendationDto`·폼 태그 버튼과 동일 순서 */
+export const MOODS: Mood[] = [
+  "새벽",
+  "운전",
+  "집중",
+  "운동",
+  "비",
+  "설렘",
+  "우울",
+  "파티",
+  "힐링",
+  "그리움",
+];
