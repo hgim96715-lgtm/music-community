@@ -25,6 +25,11 @@ export default async function AppHeader() {
               <span className="hidden text-sm text-neutral-600 sm:inline">
                 {session.user.name ?? session.user.email}
               </span>
+              {session.user.role === "admin" && (
+                <Link href="/admin" className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+                  관리자
+                </Link>
+              )}
               <form action={signOutAction}>
                 <button
                   type="submit"
@@ -42,7 +47,7 @@ export default async function AppHeader() {
               로그인
             </Link>
           )}
-             <UploadButton isLoggedIn={!!session?.user} />
+          {session?.user?.role!=='admin' && <UploadButton isLoggedIn={!!session?.user} />}
         </div>
       </div>
     </header>
