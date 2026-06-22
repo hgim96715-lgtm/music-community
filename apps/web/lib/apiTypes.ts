@@ -21,3 +21,12 @@ export type ApiRecommendation = {
   updatedAt: string;
   reactions: ApiReaction[];
 };
+
+/** `GET /admin/stats` 응답 1건 — API JSON 그대로 */
+
+export type ApiAdminStats = {
+  total: number;
+  hidden: number;
+  visible: number;
+  today: number;
+};
