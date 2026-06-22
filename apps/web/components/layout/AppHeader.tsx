@@ -30,6 +30,9 @@ export default async function AppHeader() {
                   관리자
                 </Link>
               )}
+              <Link href="/profile" className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+                마이페이지
+              </Link>
               <form action={signOutAction}>
                 <button
                   type="submit"
