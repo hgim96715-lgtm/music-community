@@ -25,7 +25,8 @@ model User {
     createdAt     DateTime  @default(now())
     updatedAt     DateTime  @updatedAt
 
-    accounts Account[]
+    accounts        Account[]
+    recommendations Recommendation[]
 }
 
 model Account {
@@ -65,6 +66,8 @@ model Recommendation {
     createdAt DateTime   @default(now())
     updatedAt DateTime   @updatedAt
     reactions Reaction[]
+    authorId  String
+    author    User       @relation(fields: [authorId], references: [id])
 }
 
 model Reaction {
