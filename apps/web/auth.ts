@@ -5,6 +5,10 @@ import type { User } from "../api/src/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import {
+  suggestNicknameFromEmail,
+  withNicknameSuffix,
+} from "./lib/nickname";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -39,11 +43,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         const dbUser = user as User;
         token.sub = dbUser.id;
         token.role = dbUser.role;
+
+        // 소셜 최초 로그인 - nickname 없으면 이메일 @ 앞부분 추출
+        // 중복된 nickname 있으면 숫자 붙여서 중복 방지
+        if (!dbUser.nickname && dbUser.email) {
+          const base = suggestNicknameFromEmail(dbUser.email);
+          let nickname = base;
+          let suffix = 2;
+          while (await prisma.user.findUnique({ where: { nickname } })) {
+            nickname = withNicknameSuffix(base, suffix);
+            suffix += 1;
+          }
+
+          await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { nickname },
+          });
+        }
       }
       return token;
     },
