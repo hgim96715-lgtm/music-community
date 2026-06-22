@@ -6,11 +6,9 @@ export async function getApiAccessToken(): Promise<string | null> {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const secretValue = process.env.JWT_SECRET ?? process.env.AUTH_SECRET;
+  const secretValue = process.env.API_JWT_SECRET;
   if (!secretValue) {
-    throw new Error(
-      "JWT_SECRET 또는 AUTH_SECRET 환경변수가 설정되지 않았습니다.",
-    );
+    throw new Error("API_JWT_SECRET 환경변수가 설정되지 않았습니다.");
   }
 
   const secret = new TextEncoder().encode(secretValue);

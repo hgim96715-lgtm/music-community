@@ -11,12 +11,12 @@ import { AdminGuard } from './admin.guard';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.getOrThrow<string>(EnvKeys.JWT_SECRET),
+        secret: configService.getOrThrow<string>(EnvKeys.API_JWT_SECRET),
         signOptions: { expiresIn: '7d' },
       }),
     }),
   ],
-  providers: [JwtAuthGuard,AdminGuard],
-  exports: [JwtModule, JwtAuthGuard,AdminGuard],
+  providers: [JwtAuthGuard, AdminGuard],
+  exports: [JwtModule, JwtAuthGuard, AdminGuard],
 })
 export class AuthModule {}
