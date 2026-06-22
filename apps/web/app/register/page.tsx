@@ -1,6 +1,5 @@
-
 import Link from "next/link";
-import { registerAction } from "./actions";
+import RegisterEmailForm from "./RegisterEmailForm";
 
 
 type RegisterPageProps={
@@ -23,69 +22,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           이메일로 계정을 만드세요.
         </p>
 
-        <form className="mt-6 space-y-4" action={registerAction}>
-          <input type="hidden" name="redirectTo" value={redirectTo} />
-
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-neutral-700"
-            >
-              이메일
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-neutral-700"
-            >
-              비밀번호
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="passwordConfirm"
-              className="block text-sm font-medium text-neutral-700"
-            >
-              비밀번호 확인
-            </label>
-            <input
-              id="passwordConfirm"
-              name="passwordConfirm"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
-          >
-            가입하기
-          </button>
-        </form>
+        <RegisterEmailForm redirectTo={redirectTo} />
 
         <p className="mt-4 text-center text-sm text-neutral-600">
           이미 계정이 있으신가요?{" "}
