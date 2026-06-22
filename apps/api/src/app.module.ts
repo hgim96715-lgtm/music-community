@@ -5,17 +5,19 @@ import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './prisma/prisma.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validationSchema:  envValidationSchema,
+      validationSchema: envValidationSchema,
       validationOptions: { convert: true },
     }),
     PrismaModule,
     RecommendationsModule,
     AuthModule,
+    AdminModule,
   ],
   controllers: [HealthController],
 })
