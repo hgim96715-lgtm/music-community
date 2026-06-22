@@ -13,6 +13,18 @@ const PLACEHOLDER_AUTHOR = {
   nickname: "익명",
 } as const;
 
+function mapAuthor(apiItem: ApiRecommendation): Recommendation["author"] {
+  const author = apiItem.author;
+  if (!author) {
+    return PLACEHOLDER_AUTHOR;
+  }
+  return {
+    id: author.id,
+    nickname: author.nickname ?? "익명",
+    ...(author.image ? { image: author.image } : {}),
+  };
+}
+
 export function mapRecommendation(ApiItem: ApiRecommendation): Recommendation {
   const { id, title, artist, embedUrl, reason, moods, createdAt, reactions } =
     ApiItem;
@@ -24,7 +36,7 @@ export function mapRecommendation(ApiItem: ApiRecommendation): Recommendation {
     reason,
     moods,
     likeCount: reactions.filter((reaction) => reaction.type === "like").length,
-    author: PLACEHOLDER_AUTHOR,
+    author: mapAuthor(ApiItem),
     createdAt,
   };
 }
