@@ -33,7 +33,7 @@ export default function UploadButton({ isLoggedIn }: UploadButtonProps) {
 
       <dialog
         ref={dialogRef}
-        className="fixed top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-neutral-200 bg-white p-6 shadow-lg backdrop:bg-black/40"
+        className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-lg backdrop:bg-black/40"
       >
         <h2 className="text-lg font-semibold text-neutral-900">로그인이 필요합니다</h2>
         <p className="mt-2 text-sm text-neutral-600">
