@@ -1,8 +1,8 @@
-import { auth } from "@/auth";
-import { signOutAction } from "@/app/actions/auth";
-import { formatTodayLine } from "@/lib/date";
-import Link from "next/link";
-import UploadButton from "../UploadButton";
+import { auth } from '@/auth';
+import { signOutAction } from '@/app/actions/auth';
+import { formatTodayLine } from '@/lib/date';
+import Link from 'next/link';
+import UploadButton from '../UploadButton';
 
 export default async function AppHeader() {
   const session = await auth();
@@ -25,19 +25,27 @@ export default async function AppHeader() {
               <span className="hidden text-sm text-neutral-600 sm:inline">
                 {session.user.name ?? session.user.email}
               </span>
-              {session.user.role === "admin" && (
-                <Link href="/admin" className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+              {session.user.role === 'admin' && (
+                <Link
+                  href="/admin"
+                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
                   관리자
                 </Link>
               )}
-              <Link href="/profile" className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+              <Link
+                href="/friends"
+                className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+                친구
+              </Link>
+              <Link
+                href="/profile"
+                className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
                 마이페이지
               </Link>
               <form action={signOutAction}>
                 <button
                   type="submit"
-                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-                >
+                  className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
                   로그아웃
                 </button>
               </form>
@@ -45,12 +53,13 @@ export default async function AppHeader() {
           ) : (
             <Link
               href="/login"
-              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-            >
+              className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
               로그인
             </Link>
           )}
-          {session?.user?.role!=='admin' && <UploadButton isLoggedIn={!!session?.user} />}
+          {session?.user?.role !== 'admin' && (
+            <UploadButton isLoggedIn={!!session?.user} />
+          )}
         </div>
       </div>
     </header>
