@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
@@ -17,10 +25,16 @@ export class RecommendationsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(
-    @Body() dto: CreateRecommendationDto,
+  create(@Body() dto: CreateRecommendationDto, @UserId() userId: string) {
+    return this.recommendationsService.create(dto, userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/reactions')
+  createReaction(
+    @Param('id', ParseUUIDPipe) id: string,
     @UserId() userId: string,
   ) {
-    return this.recommendationsService.create(dto, userId);
+    return this.recommendationsService.createReaction(id, userId);
   }
 }

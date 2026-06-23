@@ -25,9 +25,13 @@ function mapAuthor(apiItem: ApiRecommendation): Recommendation["author"] {
   };
 }
 
-export function mapRecommendation(ApiItem: ApiRecommendation): Recommendation {
-  const { id, title, artist, embedUrl, reason, moods, createdAt, reactions } =
+export function mapRecommendation(
+  ApiItem: ApiRecommendation,
+  currentUserId?: string,
+): Recommendation {
+  const { id, reactions, title, artist, embedUrl, reason, moods, createdAt } =
     ApiItem;
+  const likes = reactions.filter((reaction) => reaction.type === "like");
   return {
     id,
     title,
@@ -35,7 +39,10 @@ export function mapRecommendation(ApiItem: ApiRecommendation): Recommendation {
     embedUrl,
     reason,
     moods,
-    likeCount: reactions.filter((reaction) => reaction.type === "like").length,
+    likeCount: likes.length,
+    ...(currentUserId && {
+      likedByMe: likes.some((reaction) => reaction.userId === currentUserId),
+    }),
     author: mapAuthor(ApiItem),
     createdAt,
   };
@@ -43,6 +50,7 @@ export function mapRecommendation(ApiItem: ApiRecommendation): Recommendation {
 
 export function mapRecommendations(
   ApiItems: ApiRecommendation[],
+  currentUserId?: string,
 ): Recommendation[] {
-  return ApiItems.map(mapRecommendation);
+  return ApiItems.map((item) => mapRecommendation(item, currentUserId));
 }

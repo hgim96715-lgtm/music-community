@@ -1,15 +1,60 @@
+"use client";
 import { formatDisplayDate } from "@/lib/date";
 import { getMoodPalette, getPrimaryMoodPalette } from "@/lib/moods";
 import { Recommendation } from "@/lib/types";
 import { Heart } from "lucide-react";
+import { toggleLikeAction, ToggleLikeActionState } from "./actions";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
+
+
+const initialState:ToggleLikeActionState={};
 
 type Props = {
   recommendation: Recommendation;
 };
 
+
+function LikeButton({
+    liked,
+    likeCount,
+}:{
+    liked:boolean,
+    likeCount:number
+}){
+    const { pending } = useFormStatus();
+
+    // liked → 빨강 채움 · likeCount>0(남이 누름) → 회색 채움 · 0 → 회색 빈 하트
+    const heartClass = liked
+      ? "text-red-500"
+      : likeCount > 0
+        ? "text-neutral-400"
+        : "text-neutral-600";
+    const heartFill = liked || likeCount > 0 ? "currentColor" : "none";
+
+    return (
+        <button
+            type="submit"
+            disabled={pending}
+            aria-pressed={liked}
+            className="flex items-center gap-1 disabled:opacity-50"
+        >
+            <Heart
+                className={`size-4 ${heartClass}`}
+                fill={heartFill}
+                aria-hidden
+            />
+            <span className="text-neutral-600">{likeCount}</span>
+        </button>
+    );
+}
+
 export default function FeedCard({ recommendation }: Props) {
-  const { author, title, artist, embedUrl, reason, moods, likeCount, createdAt } =
+const [state,formAction]=useActionState(toggleLikeAction,initialState)
+  const { id, author, title, artist, embedUrl, reason, moods, likeCount:initialLikeCount, likedByMe, createdAt} =
     recommendation;
+  const liked=state.liked ?? likedByMe ?? false;
+  const likeCount=state.likeCount ?? initialLikeCount;
   const cardPalette = getPrimaryMoodPalette(moods);
 
   return (
@@ -58,8 +103,15 @@ export default function FeedCard({ recommendation }: Props) {
           </div>
         </div>
 
-        <footer className="border-t border-neutral-100 px-4 py-2.5 text-sm text-neutral-600">
-          <Heart className="mr-1 inline-block size-4" /> {likeCount}
+        <footer className="border-t border-neutral-100 px-4 py-2.5 text-sm">
+            <form action={formAction}>
+                <input type="hidden" name="recommendationId" value={id} />
+                {state.error && (
+                    <p className="mb-1 text-xs text-red-500">{state.error}</p>
+                )}
+               <LikeButton liked={liked} likeCount={likeCount} />
+            </form>
+          
         </footer>
       </div>
     </article>
