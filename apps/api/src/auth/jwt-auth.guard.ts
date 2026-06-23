@@ -8,12 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import { EnvKeys } from 'src/config/env.keys';
-
-export type JwtPayload = {
-  sub: string;
-  role: 'user' | 'admin';
-};
-
+import type { JwtPayload } from './jwt-payload';
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
@@ -27,9 +22,7 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context
-      .switchToHttp()
-      .getRequest<Request & { user?: JwtPayload }>();
+    const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractBearerToken(request);
     if (!token) {
       throw new UnauthorizedException('Bearer 토큰이 필요합니다.');
