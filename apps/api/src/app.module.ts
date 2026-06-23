@@ -6,6 +6,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { FriendsModule } from './friends/friends.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { AdminModule } from './admin/admin.module';
     RecommendationsModule,
     AuthModule,
     AdminModule,
+    FriendsModule,
+    UsersModule,
   ],
   controllers: [HealthController],
 })
