@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { RecommendationsService } from './recommendations.service';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { UserId } from 'src/auth/decorators/user-id.decorator';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
-import { JwtAuthGuard, JwtPayload } from 'src/auth/jwt-auth.guard';
-import { AdminGuard } from 'src/auth/admin.guard';
+import { RecommendationsService } from './recommendations.service';
 
 @Controller('recommendations')
 export class RecommendationsController {
@@ -19,8 +19,8 @@ export class RecommendationsController {
   @Post()
   create(
     @Body() dto: CreateRecommendationDto,
-    @Req() req: Request & { user?: JwtPayload },
+    @UserId() userId: string,
   ) {
-    return this.recommendationsService.create(dto, req.user!.sub);
+    return this.recommendationsService.create(dto, userId);
   }
 }
