@@ -4,9 +4,9 @@
  * 피드(/) 등 비로그인 읽기 전용.
  * 글 올리기·관리자 → app/new/action.ts, lib/adminFetch.ts (getApiAccessToken)
  */
-import { ApiRecommendation } from "./apiTypes";
-import { mapRecommendations } from "./mapRecommendation";
-import type { Recommendation } from "./types";
+import { ApiRecommendation } from './apiTypes';
+import { mapRecommendations } from './mapRecommendation';
+import type { Recommendation } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -14,7 +14,7 @@ export async function fetchRecommendation(
   currentUserId?: string,
 ): Promise<Recommendation[]> {
   if (!API_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL이 설정되지 않았습니다. 확인해주세요!");
+    throw new Error('NEXT_PUBLIC_API_URL이 설정되지 않았습니다. 확인해주세요!');
   }
 
   const res = await fetch(`${API_URL}/recommendations`, {

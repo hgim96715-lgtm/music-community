@@ -5,7 +5,7 @@ import { RecommendationsService } from './recommendations.service';
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [PrismaModule,AuthModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [RecommendationsController],
   providers: [RecommendationsService],
 })

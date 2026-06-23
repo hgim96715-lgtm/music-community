@@ -1,8 +1,7 @@
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
-import ProfileNicknameForm from "./components/ProfileNicknameForm";
-
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
+import { notFound } from 'next/navigation';
+import ProfileNicknameForm from './components/ProfileNicknameForm';
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -28,19 +27,19 @@ export default async function ProfilePage() {
           <div>
             <dt className="text-sm font-medium text-neutral-700">닉네임</dt>
             <dd className="mt-1 text-sm text-neutral-900">
-              {user.nickname ? `@${user.nickname}` : "미설정"}
+              {user.nickname ? `@${user.nickname}` : '미설정'}
             </dd>
           </div>
 
           <div>
             <dt className="text-sm font-medium text-neutral-700">이메일</dt>
             <dd className="mt-1 text-sm text-neutral-600">
-              {user.email ?? "-"}
+              {user.email ?? '-'}
             </dd>
           </div>
         </dl>
 
-        <ProfileNicknameForm currentNickname={user.nickname ?? ""} />
+        <ProfileNicknameForm currentNickname={user.nickname ?? ''} />
       </div>
     </main>
   );

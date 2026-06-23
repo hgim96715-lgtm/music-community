@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
 import {
   createRecommendationAction,
   type NewRecommendationFormState,
-} from "./action";
-import { getMoodPalette } from "@/lib/moods";
-import { Mood, MOODS } from "@/lib/types";
-import { ArrowLeftIcon } from "lucide-react";
-import Link from "next/link";
-import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
+} from './action';
+import { getMoodPalette } from '@/lib/moods';
+import { Mood, MOODS } from '@/lib/types';
+import { ArrowLeftIcon } from 'lucide-react';
+import Link from 'next/link';
+import { useActionState, useState } from 'react';
+import { useFormStatus } from 'react-dom';
 
 const initialState: NewRecommendationFormState = {};
 
@@ -19,9 +19,8 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
-    >
-      {pending ? "업로드 중..." : "업로드"}
+      className="rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50">
+      {pending ? '업로드 중...' : '업로드'}
     </button>
   );
 }
@@ -41,7 +40,7 @@ export default function NewPage() {
       return;
     }
     if (moods.length >= 3) {
-      setTagError("분위기 태그는 1~3개까지 선택할 수 있습니다!!");
+      setTagError('분위기 태그는 1~3개까지 선택할 수 있습니다!!');
       return;
     }
     setTagError(null);
@@ -55,8 +54,7 @@ export default function NewPage() {
       <header className="border-b border-neutral-200 bg-white px-4 py-4">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-700"
-        >
+          className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-700">
           <ArrowLeftIcon className="size-4" /> 피드
         </Link>
         <h1 className="mt-2 text-lg font-semibold text-neutral-900">
@@ -66,9 +64,8 @@ export default function NewPage() {
 
       <form
         action={formAction}
-        className="mx-auto flex w-full max-w-lg flex-col gap-5 px-4 py-6"
-      >
-        <input type="hidden" name="moods" value={moods.join(",")} />
+        className="mx-auto flex w-full max-w-lg flex-col gap-5 px-4 py-6">
+        <input type="hidden" name="moods" value={moods.join(',')} />
 
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium text-neutral-900">Embed URL</span>
@@ -134,9 +131,8 @@ export default function NewPage() {
                   className={`rounded-full border-2 px-3 py-1.5 text-xs font-medium transition-colors ${
                     selected
                       ? `${pill} border-transparent`
-                      : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300"
-                  }`}
-                >
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
+                  }`}>
                   {mood}
                 </button>
               );

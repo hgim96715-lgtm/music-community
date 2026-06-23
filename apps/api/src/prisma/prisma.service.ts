@@ -4,7 +4,6 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { ConfigService } from '@nestjs/config';
 import { EnvKeys } from 'src/config/env.keys';
 
-
 @Injectable()
 export class PrismaService
   extends PrismaClient

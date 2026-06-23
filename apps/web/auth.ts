@@ -1,14 +1,11 @@
-import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import type { User } from "../api/src/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
-import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import {
-  suggestNicknameFromEmail,
-  withNicknameSuffix,
-} from "./lib/nickname";
+import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import type { User } from '../api/src/generated/prisma/client';
+import { prisma } from '@/lib/prisma';
+import Credentials from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
+import { suggestNicknameFromEmail, withNicknameSuffix } from './lib/nickname';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -16,18 +13,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google,
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         const email =
-          typeof credentials.email === "string"
+          typeof credentials.email === 'string'
             ? credentials.email.trim().toLowerCase()
-            : "";
+            : '';
         const password =
-          typeof credentials.password === "string"
+          typeof credentials.password === 'string'
             ? credentials.password.trim()
-            : "";
+            : '';
         if (!email || !password) return null;
 
         const user = await prisma.user.findUnique({ where: { email } });
@@ -38,9 +35,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  session: { strategy: "jwt" },
+  session: { strategy: 'jwt' },
   pages: {
-    signIn: "/login",
+    signIn: '/login',
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -71,7 +68,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub!;
-        session.user.role = token.role as User["role"];
+        session.user.role = token.role as User['role'];
       }
       return session;
     },

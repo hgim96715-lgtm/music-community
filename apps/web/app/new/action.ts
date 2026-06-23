@@ -1,9 +1,9 @@
-"use server";
+'use server';
 
-import { ApiRecommendation } from "@/lib/apiTypes";
-import { getApiAccessToken } from "@/lib/getApiAccessToken";
-import { MOODS, type Mood } from "@/lib/types";
-import { redirect } from "next/navigation";
+import { ApiRecommendation } from '@/lib/apiTypes';
+import { getApiAccessToken } from '@/lib/getApiAccessToken';
+import { MOODS, type Mood } from '@/lib/types';
+import { redirect } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -13,33 +13,35 @@ export async function createRecommendationAction(
   _prevState: NewRecommendationFormState,
   formData: FormData,
 ): Promise<NewRecommendationFormState> {
-  const title = String(formData.get("title") ?? "").trim();
-  const artist = String(formData.get("artist") ?? "").trim();
-  const embedUrl = String(formData.get("embedUrl") ?? "").trim();
-  const reason = String(formData.get("reason") ?? "").trim();
-  const moodsRaw = String(formData.get("moods") ?? "");
+  const title = String(formData.get('title') ?? '').trim();
+  const artist = String(formData.get('artist') ?? '').trim();
+  const embedUrl = String(formData.get('embedUrl') ?? '').trim();
+  const reason = String(formData.get('reason') ?? '').trim();
+  const moodsRaw = String(formData.get('moods') ?? '');
   const moods = moodsRaw
-    .split(",")
+    .split(',')
     .map((m) => m.trim())
     .filter((m): m is Mood => MOODS.includes(m as Mood));
 
   if (moods.length === 0) {
-    return { error: "분위기 태그를 1~3개 선택해주세요." };
+    return { error: '분위기 태그를 1~3개 선택해주세요.' };
   }
 
   if (!API_URL) {
-    return { error: "NEXT_PUBLIC_API_URL이 설정되지 않았습니다. 확인해주세요!" };
+    return {
+      error: 'NEXT_PUBLIC_API_URL이 설정되지 않았습니다. 확인해주세요!',
+    };
   }
 
   const token = await getApiAccessToken();
   if (!token) {
-    return { error: "로그인 후 이용해주세요." };
+    return { error: '로그인 후 이용해주세요.' };
   }
 
   const res = await fetch(`${API_URL}/recommendations`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ title, artist, embedUrl, reason, moods }),
@@ -51,6 +53,6 @@ export async function createRecommendationAction(
     };
   }
 
-  await res.json() as ApiRecommendation;
-  redirect("/");
+  (await res.json()) as ApiRecommendation;
+  redirect('/');
 }

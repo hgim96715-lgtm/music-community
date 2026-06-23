@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
-const COLORS = ["#666666", "#D97706"];
+const COLORS = ['#666666', '#D97706'];
 
 export default function AdminStatsChart({
   visible,
@@ -12,8 +12,8 @@ export default function AdminStatsChart({
   hidden: number;
 }) {
   const data = [
-    { name: "공개", value: visible, fill: COLORS[0] },
-    { name: "숨김", value: hidden, fill: COLORS[1] },
+    { name: '공개', value: visible, fill: COLORS[0] },
+    { name: '숨김', value: hidden, fill: COLORS[1] },
   ];
 
   const total = visible + hidden;

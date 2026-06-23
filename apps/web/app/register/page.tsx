@@ -1,18 +1,18 @@
-import Link from "next/link";
-import RegisterEmailForm from "./RegisterEmailForm";
+import Link from 'next/link';
+import RegisterEmailForm from './RegisterEmailForm';
 
+type RegisterPageProps = {
+  searchParams: Promise<{ callbackUrl?: string }>;
+};
 
-type RegisterPageProps={
-    searchParams:Promise<{callbackUrl?:string}>;
-}
-
-
-export default async function RegisterPage({ searchParams }: RegisterPageProps) {
+export default async function RegisterPage({
+  searchParams,
+}: RegisterPageProps) {
   const { callbackUrl } = await searchParams;
   const redirectTo =
-    callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//")
+    callbackUrl?.startsWith('/') && !callbackUrl.startsWith('//')
       ? callbackUrl
-      : "/";
+      : '/';
 
   return (
     <main className="min-h-full flex-1 bg-neutral-50 px-4 py-12">
@@ -25,11 +25,10 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
         <RegisterEmailForm redirectTo={redirectTo} />
 
         <p className="mt-4 text-center text-sm text-neutral-600">
-          이미 계정이 있으신가요?{" "}
+          이미 계정이 있으신가요?{' '}
           <Link
             href={`/login?callbackUrl=${encodeURIComponent(redirectTo)}`}
-            className="font-medium text-neutral-900 underline"
-          >
+            className="font-medium text-neutral-900 underline">
             로그인
           </Link>
         </p>

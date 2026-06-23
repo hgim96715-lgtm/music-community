@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
-import { registerAction, type RegisterEmailFormState } from "./actions";
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+import { registerAction, type RegisterEmailFormState } from './actions';
 
 const initialState: RegisterEmailFormState = {};
 
@@ -12,9 +12,8 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
-    >
-      {pending ? "가입 중..." : "가입하기"}
+      className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50">
+      {pending ? '가입 중...' : '가입하기'}
     </button>
   );
 }
@@ -39,8 +38,7 @@ export default function RegisterEmailForm({ redirectTo }: Props) {
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-neutral-700"
-        >
+          className="block text-sm font-medium text-neutral-700">
           이메일
         </label>
         <input
@@ -56,8 +54,7 @@ export default function RegisterEmailForm({ redirectTo }: Props) {
       <div>
         <label
           htmlFor="nickname"
-          className="block text-sm font-medium text-neutral-700"
-        >
+          className="block text-sm font-medium text-neutral-700">
           닉네임
         </label>
         <input
@@ -75,8 +72,7 @@ export default function RegisterEmailForm({ redirectTo }: Props) {
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-neutral-700"
-        >
+          className="block text-sm font-medium text-neutral-700">
           비밀번호
         </label>
         <input
@@ -93,8 +89,7 @@ export default function RegisterEmailForm({ redirectTo }: Props) {
       <div>
         <label
           htmlFor="passwordConfirm"
-          className="block text-sm font-medium text-neutral-700"
-        >
+          className="block text-sm font-medium text-neutral-700">
           비밀번호 확인
         </label>
         <input

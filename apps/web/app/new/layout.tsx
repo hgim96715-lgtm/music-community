@@ -1,11 +1,15 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 
-export default async function NewLayout({children}:{children:React.ReactNode}){
-    const session=await auth();
+export default async function NewLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await auth();
 
-    if(!session?.user){
-        redirect("/login?callbackUrl=/new");
-    }
-    return children
+  if (!session?.user) {
+    redirect('/login?callbackUrl=/new');
+  }
+  return children;
 }

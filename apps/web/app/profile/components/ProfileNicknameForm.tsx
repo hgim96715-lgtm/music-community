@@ -1,12 +1,9 @@
-"use client";
+'use client';
 
-import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
-import {
-  updateNicknameAction,
-  type ProfileFormState,
-} from "../actions";
+import { useActionState, useEffect, useState } from 'react';
+import { useFormStatus } from 'react-dom';
+import { useRouter } from 'next/navigation';
+import { updateNicknameAction, type ProfileFormState } from '../actions';
 
 const initialState: ProfileFormState = {};
 
@@ -16,9 +13,8 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
-    >
-      {pending ? "저장 중..." : "저장"}
+      className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50">
+      {pending ? '저장 중...' : '저장'}
     </button>
   );
 }
@@ -30,7 +26,10 @@ type Props = {
 export default function ProfileNicknameForm({ currentNickname }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [state, formAction] = useActionState(updateNicknameAction, initialState);
+  const [state, formAction] = useActionState(
+    updateNicknameAction,
+    initialState,
+  );
 
   useEffect(() => {
     if (state.success) {
@@ -44,8 +43,7 @@ export default function ProfileNicknameForm({ currentNickname }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-6 rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-      >
+        className="mt-6 rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
         변경
       </button>
     );
@@ -67,8 +65,7 @@ export default function ProfileNicknameForm({ currentNickname }: Props) {
       <div>
         <label
           htmlFor="nickname"
-          className="block text-sm font-medium text-neutral-700"
-        >
+          className="block text-sm font-medium text-neutral-700">
           새 닉네임
         </label>
         <input
@@ -89,8 +86,7 @@ export default function ProfileNicknameForm({ currentNickname }: Props) {
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-        >
+          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
           취소
         </button>
       </div>

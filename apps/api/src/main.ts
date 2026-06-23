@@ -9,11 +9,13 @@ async function bootstrap() {
     origin: ['http://localhost:3031', process.env.FRONTEND_URL].filter(Boolean),
     credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
   setupSwagger(app);
   await app.listen(process.env.PORT ?? 3030);
 }

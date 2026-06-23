@@ -1,17 +1,15 @@
-import { ApiRecommendation } from "@/lib/apiTypes";
-import { formatDisplayDate } from "@/lib/date";
-import { getApiAccessToken } from "@/lib/getApiAccessToken";
-import { setRecommendationHidden } from "./actions";
-import { adminFetchJson } from "@/lib/adminFetch";
-import DeleteRecommendationButton from "./DeletRecommendationButton";
+import { ApiRecommendation } from '@/lib/apiTypes';
+import { formatDisplayDate } from '@/lib/date';
+import { getApiAccessToken } from '@/lib/getApiAccessToken';
+import { setRecommendationHidden } from './actions';
+import { adminFetchJson } from '@/lib/adminFetch';
+import DeleteRecommendationButton from './DeletRecommendationButton';
 
-
-
-export default async function AdminRecommendationsPage(){
-    const items = await adminFetchJson<ApiRecommendation[]>(
-        "/admin/recommendations",
-        { cache: "no-store" },
-      );
+export default async function AdminRecommendationsPage() {
+  const items = await adminFetchJson<ApiRecommendation[]>(
+    '/admin/recommendations',
+    { cache: 'no-store' },
+  );
 
   return (
     <div>
@@ -33,7 +31,9 @@ export default async function AdminRecommendationsPage(){
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id} className="border-b border-neutral-100 last:border-0">
+              <tr
+                key={item.id}
+                className="border-b border-neutral-100 last:border-0">
                 <td className="px-4 py-3 text-neutral-900">{item.title}</td>
                 <td className="px-4 py-3 text-neutral-700">{item.artist}</td>
                 <td className="px-4 py-3">
@@ -44,29 +44,36 @@ export default async function AdminRecommendationsPage(){
                   )}
                 </td>
                 <td className="px-4 py-3 text-neutral-700">
-                  {item.reactions.filter((r) => r.type === "like").length}
+                  {item.reactions.filter((r) => r.type === 'like').length}
                 </td>
                 <td className="px-4 py-3 text-neutral-500">
                   {formatDisplayDate(item.createdAt)}
                 </td>
-                
+
                 <td className="px-4 py-3">
-                    <div  className="flex items-center gap-2">
-                    <form action={setRecommendationHidden.bind(null, item.id, !item.hidden)}>
-    <button
-      type="submit"
-      className={
-        item.hidden
-          ? "rounded-md border border-neutral-300 px-2.5 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
-          : "rounded-md border border-amber-300 px-2.5 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50"
-      }
-    >
-      {item.hidden ? "복구" : "숨김"}
-    </button>
-  </form>
-  <DeleteRecommendationButton id={item.id} title={item.title} />
-                    </div>
-</td>
+                  <div className="flex items-center gap-2">
+                    <form
+                      action={setRecommendationHidden.bind(
+                        null,
+                        item.id,
+                        !item.hidden,
+                      )}>
+                      <button
+                        type="submit"
+                        className={
+                          item.hidden
+                            ? 'rounded-md border border-neutral-300 px-2.5 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50'
+                            : 'rounded-md border border-amber-300 px-2.5 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50'
+                        }>
+                        {item.hidden ? '복구' : '숨김'}
+                      </button>
+                    </form>
+                    <DeleteRecommendationButton
+                      id={item.id}
+                      title={item.title}
+                    />
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -74,6 +81,4 @@ export default async function AdminRecommendationsPage(){
       </div>
     </div>
   );
-
-    
 }

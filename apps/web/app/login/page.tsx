@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { signInWithEmailAction, signInWithGoogle } from "./actions";
-import LoginEmailForm from "./LoginEmailForm";
+import Link from 'next/link';
+import { signInWithEmailAction, signInWithGoogle } from './actions';
+import LoginEmailForm from './LoginEmailForm';
 
 type LoginPageProps = {
   searchParams: Promise<{ callbackUrl?: string }>;
@@ -9,9 +9,9 @@ type LoginPageProps = {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { callbackUrl } = await searchParams;
   const redirectTo =
-    callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//")
+    callbackUrl?.startsWith('/') && !callbackUrl.startsWith('//')
       ? callbackUrl
-      : "/";
+      : '/';
 
   return (
     <main className="min-h-full flex-1 bg-neutral-50 px-4 py-12">
@@ -24,8 +24,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <form className="mt-6" action={signInWithGoogle.bind(null, redirectTo)}>
           <button
             type="submit"
-            className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
-          >
+            className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800">
             Google로 계속하기
           </button>
         </form>
@@ -38,11 +37,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <LoginEmailForm redirectTo={redirectTo} />
 
         <p className="mt-4 text-center text-sm text-neutral-600">
-          계정이 없으신가요?{" "}
+          계정이 없으신가요?{' '}
           <Link
             href={`/register?callbackUrl=${encodeURIComponent(redirectTo)}`}
-            className="font-medium text-neutral-900 underline"
-          >
+            className="font-medium text-neutral-900 underline">
             회원가입
           </Link>
         </p>

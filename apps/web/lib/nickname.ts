@@ -12,7 +12,7 @@ const NICKNAME_PATTERN = /^[가-힣a-zA-Z0-9_]+$/;
 
 //내가 정한 예약어 목록 더 늘리려면 여기에 추가하면 됨
 // 추후 추가할게 많아지면 분리 고려
-const RESERVED = new Set(["admin", "official"]);
+const RESERVED = new Set(['admin', 'official']);
 
 export type NickNameValidation =
   | { ok: true; nickname: string }
@@ -31,11 +31,11 @@ export function validateNickname(raw: string): NickNameValidation {
   if (!NICKNAME_PATTERN.test(nickname)) {
     return {
       ok: false,
-      error: "한글, 영문, 숫자, _ 만 사용할 수 있습니다.",
+      error: '한글, 영문, 숫자, _ 만 사용할 수 있습니다.',
     };
   }
   if (RESERVED.has(nickname.toLowerCase())) {
-    return { ok: false, error: "사용할수 없는 닉네임입니다." };
+    return { ok: false, error: '사용할수 없는 닉네임입니다.' };
   }
   return { ok: true, nickname };
 }
@@ -46,9 +46,9 @@ export function validateNickname(raw: string): NickNameValidation {
  */
 
 export function suggestNicknameFromEmail(email: string): string {
-  const local = email.split("@")[0]?.trim().toLowerCase() ?? "";
+  const local = email.split('@')[0]?.trim().toLowerCase() ?? '';
   const sanitized = local
-    .replace(/[^가-힣a-zA-Z0-9_]/g, "")
+    .replace(/[^가-힣a-zA-Z0-9_]/g, '')
     .slice(0, NICKNAME_MAX);
 
   if (sanitized.length >= NICKNAME_MIN) {

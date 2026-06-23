@@ -1,16 +1,18 @@
-import Link from "next/link";
-import { adminFetchJson } from "@/lib/adminFetch";
-import type { ApiAdminStats } from "@/lib/apiTypes";
-import AdminStatsChart from "./AdminStatsChart";
+import Link from 'next/link';
+import { adminFetchJson } from '@/lib/adminFetch';
+import type { ApiAdminStats } from '@/lib/apiTypes';
+import AdminStatsChart from './AdminStatsChart';
 
 export default async function AdminPage() {
-  const stats = await adminFetchJson<ApiAdminStats>("/admin/stats", {
-    cache: "no-store",
+  const stats = await adminFetchJson<ApiAdminStats>('/admin/stats', {
+    cache: 'no-store',
   });
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-neutral-900">관리자 대시보드</h1>
+      <h1 className="text-lg font-semibold text-neutral-900">
+        관리자 대시보드
+      </h1>
       <p className="mt-2 text-sm text-neutral-600">
         추천 글 운영 · 숨김 · 삭제
       </p>
@@ -27,8 +29,7 @@ export default async function AdminPage() {
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <Link
           href="/admin/recommendations"
-          className="rounded-xl border border-neutral-200 bg-white p-4 hover:border-neutral-300"
-        >
+          className="rounded-xl border border-neutral-200 bg-white p-4 hover:border-neutral-300">
           <p className="text-sm font-medium text-neutral-900">추천 관리</p>
           <p className="mt-1 text-xs text-neutral-500">전체 목록 · 숨김 포함</p>
         </Link>
