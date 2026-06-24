@@ -69,37 +69,48 @@
 
 | 영역 | 기술 |
 |------|------|
-| Frontend | [Next.js](https://nextjs.org/) + [Tailwind CSS](https://tailwindcss.com/) |
-| Backend | [NestJS](https://nestjs.com/) |
-| DB | TBD (PostgreSQL 예정) |
-| Auth | TBD |
+| Frontend | [Next.js](https://nextjs.org/) + [Tailwind CSS](https://tailwindcss.com/) — UI · `fetch`만 |
+| Backend | [NestJS](https://nestjs.com/) — API · Prisma · 인증 · 비즈니스 규칙 |
+| DB | **PostgreSQL** (로컬: Docker `docker-compose.yml`) |
+| Auth | **Nest JWT** + Bearer (`POST /auth/*`) |
 | Realtime | TBD (채팅·알림용) |
 | Music API | Spotify / YouTube / Apple Music Embed |
 
+> **아키텍처:** Nest 집중 — Web/앱은 화면 + REST 호출, DB·규칙은 API만. 상세: `apps/docs/overview.md` (로컬)
+
 ---
 
-## 프로젝트 구조 (예정)
+## 프로젝트 구조
 
 ```
 music-community/
 ├── apps/
-│   ├── web/          # Next.js (프론트엔드)
-│   └── api/          # NestJS (백엔드)
-├── packages/         # 공유 타입, 유틸 (선택)
+│   ├── web/              # Next.js (:3031)
+│   ├── api/              # NestJS (:3030)
+│   └── docs/             # 설계 문서 (로컬, overview.md부터)
+├── docker-compose.yml    # Postgres만 (로컬 :5433)
 └── README.md
 ```
 
-> 모노레포(Turborepo / pnpm workspace) 또는 분리 레포 중 추후 결정
+pnpm workspace 모노레포. **Web URL path = API path** (`/recommendations`, `/users/me` …). 경로·네이밍: `apps/docs/routes.md`
 
 ---
 
 ## 배포 목표
 
-- [ ] 로컬 개발 환경 구축
-- [ ] MVP: 오늘의 한곡 + embed + 반응
-- [ ] 알림·댓글·피드 개선
-- [ ] 채팅방·투표
-- [ ] **실제 서비스 배포** (Vercel + Railway/Render 등 검토)
+| 단계 | 구성 |
+|------|------|
+| **첫 배포 (MVP·포트폴리오)** | **Vercel** (Web) + **Railway** (Nest API) + **Railway Postgres** 또는 **Neon** |
+| **이미지·S3·앱 본격** | API **AWS ECR/Fargate** 검토 · DB **RDS/Neon** · Web **Vercel** 유지 — AWS는 비용 때문에 **필요할 때만** |
+
+- [ ] 로컬 개발 환경 (Docker Postgres + pnpm)
+- [ ] MVP 기능: 피드 · 가입·로그인 · 글 · 좋아요 (**개발 7단계**)
+- [ ] **첫 배포 (7.5):** Vercel + Railway + Neon — 포트폴리오 URL
+- [ ] Admin · 프로필 · 친구 (8~10)
+- [ ] 댓글 · 그룹방 · 친구 피드
+- [ ] (나중) S3 · AWS API · 모바일 앱
+
+상세·시점: `apps/docs/overview.md` 「배포」·「개발 순서 7.5」
 
 ---
 
@@ -111,34 +122,33 @@ music-community/
 |----|------|-----|
 | API (NestJS) | 3030 | http://localhost:3030 |
 | Web (Next.js) | 3031 | http://localhost:3031 |
-
-포트는 각 앱의 `.env` 파일에서 설정합니다.
+| Postgres (Docker) | 5433 | `localhost:5433` |
 
 | 파일 | 변수 |
 |------|------|
-| `apps/api/.env` | `PORT=3030` |
-| `apps/web/.env.local` | `PORT=3031` |
-
-최초 설정 시 `.env.example`을 복사해 사용하세요.
+| `apps/api/.env` | `PORT=3030`, `DATABASE_URL` (호스트 **5433**) |
+| `apps/web/.env.local` | `NEXT_PUBLIC_API_URL=http://localhost:3030` |
 
 ```bash
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
+docker compose up -d    # DB만
 ```
 
 ### 실행
 
 ```bash
-# API
-cd apps/api
+# 루트 (모노레포 의존성 — 재구현 후)
 pnpm install
-pnpm start:dev
+
+# API
+cd apps/api && pnpm start:dev
 
 # Web (다른 터미널)
-cd apps/web
-pnpm install
-pnpm dev
+cd apps/web && pnpm dev
 ```
+
+큰 틀·개발 순서: `apps/docs/overview.md` · 참고 구현: git 브랜치 `backup/main`
 
 ---
 

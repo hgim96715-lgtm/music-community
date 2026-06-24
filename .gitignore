@@ -1,3 +1,23 @@
 node_modules/
 .pnpm-store/
 .idea/
+
+# Environment — secrets (커밋 금지)
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+!.env.example
+!**/.env.example
+
+# Next.js
+**/.next/
+**/out/
+
+# Nest / build
+**/dist/
+
+# 배포용 — 재구현·AWS 배포 전까지 로컬만
+apps/api/Dockerfile
