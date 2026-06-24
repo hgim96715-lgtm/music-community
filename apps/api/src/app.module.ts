@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from './config/env.validation';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 
 @Module({
   imports: [
@@ -13,7 +14,9 @@ import { PrismaModule } from './prisma/prisma.module';
       validationOptions: { convert: true },
     }),
     PrismaModule,
+    RecommendationsModule,
   ],
   controllers: [HealthController],
+  providers: [],
 })
 export class AppModule {}
