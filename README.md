@@ -106,7 +106,7 @@ pnpm workspace 모노레포. **Web URL path = API path** (`/recommendations`, `/
 | **이미지·S3·앱 본격** | API **AWS ECR/Fargate** 검토 · DB **RDS/Neon** · Web **Vercel** 유지 — AWS는 비용 때문에 **필요할 때만** |
 
 - [x] 로컬 개발 환경 기본 세팅 (0·1 — workspace · health 연동)
-- [ ] 로컬 DB + Prisma (2단계)
+- [ ] 2단계 — Prisma · Joi · `GET /recommendations` (진행 중: schema·migrate·PrismaModule ✅)
 - [ ] MVP 기능: 피드 · 가입·로그인 · 글 · 좋아요 (**개발 7단계**)
 - [ ] **첫 배포 (7.5):** Vercel + Railway + Neon — 포트폴리오 URL
 - [ ] Admin · 프로필 · 친구 (8~10)
