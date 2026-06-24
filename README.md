@@ -84,6 +84,8 @@
 
 ```
 music-community/
+├── package.json          # dev:api · dev:web (루트에서 실행)
+├── pnpm-workspace.yaml
 ├── apps/
 │   ├── web/              # Next.js (:3031)
 │   ├── api/              # NestJS (:3030)
@@ -103,7 +105,8 @@ pnpm workspace 모노레포. **Web URL path = API path** (`/recommendations`, `/
 | **첫 배포 (MVP·포트폴리오)** | **Vercel** (Web) + **Railway** (Nest API) + **Railway Postgres** 또는 **Neon** |
 | **이미지·S3·앱 본격** | API **AWS ECR/Fargate** 검토 · DB **RDS/Neon** · Web **Vercel** 유지 — AWS는 비용 때문에 **필요할 때만** |
 
-- [ ] 로컬 개발 환경 (Docker Postgres + pnpm)
+- [x] 로컬 개발 환경 기본 세팅 (0·1 — workspace · health 연동)
+- [ ] 로컬 DB + Prisma (2단계)
 - [ ] MVP 기능: 피드 · 가입·로그인 · 글 · 좋아요 (**개발 7단계**)
 - [ ] **첫 배포 (7.5):** Vercel + Railway + Neon — 포트폴리오 URL
 - [ ] Admin · 프로필 · 친구 (8~10)
@@ -138,13 +141,17 @@ docker compose up -d    # DB만
 ### 실행
 
 ```bash
-# 루트 (모노레포 의존성 — 재구현 후)
-pnpm install
+pnpm install              # 루트에서 한 번
 
-# API
+pnpm dev:api              # 터미널 1 — Nest :3030
+pnpm dev:web              # 터미널 2 — Next :3031
+```
+
+http://localhost:3031 에서 API health `{"ok":true}` 확인 (1단계).
+
+```bash
+# 개별 앱에서 직접 실행해도 됨
 cd apps/api && pnpm start:dev
-
-# Web (다른 터미널)
 cd apps/web && pnpm dev
 ```
 
