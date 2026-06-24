@@ -9,7 +9,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-import { MAX_MOODS, MIN_MOODS, MOOD_VALUES } from '../constants/mood';
+import { MAX_MOODS, MIN_MOODS, MOOD_VALUES } from '../constants/moods';
 
 /**
  * 안 넣음: id · hidden · createdAt

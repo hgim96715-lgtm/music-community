@@ -106,7 +106,8 @@ pnpm workspace 모노레포. **Web URL path = API path** (`/recommendations`, `/
 | **이미지·S3·앱 본격** | API **AWS ECR/Fargate** 검토 · DB **RDS/Neon** · Web **Vercel** 유지 — AWS는 비용 때문에 **필요할 때만** |
 
 - [x] 로컬 개발 환경 기본 세팅 (0·1 — workspace · health 연동)
-- [ ] 2단계 — Prisma · Joi · `GET /recommendations` (진행 중: schema·migrate·PrismaModule ✅)
+- [x] 2·2a — Prisma · `GET/POST /recommendations` · Web lib (`api.ts` 체인)
+- [ ] 3단계 — `FeedCard` · `FeedList` mock UI (`components/recommendations/`)
 - [ ] MVP 기능: 피드 · 가입·로그인 · 글 · 좋아요 (**개발 7단계**)
 - [ ] **첫 배포 (7.5):** Vercel + Railway + Neon — 포트폴리오 URL
 - [ ] Admin · 프로필 · 친구 (8~10)
@@ -155,7 +156,7 @@ cd apps/api && pnpm start:dev
 cd apps/web && pnpm dev
 ```
 
-큰 틀·개발 순서: `apps/docs/overview.md` · 참고 구현: git 브랜치 `backup/main`
+큰 틀·개발 순서: `apps/docs/overview.md`
 
 ---
 
