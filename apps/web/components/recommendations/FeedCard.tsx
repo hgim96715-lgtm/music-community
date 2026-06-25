@@ -1,5 +1,6 @@
 import { Recommendation } from '@/lib/types';
 import { Heart } from 'lucide-react';
+import { formatFeedDate } from '@/lib/date';
 
 type FeedCardProps = {
   recommendation: Recommendation;
@@ -22,10 +23,19 @@ export function FeedCard({ recommendation }: FeedCardProps) {
   /*내가 좋아요 했는지 여부 true 면 좋아요 버튼 빨간색*/
   const liked = likedByMe ?? false;
 
+  const heartClassName = liked
+    ? 'fill-red-500 text-red-500'
+    : likeCount > 0
+      ? 'fill-neutral-400 text-neutral-400'
+      : 'text-neutral-400';
+
   return (
     <article>
-      <header className="mb-2 text-sm text-neutral-600">
-        @{author.nickname}
+      <header className="mb-2 flex items-center justify-between text-sm text-neutral-600">
+        <span>@{author.nickname}</span>
+        <time className="text-xs text-neutral-400" dateTime={createdAt}>
+          {formatFeedDate(createdAt)}
+        </time>
       </header>
       <h2 className="text-lg font-semibold">{title}</h2>
       <p className="text-sm text-neutral-600">{artist}</p>
@@ -50,14 +60,14 @@ export function FeedCard({ recommendation }: FeedCardProps) {
         ))}
       </div>
       <footer className="mt-3 flex items-center gap-2 text-neutral-600">
-        <Heart
-          className={`h-5 w-5 ${liked ? 'fill-red-500 text-red-500' : ''}`}
-          aria-hidden
-        />
-        <span className="text-sm">{likeCount}</span>
-        <time className="ml-auto text-xs text-neutral-400" dateTime={createdAt}>
-          {createdAt}
-        </time>
+        <button
+          type="button"
+          aria-label={liked ? '좋아요 취소' : '좋아요'}
+          aria-pressed={liked}
+          className="inline-flex p-0.5">
+          <Heart className={`h-5 w-5 ${heartClassName}`} aria-hidden />
+        </button>
+        <span className="text-sm text-neutral-600">{likeCount}</span>
       </footer>
     </article>
   );

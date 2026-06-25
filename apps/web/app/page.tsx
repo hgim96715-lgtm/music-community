@@ -1,12 +1,5 @@
-import HealthCheck from './HealthCheck';
-import { FeedList } from '@/components/recommendations/FeedList';
-import { mockRecommendations } from '@/lib/mockRecommendations';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <main className="mx-auto max-w-lg p-8">
-      {/* <HealthCheck /> */}
-      <FeedList items={mockRecommendations} />
-    </main>
-  );
+  redirect('/recommendations');
 }
