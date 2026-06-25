@@ -8,6 +8,21 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  user
+  admin
+}
+
+model User {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  email        String   @unique
+  nickname     String   @unique
+  passwordHash String?
+  role         UserRole @default(user)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Recommendation {
   id        String   @id @default(uuid(7)) @db.Uuid
   title     String
