@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 
 import { MAX_MOODS, MIN_MOODS, MOOD_VALUES } from '../constants/moods';
+import { ApiProperty } from '@nestjs/swagger';
 
 /**
  * 안 넣음: id · hidden · createdAt
@@ -47,6 +48,13 @@ export class CreateRecommendationDto {
   reason: string;
 
   /** 분위기 1~3개 — MOODS 단일 소스 */
+  @ApiProperty({
+    type: [String],
+    enum: MOOD_VALUES,
+    minItems: MIN_MOODS,
+    maxItems: MAX_MOODS,
+    example: ['새벽', '운전'],
+  })
   @IsArray()
   @ArrayMinSize(MIN_MOODS)
   @ArrayMaxSize(MAX_MOODS)

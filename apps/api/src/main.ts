@@ -27,6 +27,16 @@ async function bootstrap() {
     .setTitle('Music Community API')
     .setDescription('Music Community API description')
     .setVersion('0.0.1')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description:
+          'POST /auth/login 또는 /auth/register 후 발급받은 토큰을 사용하세요.',
+      },
+      'access-token',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
