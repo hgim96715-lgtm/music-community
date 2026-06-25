@@ -9,18 +9,9 @@ import { RegisterDto } from './dto/register.dto';
 import { JwtPayload } from './jwt-payload';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
+import { AuthResponseDto, AuthUserDto } from './dto/auth-response.dto';
 
 const BCRYPT_ROUNDS = 12;
-
-export type AuthResponse = {
-  accessToken: string;
-  user: {
-    id: string;
-    email: string;
-    nickname: string;
-    role: 'user' | 'admin';
-  };
-};
 
 @Injectable()
 export class AuthService {
@@ -29,26 +20,19 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  private async buildAuthResponse(user: {
-    id: string;
-    email: string;
-    nickname: string;
-    role: 'user' | 'admin';
-  }): Promise<AuthResponse> {
+  private async buildAuthResponse(user: AuthUserDto): Promise<AuthResponseDto> {
     const payload: JwtPayload = { sub: user.id, role: user.role };
     const accessToken = await this.jwtService.signAsync(payload);
-    return {
-      accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        nickname: user.nickname,
-        role: user.role,
-      },
+    const authUser: AuthUserDto = {
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      role: user.role,
     };
+    return { accessToken, user: authUser };
   }
 
-  async register(dto: RegisterDto): Promise<AuthResponse> {
+  async register(dto: RegisterDto): Promise<AuthResponseDto> {
     const byEmail = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -74,7 +58,7 @@ export class AuthService {
 
     return this.buildAuthResponse(user);
   }
-  async login(dto: LoginDto): Promise<AuthResponse> {
+  async login(dto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
