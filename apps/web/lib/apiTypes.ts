@@ -20,3 +20,17 @@ export type ApiRecommendation = {
   updatedAt: string;
   reactions: ApiReaction[];
 };
+
+/** POST /auth/login · /auth/register — Nest AuthResponseDto */
+
+export type ApiAuthUser = {
+  id: string;
+  email: string;
+  nickname: string;
+  role: 'user' | 'admin';
+};
+
+export type ApiAuthResponse = {
+  accessToken: string;
+  user: ApiAuthUser;
+};
