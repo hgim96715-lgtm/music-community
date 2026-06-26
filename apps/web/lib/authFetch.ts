@@ -29,3 +29,11 @@ export async function authFetchApi<T>(
   await throwIfNotOk(res, path);
   return (await res.json()) as Promise<T>;
 }
+
+export async function authFetchApiVoid(
+  path: string,
+  init?: RequestInit,
+): Promise<void> {
+  const res = await authFetch(path, init);
+  await throwIfNotOk(res, path);
+}

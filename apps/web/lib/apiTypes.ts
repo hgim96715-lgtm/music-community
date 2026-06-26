@@ -6,6 +6,7 @@ export type ApiReaction = {
   type: string;
   createdAt: string;
   updatedAt: string;
+  userId: string;
 };
 
 export type ApiAuthor = {

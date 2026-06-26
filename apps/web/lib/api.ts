@@ -1,5 +1,6 @@
-import { ApiAuthResponse, ApiRecommendation } from './apiTypes';
-import { setApiAccessToken } from './authToken';
+import { ApiAuthResponse, ApiAuthUser, ApiRecommendation } from './apiTypes';
+import { authFetchApi } from './authFetch';
+import { removeApiAccessToken, setApiAccessToken } from './authToken';
 import { fetchApi } from './fetchApi';
 import { mapRecommendations } from './mapRecommendation';
 import { Recommendation } from './types';
@@ -34,4 +35,14 @@ export async function login(email: string, password: string) {
 
 export function register(email: string, password: string, nickname: string) {
   return postAuth('register', { email, password, nickname });
+}
+
+/** Nest GET /auth/me — 새로고침 후 user 캐시 갱신 */
+export async function fetchMe(): Promise<ApiAuthUser> {
+  return authFetchApi<ApiAuthUser>('/auth/me');
+}
+
+/** 로그아웃 · 401 시 */
+export function clearAuthStorage(): void {
+  removeApiAccessToken();
 }

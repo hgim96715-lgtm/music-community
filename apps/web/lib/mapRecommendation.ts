@@ -15,11 +15,12 @@ export function mapRecommendation(
   api: ApiRecommendation,
   currentUserId?: string,
 ): Recommendation {
-  /* Reaction.userId 추가후
-    likedByMe 계산
-    const likedByMe=currentUserId?
-    api.reactions.some(reaction=>reaction.type==='like'&& reaction.userId===currentUserId):undefined;
-    */
+  const likedByMe = currentUserId
+    ? api.reactions.some(
+        (reaction) =>
+          reaction.type === 'like' && reaction.userId === currentUserId,
+      )
+    : undefined;
 
   return {
     id: api.id,
@@ -29,7 +30,7 @@ export function mapRecommendation(
     reason: api.reason,
     moods: api.moods,
     likeCount: countLikes(api.reactions),
-    //likedByMe,
+    likedByMe,
     author: api.author
       ? { id: api.author.id, nickname: api.author.nickname }
       : ANONYMOUS_AUTHOR,
