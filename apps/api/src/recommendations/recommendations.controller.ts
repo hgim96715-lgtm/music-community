@@ -3,6 +3,7 @@ import { RecommendationsService } from './recommendations.service';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UserId } from 'src/auth/decorators/user-id.decorator';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
@@ -21,7 +22,10 @@ export class RecommendationsController {
   @ApiOperation({ summary: '추천 등록 (로그인 필요)' })
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() dto: CreateRecommendationDto) {
-    return await this.recommendationsService.create(dto);
+  async create(
+    @Body() dto: CreateRecommendationDto,
+    @UserId() authorId: string,
+  ) {
+    return await this.recommendationsService.create(dto, authorId);
   }
 }

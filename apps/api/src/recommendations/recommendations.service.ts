@@ -10,11 +10,11 @@ export class RecommendationsService {
     return this.prisma.recommendation.findMany({
       where: { hidden: false },
       orderBy: { createdAt: 'desc' },
-      include: { reactions: true },
+      include: { reactions: true, author: true },
     });
   }
 
-  create(dto: CreateRecommendationDto) {
+  create(dto: CreateRecommendationDto, authorId: string) {
     const { title, artist, embedUrl, reason, moods } = dto;
     return this.prisma.recommendation.create({
       data: {
@@ -23,8 +23,9 @@ export class RecommendationsService {
         embedUrl,
         reason,
         moods,
+        authorId,
       },
-      include: { reactions: true },
+      include: { reactions: true, author: true },
     });
   }
 }
