@@ -94,7 +94,7 @@ music-community/
 └── README.md
 ```
 
-pnpm workspace 모노레포. **Web URL path = API path** (`/recommendations`, `/users/me` …). 경로·네이밍: `apps/docs/routes.md`
+pnpm workspace 모노레포. **Web URL path = API path** (`/recommendations`, `/users/me` …). 네이밍 규칙: `apps/docs/overview.md`
 
 ---
 
