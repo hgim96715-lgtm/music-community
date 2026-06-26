@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { RecommendationsService } from './recommendations.service';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -27,5 +38,31 @@ export class RecommendationsController {
     @UserId() authorId: string,
   ) {
     return await this.recommendationsService.create(dto, authorId);
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '추천 좋아요 (로그인 필요)' })
+  @Post(':id/reactions')
+  @UseGuards(JwtAuthGuard)
+  async addLike(
+    @Param('id', ParseUUIDPipe) recommendationId: string,
+    @UserId() userId: string,
+  ) {
+    return await this.recommendationsService.addLike(recommendationId, userId);
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '추천 좋아요 취소 (로그인 필요)' })
+  @Delete(':id/reactions')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  async removeLike(
+    @Param('id', ParseUUIDPipe) recommendationId: string,
+    @UserId() userId: string,
+  ) {
+    return await this.recommendationsService.removeLike(
+      recommendationId,
+      userId,
+    );
   }
 }

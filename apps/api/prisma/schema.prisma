@@ -23,6 +23,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   recommendations Recommendation[]
+  reactions      Reaction[]
 }
 
 model Recommendation {
@@ -37,7 +38,7 @@ model Recommendation {
   updatedAt DateTime @updatedAt
 
   authorId  String   @db.Uuid
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author    User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   
   reactions Reaction[]
 
@@ -50,8 +51,12 @@ model Reaction {
   type             String   @default("like")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  userId           String   @db.Uuid
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
 
+  @@unique([recommendationId, userId])
   @@index([recommendationId])
+  @@index([userId])
 }
