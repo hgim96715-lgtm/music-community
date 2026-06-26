@@ -1,10 +1,14 @@
 'use client';
 
 import { register } from '@/lib/api';
+import {
+  buildLoginHref,
+  getRedirectPathFromSearchParams,
+} from '@/lib/redirect';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { useActionState } from 'react';
+import { Suspense, useActionState } from 'react';
 
 type FormState = { message?: string };
 
@@ -12,8 +16,10 @@ const inputClassName =
   'mt-1 w-full rounded-md border border-neutral-200 px-3 py-2 text-sm';
 const labelClassName = 'text-sm font-medium';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = getRedirectPathFromSearchParams(searchParams);
 
   async function submitRegister(
     _prev: FormState,
@@ -29,7 +35,7 @@ export default function RegisterPage() {
 
     try {
       await register(email, password, nickname);
-      router.push('/recommendations');
+      router.push(redirectPath);
       return {};
     } catch (error) {
       return {
@@ -47,7 +53,9 @@ export default function RegisterPage() {
         <h1 className="text-xl font-semibold">회원가입</h1>
         <p className="mt-1 text-sm text-neutral-600">
           이미 계정이 있으신가요?{' '}
-          <Link href="/login" className="text-neutral-900 underline">
+          <Link
+            href={buildLoginHref(redirectPath)}
+            className="text-neutral-900 underline">
             로그인
           </Link>
         </p>
@@ -113,5 +121,18 @@ export default function RegisterPage() {
         ) : null}
       </form>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-lg p-8">
+          <p className="text-sm text-neutral-500">불러오는 중…</p>
+        </main>
+      }>
+      <RegisterForm />
+    </Suspense>
   );
 }

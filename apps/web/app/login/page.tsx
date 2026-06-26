@@ -1,10 +1,14 @@
 'use client';
 
 import { login } from '@/lib/api';
+import {
+  buildRegisterHref,
+  getRedirectPathFromSearchParams,
+} from '@/lib/redirect';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { useActionState } from 'react';
+import { Suspense, useActionState } from 'react';
 
 type FormState = { message?: string };
 
@@ -12,8 +16,10 @@ const inputClassName =
   'mt-1 w-full rounded-md border border-neutral-200 px-3 py-2 text-sm';
 const labelClassName = 'text-sm font-medium';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = getRedirectPathFromSearchParams(searchParams);
 
   async function submitLogin(
     _prev: FormState,
@@ -26,7 +32,7 @@ export default function LoginPage() {
     }
     try {
       await login(email, password);
-      router.push('/recommendations');
+      router.push(redirectPath);
     } catch (error) {
       return {
         message:
@@ -44,7 +50,9 @@ export default function LoginPage() {
         <h1 className="text-xl font-semibold">로그인</h1>
         <p className="mt-1 text-sm text-neutral-600">
           아직 회원이 아니신가요?{' '}
-          <Link href="/register" className="text-neutral-900 underline">
+          <Link
+            href={buildRegisterHref(redirectPath)}
+            className="text-neutral-900 underline">
             회원가입
           </Link>
         </p>
@@ -93,5 +101,18 @@ export default function LoginPage() {
         ) : null}
       </form>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-lg p-8">
+          <p className="text-sm text-neutral-500">불러오는 중…</p>
+        </main>
+      }>
+      <LoginForm />
+    </Suspense>
   );
 }

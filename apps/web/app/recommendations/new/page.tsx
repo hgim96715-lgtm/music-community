@@ -2,22 +2,15 @@
 import Link from 'next/link';
 import { MAX_MOODS, MIN_MOODS, MOODS, type Mood } from '@/lib/moods';
 import { ChevronLeftIcon, Loader2 } from 'lucide-react';
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
+import { authFetchApi } from '@/lib/authFetch';
+import { getApiAccessToken } from '@/lib/authToken';
+import { buildLoginHref } from '@/lib/redirect';
+import { useRouter } from 'next/navigation';
+
+const NEW_PATH = '/recommendations/new';
 
 type FormState = { message?: string };
-
-async function submitStub(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const moods = formData.getAll('moods') as string[];
-  if (moods.length < MIN_MOODS || moods.length > MAX_MOODS) {
-    return { message: `${MIN_MOODS}~${MAX_MOODS}개의 분위기를 선택해주세요.` };
-  }
-
-  // TODO : POST 아직 미구현
-  return { message: 'POST 아직 미구현' };
-}
 
 /** 폼 공통 class — /new 전용. 재사용 늘면 components/ui 또는 lib/form.ts 로 이동 */
 const inputClassName =
@@ -28,8 +21,15 @@ const labelClassName = 'text-sm font-medium';
 /**====================================== */
 
 export default function NewRecommendationPage() {
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(submitStub, {});
   const [selectedMoods, setSelectedMoods] = useState<Mood[]>([]);
+
+  useEffect(() => {
+    if (!getApiAccessToken()) {
+      router.replace(buildLoginHref(NEW_PATH));
+    }
+  }, [router]);
 
   function toggleMood(mood: Mood) {
     setSelectedMoods((prev) => {
@@ -37,6 +37,38 @@ export default function NewRecommendationPage() {
       if (prev.length >= MAX_MOODS) return prev;
       return [...prev, mood];
     });
+  }
+
+  async function submitStub(
+    _prev: FormState,
+    formData: FormData,
+  ): Promise<FormState> {
+    const moods = formData.getAll('moods') as string[];
+    if (moods.length < MIN_MOODS || moods.length > MAX_MOODS) {
+      return {
+        message: `${MIN_MOODS}~${MAX_MOODS}개의 분위기를 선택해주세요.`,
+      };
+    }
+    try {
+      await authFetchApi('/recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.get('title') as string,
+          artist: formData.get('artist') as string,
+          embedUrl: formData.get('embedUrl') as string,
+          reason: formData.get('reason') as string,
+          moods,
+        }),
+      });
+      router.push('/recommendations');
+      return {};
+    } catch (error) {
+      return {
+        message:
+          error instanceof Error ? error.message : '추천 등록에 실패했습니다.',
+      };
+    }
   }
 
   return (
