@@ -30,7 +30,9 @@ export function mapRecommendation(
     moods: api.moods,
     likeCount: countLikes(api.reactions),
     //likedByMe,
-    author: ANONYMOUS_AUTHOR,
+    author: api.author
+      ? { id: api.author.id, nickname: api.author.nickname }
+      : ANONYMOUS_AUTHOR,
     createdAt: api.createdAt,
   };
 }

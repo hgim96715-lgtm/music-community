@@ -1,7 +1,7 @@
 /** Bearer 붙이는 fetch — POST /recommendations 등 */
 
 import { getApiAccessToken } from './authToken';
-import { getApiBaseUrl } from './fetchApi';
+import { getApiBaseUrl, throwIfNotOk } from './fetchApi';
 
 export async function authFetch(
   path: string,
@@ -18,4 +18,14 @@ export async function authFetch(
     ...init,
     headers,
   });
+}
+
+/** Bearer + JSON — fetchApi 와 같은 에러 처리 */
+export async function authFetchApi<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
+  const res = await authFetch(path, init);
+  await throwIfNotOk(res, path);
+  return (await res.json()) as Promise<T>;
 }

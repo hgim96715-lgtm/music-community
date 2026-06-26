@@ -8,6 +8,11 @@ export type ApiReaction = {
   updatedAt: string;
 };
 
+export type ApiAuthor = {
+  id: string;
+  nickname: string;
+};
+
 export type ApiRecommendation = {
   id: string;
   title: string;
@@ -19,6 +24,8 @@ export type ApiRecommendation = {
   createdAt: string;
   updatedAt: string;
   reactions: ApiReaction[];
+  authorId: string;
+  author: ApiAuthor;
 };
 
 /** POST /auth/login · /auth/register — Nest AuthResponseDto */
