@@ -51,7 +51,7 @@ export function FeedList() {
   return (
     <>
       <FeedHeader />
-      <ul className="flex flex-col gap-6">
+      <ul className="flex flex-col gap-10 pb-2">
         {items.map((item) => (
           <li key={item.id}>
             <FeedCard recommendation={item} />

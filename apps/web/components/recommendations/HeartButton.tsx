@@ -12,6 +12,10 @@ type HeartButtonProps = {
   likeCount: number;
 };
 
+/** 숫자 자릿수 바뀌어도 옆 아이콘이 밀리지 않게 고정 너비 */
+const COUNT_SLOT =
+  'inline-block min-w-[1.25rem] text-left text-sm tabular-nums';
+
 export function HeartButton({
   recommendationId,
   likedByMe,
@@ -62,6 +66,7 @@ export function HeartButton({
       setIsPending(false);
     }
   }
+
   return (
     <>
       <button
@@ -70,10 +75,10 @@ export function HeartButton({
         disabled={isPending}
         aria-label={liked ? '좋아요 취소' : '좋아요'}
         aria-pressed={liked}
-        className="inline-flex p-0.5 disabled:opacity-50">
-        <Heart className={`h-5 w-5 ${heartClassName}`} aria-hidden />
+        className="inline-flex h-9 min-w-[3.25rem] shrink-0 items-center justify-start gap-1 rounded-full px-1 text-neutral-500 transition-colors hover:text-neutral-800 disabled:opacity-50">
+        <Heart className={`h-5 w-5 shrink-0 ${heartClassName}`} aria-hidden />
+        <span className={`${COUNT_SLOT} text-neutral-600`}>{likeCount}</span>
       </button>
-      <span className="text-sm text-neutral-600">{likeCount}</span>
       <LoginPromptDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
