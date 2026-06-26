@@ -1,20 +1,14 @@
 'use client';
-import { getApiAccessToken, removeApiAccessToken } from '@/lib/authToken';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useAuth } from '../auth/AuthProvider';
 
 export default function AppHeader() {
+  const { user, isLoading, clearSession } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  useEffect(() => {
-    setLoggedIn(!!getApiAccessToken());
-  }, [pathname]);
 
   function handleLogout() {
-    removeApiAccessToken();
+    clearSession();
     router.push('/login');
   }
   return (
@@ -24,7 +18,7 @@ export default function AppHeader() {
           Music Community
         </Link>
         <nav className="flex items-center gap-3 text-sm">
-          {loggedIn ? (
+          {isLoading ? null : user ? (
             <button
               type="button"
               onClick={handleLogout}

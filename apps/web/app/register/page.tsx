@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Suspense, useActionState } from 'react';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 type FormState = { message?: string };
 
@@ -17,6 +18,7 @@ const inputClassName =
 const labelClassName = 'text-sm font-medium';
 
 function RegisterForm() {
+  const { setUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = getRedirectPathFromSearchParams(searchParams);
@@ -34,7 +36,8 @@ function RegisterForm() {
     }
 
     try {
-      await register(email, password, nickname);
+      const data = await register(email, password, nickname);
+      setUser(data.user);
       router.push(redirectPath);
       return {};
     } catch (error) {

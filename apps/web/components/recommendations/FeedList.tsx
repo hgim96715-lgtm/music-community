@@ -1,13 +1,44 @@
-/** FeedList.tsx — 피드 목록 · 헤더(올리기)는 빈 목록에도 표시 */
+'use client';
+
+import { fetchRecommendations } from '@/lib/api';
+import { useAuth } from '@/components/auth/AuthProvider';
 import type { Recommendation } from '@/lib/types';
+import { useEffect, useState } from 'react';
 import { FeedCard } from './FeedCard';
 import { FeedHeader } from './FeedHeader';
 
-type FeedListProps = {
-  items: Recommendation[];
-};
+export function FeedList() {
+  const { user, isLoading: authLoading } = useAuth();
+  const [items, setItems] = useState<Recommendation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-export function FeedList({ items }: FeedListProps) {
+  useEffect(() => {
+    if (authLoading) return;
+    let cancelled = false;
+    async function load() {
+      setIsLoading(true);
+      try {
+        const data = await fetchRecommendations(user?.id);
+        if (!cancelled) setItems(data);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user?.id]);
+
+  if (authLoading || isLoading) {
+    return (
+      <>
+        <FeedHeader />
+        <p className="text-center text-neutral-500">불러오는 중입니다...</p>
+      </>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <>

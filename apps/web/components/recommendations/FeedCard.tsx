@@ -1,6 +1,6 @@
 import { Recommendation } from '@/lib/types';
-import { Heart } from 'lucide-react';
 import { formatFeedDate } from '@/lib/date';
+import { HeartButton } from './HeartButton';
 
 type FeedCardProps = {
   recommendation: Recommendation;
@@ -19,15 +19,6 @@ export function FeedCard({ recommendation }: FeedCardProps) {
     author,
     createdAt,
   } = recommendation;
-
-  /*내가 좋아요 했는지 여부 true 면 좋아요 버튼 빨간색*/
-  const liked = likedByMe ?? false;
-
-  const heartClassName = liked
-    ? 'fill-red-500 text-red-500'
-    : likeCount > 0
-      ? 'fill-neutral-400 text-neutral-400'
-      : 'text-neutral-400';
 
   return (
     <article>
@@ -60,14 +51,11 @@ export function FeedCard({ recommendation }: FeedCardProps) {
         ))}
       </div>
       <footer className="mt-3 flex items-center gap-2 text-neutral-600">
-        <button
-          type="button"
-          aria-label={liked ? '좋아요 취소' : '좋아요'}
-          aria-pressed={liked}
-          className="inline-flex p-0.5">
-          <Heart className={`h-5 w-5 ${heartClassName}`} aria-hidden />
-        </button>
-        <span className="text-sm text-neutral-600">{likeCount}</span>
+        <HeartButton
+          recommendationId={id}
+          likedByMe={likedByMe}
+          likeCount={likeCount}
+        />
       </footer>
     </article>
   );

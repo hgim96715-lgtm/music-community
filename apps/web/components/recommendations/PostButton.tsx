@@ -1,11 +1,10 @@
 'use client';
 
 import { LoginPromptDialog } from '@/components/auth/LoginPromptDialog';
-import { getApiAccessToken } from '@/lib/authToken';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { PlusIcon } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const NEW_PATH = '/recommendations/new';
 
@@ -15,15 +14,11 @@ const guestClassName =
   'inline-flex items-center gap-1 rounded-md bg-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-500';
 
 export function PostButton() {
-  const pathname = usePathname();
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { user, isLoading } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
+  if (isLoading) return null;
 
-  useEffect(() => {
-    setLoggedIn(!!getApiAccessToken());
-  }, [pathname]);
-
-  if (loggedIn) {
+  if (user) {
     return (
       <Link href={NEW_PATH} className={primaryClassName}>
         <PlusIcon className="h-4 w-4" aria-hidden />
