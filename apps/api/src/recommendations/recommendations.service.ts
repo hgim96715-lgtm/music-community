@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
+import { normalizeEmbedUrl } from './normalize-embed-url';
 
 @Injectable()
 export class RecommendationsService {
@@ -31,11 +32,12 @@ export class RecommendationsService {
 
   create(dto: CreateRecommendationDto, authorId: string) {
     const { title, artist, embedUrl, reason, moods } = dto;
+    const normalizedEmbedUrl = normalizeEmbedUrl(embedUrl);
     return this.prisma.recommendation.create({
       data: {
         title,
         artist,
-        embedUrl,
+        embedUrl: normalizedEmbedUrl,
         reason,
         moods,
         authorId,
