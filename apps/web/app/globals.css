@@ -1,6 +1,27 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 @import 'tailwindcss';
 
+@theme {
+  --color-brand-primary: #335b73;
+  --color-brand-primary-soft: #e4eff5;
+  --color-brand-shadow: #b9ced9;
+  --color-brand-shadow-soft: #dce7ed;
+  --color-brand-shadow-play: #abc8da;
+  --color-brand-border: #353535;
+  --color-brand-bg: #f5f7f8;
+  --color-brand-card-back: #d8e5ee;
+}
+
 @layer base {
+  body {
+    font-family:
+      'Pretendard',
+      -apple-system,
+      BlinkMacSystemFont,
+      system-ui,
+      sans-serif;
+  }
+
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;
@@ -8,5 +29,159 @@
 
   button:disabled {
     cursor: not-allowed;
+  }
+}
+
+@layer components {
+  /* 1. 게시물 카드 — 뒤에 파란 레이어 */
+  .post-card-shell {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .post-card-shell::before {
+    content: '';
+    position: absolute;
+    inset: 6px -6px -6px 6px;
+    z-index: -1;
+    border: 2px solid var(--color-brand-border);
+    border-radius: 1rem;
+    background: var(--card-back, var(--color-brand-card-back));
+  }
+
+  .post-card {
+    overflow: hidden;
+    border: 2px solid var(--color-brand-border);
+    border-radius: 1rem;
+    background: #ffffff;
+  }
+
+  /* 2. 음악 카드 — 단단한 그림자 */
+  .track-card {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem;
+    text-align: left;
+    border: 1.5px solid #3d3d3d;
+    border-radius: 1.25rem;
+    background: #fafafa;
+    box-shadow: 4px 4px 0 var(--color-brand-shadow-soft);
+    transition: background-color 150ms ease;
+  }
+
+  .track-card:hover {
+    background: #f6f6f6;
+  }
+
+  /* 3. 재생 버튼 — 눌림 효과 (부모 .track-card:active 시) */
+  .play-button {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1.5px solid var(--color-brand-border);
+    border-radius: 9999px;
+    background: #ffffff;
+    color: var(--color-brand-primary);
+    box-shadow: 3px 3px 0 var(--color-brand-shadow-play);
+    transition:
+      transform 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  .track-card:hover .play-button {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--color-brand-shadow-play);
+  }
+
+  .track-card:active .play-button {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+  }
+
+  /* 태그 — 약한 입체감 */
+  .mood-pill-depth {
+    box-shadow: 1px 1px 0 var(--color-brand-shadow-soft);
+  }
+
+  /* 올리기 · 모달 CTA — pill + 단단한 그림자 */
+  .brand-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border: 2px solid var(--color-brand-border);
+    border-radius: 9999px;
+    background: var(--color-brand-primary);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    color: #ffffff;
+    box-shadow: 3px 3px 0 var(--color-brand-shadow-soft);
+    transition:
+      transform 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  .brand-pill-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--color-brand-shadow-soft);
+  }
+
+  .brand-pill-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+  }
+
+  .brand-pill-btn-guest {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border: 2px solid var(--color-brand-border);
+    border-radius: 9999px;
+    background: #ffffff;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    color: var(--color-brand-primary);
+    box-shadow: 3px 3px 0 var(--color-brand-shadow-soft);
+    transition:
+      transform 120ms ease,
+      box-shadow 120ms ease,
+      background-color 150ms ease;
+  }
+
+  .brand-pill-btn-guest:hover {
+    transform: translate(-1px, -1px);
+    background: var(--color-brand-primary-soft);
+    box-shadow: 4px 4px 0 var(--color-brand-shadow-soft);
+  }
+
+  .brand-pill-btn-guest:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+  }
+
+  /* 로그인 모달 — 입체 뒤 레이어 (실제 div · z-index 음수 X) */
+  .dialog-back {
+    pointer-events: none;
+    position: absolute;
+    inset: 5px -5px -5px 5px;
+    border: 2px solid var(--color-brand-border);
+    border-radius: 1rem;
+    background: var(--color-brand-card-back);
+  }
+
+  .dialog-panel {
+    position: relative;
+    z-index: 1;
+    border: 2px solid var(--color-brand-border);
+    border-radius: 1rem;
+    background: #ffffff;
   }
 }
