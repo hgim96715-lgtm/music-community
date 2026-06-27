@@ -1,6 +1,11 @@
+import type { CSSProperties } from 'react';
 import { Recommendation } from '@/lib/types';
 import { formatFeedDate } from '@/lib/date';
-import { HeartButton } from './HeartButton';
+import { getMoodColors } from '@/lib/moodColors';
+import { neoHeaderDefault, postCard, postCardShell } from '@/lib/neobrutal';
+import { FeedCardFooter } from './FeedCardFooter';
+import { FeedCardMedia } from './FeedCardMedia';
+import { FeedCardMenu } from './FeedCardMenu';
 
 type FeedCardProps = {
   recommendation: Recommendation;
@@ -20,43 +25,49 @@ export function FeedCard({ recommendation }: FeedCardProps) {
     createdAt,
   } = recommendation;
 
+  const headerMood = moods[0] ? getMoodColors(moods[0]) : null;
+  const headerBand = headerMood?.pillBg ?? neoHeaderDefault.band;
+  const headerNicknameClass =
+    headerMood?.pillText ?? neoHeaderDefault.text;
+  const headerDateClass = headerMood?.pillText ?? neoHeaderDefault.muted;
+  const cardBack = headerMood?.cardBack ?? neoHeaderDefault.cardBack;
+
   return (
-    <article>
-      <header className="mb-2 flex items-center justify-between text-sm text-neutral-600">
-        <span>@{author.nickname}</span>
-        <time className="text-xs text-neutral-400" dateTime={createdAt}>
-          {formatFeedDate(createdAt)}
-        </time>
-      </header>
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <p className="text-sm text-neutral-600">{artist}</p>
-      {/* embed — 3단계는 iframe만 (URL 검증은 Nest가 함) */}
-      <div className="my-3 aspect-video w-full overflow-hidden rounded-md bg-neutral-100">
-        <iframe
-          src={embedUrl}
-          title={title}
-          className="h-full w-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-      <p className="text-sm text-neutral-800">{reason}</p>
-      <div className="mt-2 flex flex-wrap gap-1">
-        {moods.map((mood) => (
+    <div
+      className={postCardShell}
+      style={{ '--card-back': cardBack } as CSSProperties}>
+      <article className={postCard}>
+        <header
+          className={`flex items-center justify-between gap-3 border-b border-[#353535]/15 px-4 py-3 ${headerBand}`}>
           <span
-            key={mood}
-            className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700">
-            {mood}
+            className={`min-w-0 truncate text-sm font-semibold leading-5 [font-family:ui-sans-serif,system-ui,sans-serif] ${headerNicknameClass}`}>
+            @{author.nickname}
           </span>
-        ))}
-      </div>
-      <footer className="mt-3 flex items-center gap-2 text-neutral-600">
-        <HeartButton
-          recommendationId={id}
-          likedByMe={likedByMe}
-          likeCount={likeCount}
-        />
-      </footer>
-    </article>
+          <div className="flex shrink-0 items-center gap-1">
+            <time
+              className={`text-xs font-medium leading-5 opacity-80 ${headerDateClass}`}
+              dateTime={createdAt}>
+              {formatFeedDate(createdAt)}
+            </time>
+            <FeedCardMenu recommendationId={id} variant="neo" />
+          </div>
+        </header>
+
+        <div className="p-4">
+          <FeedCardMedia embedUrl={embedUrl} title={title} artist={artist} />
+
+          <p className="mt-3.5 break-words font-sans text-[0.9375rem] font-normal leading-[1.65] text-neutral-700 [overflow-wrap:anywhere]">
+            {reason}
+          </p>
+
+          <FeedCardFooter
+            recommendationId={id}
+            moods={moods}
+            likeCount={likeCount}
+            likedByMe={likedByMe}
+          />
+        </div>
+      </article>
+    </div>
   );
 }

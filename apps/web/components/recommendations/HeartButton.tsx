@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { authFetchApi, authFetchApiVoid } from '@/lib/authFetch';
 import { Heart } from 'lucide-react';
+import {
+  ACTION_BTN,
+  ACTION_ICON,
+  COUNT_SLOT,
+} from '@/lib/feedCardActions';
 import { LoginPromptDialog } from '../auth/LoginPromptDialog';
 
 type HeartButtonProps = {
@@ -11,10 +16,6 @@ type HeartButtonProps = {
   likedByMe?: boolean;
   likeCount: number;
 };
-
-/** 숫자 자릿수 바뀌어도 옆 아이콘이 밀리지 않게 고정 너비 */
-const COUNT_SLOT =
-  'inline-block min-w-[1.25rem] text-left text-sm tabular-nums';
 
 export function HeartButton({
   recommendationId,
@@ -75,8 +76,12 @@ export function HeartButton({
         disabled={isPending}
         aria-label={liked ? '좋아요 취소' : '좋아요'}
         aria-pressed={liked}
-        className="inline-flex h-9 min-w-[3.25rem] shrink-0 items-center justify-start gap-1 rounded-full px-1 text-neutral-500 transition-colors hover:text-neutral-800 disabled:opacity-50">
-        <Heart className={`h-5 w-5 shrink-0 ${heartClassName}`} aria-hidden />
+        className={`${ACTION_BTN} text-neutral-500 hover:text-neutral-800 disabled:opacity-50`}>
+        <Heart
+          className={`${ACTION_ICON} ${heartClassName}`}
+          strokeWidth={1.75}
+          aria-hidden
+        />
         <span className={`${COUNT_SLOT} text-neutral-600`}>{likeCount}</span>
       </button>
       <LoginPromptDialog
