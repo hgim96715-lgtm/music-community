@@ -1,6 +1,14 @@
 'use client';
+
+import {
+  appHeaderClassName,
+  appHeaderInnerClassName,
+  appLogoClassName,
+  appNavLinkClassName,
+  authLinkClassName,
+} from '@/lib/form';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../auth/AuthProvider';
 
 export default function AppHeader() {
@@ -11,24 +19,23 @@ export default function AppHeader() {
     clearSession();
     router.push('/login');
   }
+
   return (
-    <header className="border-b border-neutral-200">
-      <div className="mx-auto flex max-w-lg items-center justify-between px-8 py-4">
-        <Link href="/recommendations" className="text-sm font-semibold">
+    <header className={appHeaderClassName}>
+      <div className={appHeaderInnerClassName}>
+        <Link href="/recommendations" className={appLogoClassName}>
           Music Community
         </Link>
-        <nav className="flex items-center gap-3 text-sm">
+        <nav className="flex items-center gap-2">
           {isLoading ? null : user ? (
             <button
               type="button"
               onClick={handleLogout}
-              className="text-neutral-600 hover:text-neutral-900">
+              className={appNavLinkClassName}>
               로그아웃
             </button>
           ) : (
-            <Link
-              href="/login"
-              className="text-neutral-600 hover:text-neutral-900">
+            <Link href="/login" className={`${authLinkClassName} text-sm`}>
               로그인
             </Link>
           )}

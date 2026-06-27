@@ -1,7 +1,15 @@
 'use client';
 
+import { authLinkClassName } from '@/lib/form';
+import {
+  brandPillBtn,
+  dialogBack,
+  dialogPanel,
+} from '@/lib/neobrutal';
+import { buildLoginHref, buildRegisterHref } from '@/lib/redirect';
 import Link from 'next/link';
-import { buildLoginHref } from '@/lib/redirect';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 type LoginPromptDialogProps = {
   open: boolean;
@@ -19,38 +27,57 @@ export function LoginPromptDialog({
   title = '로그인이 필요해요',
   description = '추천을 올리려면 로그인해 주세요.',
 }: LoginPromptDialogProps) {
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!open || !mounted) return null;
 
   const loginHref = buildLoginHref(redirectPath);
+  const registerHref = buildRegisterHref(redirectPath);
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="login-prompt-title"
       onClick={onClose}>
       <div
-        className="w-full max-w-sm rounded-lg bg-white p-6 shadow-lg"
+        className="relative w-full max-w-sm"
         onClick={(e) => e.stopPropagation()}>
-        <h2 id="login-prompt-title" className="text-lg font-semibold">
-          {title}
-        </h2>
-        <p className="mt-2 text-sm text-neutral-600">{description}</p>
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900">
-            닫기
-          </button>
-          <Link
-            href={loginHref}
-            className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white">
-            로그인
-          </Link>
+        <div className={dialogBack} aria-hidden />
+        <div className={`${dialogPanel} p-6`}>
+          <h2
+            id="login-prompt-title"
+            className="text-center text-lg font-semibold text-brand-primary">
+            {title}
+          </h2>
+          <p className="mt-2 text-center text-sm leading-relaxed text-neutral-600">
+            {description}
+          </p>
+          <div className="mt-6 flex flex-col items-stretch gap-2">
+            <Link href={loginHref} className={`${brandPillBtn} justify-center`}>
+              로그인
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full py-2 text-sm font-medium text-neutral-500 transition-colors hover:text-brand-primary">
+              닫기
+            </button>
+          </div>
+          <p className="mt-5 text-center text-xs text-neutral-500">
+            계정이 없으신가요?{' '}
+            <Link href={registerHref} className={`${authLinkClassName} text-xs`}>
+              회원가입
+            </Link>
+          </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
