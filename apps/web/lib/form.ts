@@ -36,6 +36,9 @@ export const authLinkClassName =
 export const fieldHintClassName =
   'mt-1.5 px-1 text-xs leading-relaxed text-neutral-500';
 
+export const fieldSuccessClassName =
+  'mt-1.5 px-1 text-xs leading-relaxed text-emerald-600';
+
 export const fieldErrorClassName =
   'mt-1.5 px-1 text-xs leading-relaxed text-red-500';
 

@@ -6,35 +6,45 @@ import { useId, useState } from 'react';
 import {
   fieldErrorClassName,
   fieldHintClassName,
+  fieldSuccessClassName,
   pillInputClassName,
   pillInputErrorClassName,
 } from '@/lib/form';
 
 type PillInputProps = {
   label: string;
+  value: string;
+  onChange: (value: string) => void;
   name: string;
   type?: 'text' | 'email' | 'password' | 'url';
   autoComplete?: string;
   required?: boolean;
+  minLength?: number;
   maxLength?: number;
   icon: LucideIcon;
   showPasswordToggle?: boolean;
-  /** 안내 문구 — 레퍼런스 이미지의 회색 설명 (에러 없을 때) */
+  /** 안내 문구 — 회색 설명 (에러·성공 없을 때) */
   hint?: string;
+  /** 필드 아래 초록 성공 문구 */
+  success?: string;
   /** 필드 아래 빨간 에러 */
   error?: string;
 };
 
 export function PillInput({
   label,
+  value,
+  onChange,
   name,
   type = 'text',
   autoComplete,
   required,
+  minLength,
   maxLength,
   icon: Icon,
   showPasswordToggle = false,
   hint,
+  success,
   error,
 }: PillInputProps) {
   const id = useId();
@@ -43,7 +53,7 @@ export function PillInput({
   const isPassword = type === 'password';
   const inputType =
     isPassword && showPasswordToggle && passwordVisible ? 'text' : type;
-  const hasFeedback = Boolean(error || hint);
+  const hasFeedback = Boolean(error || success || hint);
 
   return (
     <div>
@@ -58,8 +68,11 @@ export function PillInput({
         <input
           id={id}
           name={name}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           type={inputType}
           required={required}
+          minLength={minLength}
           maxLength={maxLength}
           autoComplete={autoComplete}
           placeholder={label}
@@ -88,6 +101,10 @@ export function PillInput({
           role="alert"
           aria-live="polite">
           {error}
+        </p>
+      ) : success ? (
+        <p id={feedbackId} className={fieldSuccessClassName} aria-live="polite">
+          {success}
         </p>
       ) : hint ? (
         <p id={feedbackId} className={fieldHintClassName}>
