@@ -23,27 +23,35 @@ import {
 import { Loader2, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useActionState } from 'react';
+import { Suspense, useActionState, useState } from 'react';
 
 function LoginForm() {
   const { setUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = getRedirectPathFromSearchParams(searchParams);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  function resetLoginForm() {
+    setEmail('');
+    setPassword('');
+  }
 
   async function submitLogin(
     _prev: AuthFieldErrors,
-    formData: FormData,
+    _formData: FormData,
   ): Promise<AuthFieldErrors> {
-    const email = String(formData.get('email') ?? '').trim();
-    const password = String(formData.get('password') ?? '').trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
 
-    const clientErrors = validateLoginFields(email, password);
+    const clientErrors = validateLoginFields(trimmedEmail, trimmedPassword);
     if (hasAuthFieldErrors(clientErrors)) return clientErrors;
 
     try {
-      const data = await login(email, password);
+      const data = await login(trimmedEmail, trimmedPassword);
       setUser(data.user);
+      resetLoginForm();
       router.push(redirectPath);
       return {};
     } catch (error) {
@@ -64,6 +72,8 @@ function LoginForm() {
       <form action={formAction} className="flex flex-col gap-4">
         <PillInput
           label="이메일"
+          value={email}
+          onChange={setEmail}
           name="email"
           type="text"
           autoComplete="email"
@@ -73,6 +83,8 @@ function LoginForm() {
         />
         <PillInput
           label="비밀번호"
+          value={password}
+          onChange={setPassword}
           name="password"
           type="password"
           autoComplete="current-password"
@@ -99,7 +111,9 @@ function LoginForm() {
 
       <p className="mt-8 text-center text-sm text-neutral-600">
         아직 회원이 아니신가요?{' '}
-        <Link href={buildRegisterHref(redirectPath)} className={authLinkClassName}>
+        <Link
+          href={buildRegisterHref(redirectPath)}
+          className={authLinkClassName}>
           회원가입
         </Link>
       </p>
