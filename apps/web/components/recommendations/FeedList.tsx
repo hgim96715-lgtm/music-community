@@ -13,6 +13,10 @@ export function FeedList() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const handleDeleted = (id: string) => {
+    setItems((items) => items.filter((item) => item.id !== id));
+  };
+
   useEffect(() => {
     if (authLoading) return;
     let cancelled = false;
@@ -90,7 +94,7 @@ export function FeedList() {
       <ul className="flex flex-col gap-10 pb-2">
         {items.map((item) => (
           <li key={item.id}>
-            <FeedCard recommendation={item} />
+            <FeedCard recommendation={item} onDeleted={handleDeleted} />
           </li>
         ))}
       </ul>

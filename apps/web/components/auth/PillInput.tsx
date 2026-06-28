@@ -2,7 +2,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { Eye, EyeOff } from 'lucide-react';
-import { useId, useState } from 'react';
+import { useId, useState, type ChangeEvent } from 'react';
 import {
   fieldErrorClassName,
   fieldHintClassName,
@@ -13,9 +13,10 @@ import {
 
 type PillInputProps = {
   label: string;
-  value: string;
-  onChange: (value: string) => void;
   name: string;
+  /** 있으면 제어 컴포넌트(로그인·가입). 없으면 name만 — FormData 제출(올리기 등) */
+  value?: string;
+  onChange?: (value: string) => void;
   type?: 'text' | 'email' | 'password' | 'url';
   autoComplete?: string;
   required?: boolean;
@@ -68,8 +69,13 @@ export function PillInput({
         <input
           id={id}
           name={name}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          {...(onChange != null
+            ? {
+                value: value ?? '',
+                onChange: (e: ChangeEvent<HTMLInputElement>) =>
+                  onChange(e.target.value),
+              }
+            : {})}
           type={inputType}
           required={required}
           minLength={minLength}

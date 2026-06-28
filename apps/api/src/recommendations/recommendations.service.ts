@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -43,6 +44,23 @@ export class RecommendationsService {
         authorId,
       },
       include: { reactions: true, author: true },
+    });
+  }
+
+  async remove(recommendationId: string, userId: string) {
+    const recommendation = await this.prisma.recommendation.findFirst({
+      where: { id: recommendationId, hidden: false },
+      select: { id: true, authorId: true },
+    });
+
+    if (!recommendation) {
+      throw new NotFoundException('추천을 찾을 수 없어요.');
+    }
+    if (recommendation.authorId !== userId) {
+      throw new ForbiddenException('본인 글만 삭제할 수 있습니다.');
+    }
+    await this.prisma.recommendation.delete({
+      where: { id: recommendationId },
     });
   }
 

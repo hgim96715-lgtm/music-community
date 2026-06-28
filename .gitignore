@@ -18,6 +18,7 @@ node_modules/
 
 # Nest / build
 **/dist/
+*.tsbuildinfo
 apps/api/src/generated/
 
 # 배포용 — 재구현·AWS 배포 전까지 로컬만

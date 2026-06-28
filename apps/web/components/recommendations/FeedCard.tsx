@@ -9,9 +9,10 @@ import { FeedCardMenu } from './FeedCardMenu';
 
 type FeedCardProps = {
   recommendation: Recommendation;
+  onDeleted?: (id: string) => void;
 };
 
-export function FeedCard({ recommendation }: FeedCardProps) {
+export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
   const {
     id,
     title,
@@ -27,8 +28,7 @@ export function FeedCard({ recommendation }: FeedCardProps) {
 
   const headerMood = moods[0] ? getMoodColors(moods[0]) : null;
   const headerBand = headerMood?.pillBg ?? neoHeaderDefault.band;
-  const headerNicknameClass =
-    headerMood?.pillText ?? neoHeaderDefault.text;
+  const headerNicknameClass = headerMood?.pillText ?? neoHeaderDefault.text;
   const headerDateClass = headerMood?.pillText ?? neoHeaderDefault.muted;
   const cardBack = headerMood?.cardBack ?? neoHeaderDefault.cardBack;
 
@@ -49,7 +49,12 @@ export function FeedCard({ recommendation }: FeedCardProps) {
               dateTime={createdAt}>
               {formatFeedDate(createdAt)}
             </time>
-            <FeedCardMenu recommendationId={id} variant="neo" />
+            <FeedCardMenu
+              recommendationId={id}
+              authorId={author.id}
+              variant="neo"
+              onDeleted={onDeleted}
+            />
           </div>
         </header>
 

@@ -30,6 +30,18 @@ export class RecommendationsController {
   }
 
   @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '추천 삭제 (사용자만)' })
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  async remove(
+    @Param('id', ParseUUIDPipe) recommendationId: string,
+    @UserId() userId: string,
+  ) {
+    return await this.recommendationsService.remove(recommendationId, userId);
+  }
+
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 등록 (로그인 필요)' })
   @Post()
   @UseGuards(JwtAuthGuard)

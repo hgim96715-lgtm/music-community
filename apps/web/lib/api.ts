@@ -1,5 +1,5 @@
 import { ApiAuthResponse, ApiAuthUser, ApiRecommendation } from './apiTypes';
-import { authFetchApi } from './authFetch';
+import { authFetchApi, authFetchApiVoid } from './authFetch';
 import { removeApiAccessToken, setApiAccessToken } from './authToken';
 import { fetchApi } from './fetchApi';
 import { mapRecommendations } from './mapRecommendation';
@@ -67,4 +67,9 @@ export async function checkNicknameAvailable(
     `/auth/nickname-available?nickname=${q}`,
   );
   return data.available;
+}
+
+/** DELETE /recommendations/:id — 본인 글만 삭제 */
+export function deleteRecommendation(id: string) {
+  return authFetchApiVoid(`/recommendations/${id}`, { method: 'DELETE' });
 }
