@@ -1,5 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
+import {
+  PASSWORD_REGEX,
+  PASSWORD_VALIDATION_MESSAGE,
+} from '../constants/password';
 
 export class RegisterDto {
   /** 이메일 */
@@ -7,10 +11,10 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
-  /** 비밀번호 — 최소 8자 이상 */
-  @ApiProperty({ example: 'password12', minLength: 8 })
+  /** 비밀번호 — 8자 이상 · 영문 · 특수문자 */
+  @ApiProperty({ example: 'Password1!', minLength: 8 })
   @IsString()
-  @MinLength(8)
+  @Matches(PASSWORD_REGEX, { message: PASSWORD_VALIDATION_MESSAGE })
   password: string;
 
   /** 닉네임 */

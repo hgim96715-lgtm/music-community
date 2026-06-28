@@ -20,6 +20,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /** trim만 — 이메일·닉네임 대소문자 유지 */
+  private trimField(value: string): string {
+    return value.trim();
+  }
+
   private async buildAuthResponse(user: AuthUserDto): Promise<AuthResponseDto> {
     const payload: JwtPayload = { sub: user.id, role: user.role };
     const accessToken = await this.jwtService.signAsync(payload);
@@ -33,15 +38,18 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
+    const email = this.trimField(dto.email);
+    const nickname = this.trimField(dto.nickname);
+
     const byEmail = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { email },
     });
     if (byEmail) {
       throw new ConflictException('이미 사용 중인 이메일입니다.');
     }
 
     const byNickname = await this.prisma.user.findUnique({
-      where: { nickname: dto.nickname },
+      where: { nickname },
     });
     if (byNickname) {
       throw new ConflictException('이미 사용 중인 닉네임입니다.');
@@ -50,17 +58,38 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
     const user = await this.prisma.user.create({
       data: {
-        email: dto.email,
-        nickname: dto.nickname,
+        email,
+        nickname,
         passwordHash,
       },
     });
 
     return this.buildAuthResponse(user);
   }
+
+  async checkEmailAvailable(email: string): Promise<{ available: boolean }> {
+    const trimmed = this.trimField(email);
+    if (!trimmed) return { available: false };
+    const existing = await this.prisma.user.findUnique({
+      where: { email: trimmed },
+    });
+    return { available: !existing };
+  }
+
+  async checkNicknameAvailable(
+    nickname: string,
+  ): Promise<{ available: boolean }> {
+    const trimmed = this.trimField(nickname);
+    if (!trimmed) return { available: false };
+    const existing = await this.prisma.user.findUnique({
+      where: { nickname: trimmed },
+    });
+    return { available: !existing };
+  }
+
   async login(dto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { email: this.trimField(dto.email) },
     });
     if (!user?.passwordHash) {
       throw new UnauthorizedException(

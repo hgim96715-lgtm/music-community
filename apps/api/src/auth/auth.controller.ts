@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -24,6 +24,16 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getMe(@UserId() userId: string) {
     return await this.authService.getMe(userId);
+  }
+
+  @Get('email-available')
+  async checkEmail(@Query('email') email: string) {
+    return await this.authService.checkEmailAvailable(email);
+  }
+
+  @Get('nickname-available')
+  async checkNickname(@Query('nickname') nickname: string) {
+    return await this.authService.checkNicknameAvailable(nickname);
   }
 
   @ApiOperation({ summary: '회원가입' })
