@@ -30,11 +30,15 @@ async function postAuth(
 }
 
 export async function login(email: string, password: string) {
-  return postAuth('login', { email, password });
+  return postAuth('login', { email: email.trim(), password });
 }
 
 export function register(email: string, password: string, nickname: string) {
-  return postAuth('register', { email, password, nickname });
+  return postAuth('register', {
+    email: email.trim(),
+    password,
+    nickname: nickname.trim(),
+  });
 }
 
 /** Nest GET /auth/me — 새로고침 후 user 캐시 갱신 */
@@ -45,4 +49,22 @@ export async function fetchMe(): Promise<ApiAuthUser> {
 /** 로그아웃 · 401 시 */
 export function clearAuthStorage(): void {
   removeApiAccessToken();
+}
+
+export async function checkEmailAvailable(email: string): Promise<boolean> {
+  const q = encodeURIComponent(email.trim());
+  const data = await fetchApi<{ available: boolean }>(
+    `/auth/email-available?email=${q}`,
+  );
+  return data.available;
+}
+
+export async function checkNicknameAvailable(
+  nickname: string,
+): Promise<boolean> {
+  const q = encodeURIComponent(nickname.trim());
+  const data = await fetchApi<{ available: boolean }>(
+    `/auth/nickname-available?nickname=${q}`,
+  );
+  return data.available;
 }
