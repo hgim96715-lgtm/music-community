@@ -111,11 +111,29 @@ export type CreateSavedCardBody = {
 
 // Admin
 
+export type ApiAdminDailyCount = {
+  date: string;
+  count: number;
+};
+
+export type ApiAdminMonthlyCount = {
+  month: string;
+  count: number;
+};
+
+export type ApiAdminHourlyCount = {
+  hour: number;
+  count: number;
+};
+
 export type ApiAdminStats = {
   total: number;
   hidden: number;
   visible: number;
   today: number;
+  daily: ApiAdminDailyCount[];
+  monthly: ApiAdminMonthlyCount[];
+  hourly: ApiAdminHourlyCount[];
 };
 
 export type ApiAdminRecommendation = ApiRecommendation & {
