@@ -1,6 +1,4 @@
-/** date.md
- * 피드·Admin 날짜 표시 (MVP: formatDisplayDate · formatFeedDate만)
- */
+/** 피드 날짜 표시 — 정본: apps/docs/date.md */
 
 function startOfDay(date: Date): Date {
   const d = new Date(date);
