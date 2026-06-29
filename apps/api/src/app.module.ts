@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { SavedCardsModule } from './saved-cards/saved-cards.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UsersModule } from './users/users.module';
     RecommendationsModule,
     AuthModule,
     UsersModule,
+    SavedCardsModule,
   ],
   controllers: [HealthController],
 })
