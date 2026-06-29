@@ -6,6 +6,7 @@ import type { Recommendation } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { FeedCard } from './FeedCard';
 import { FeedHeader } from './FeedHeader';
+import { SavedCardsFeedProvider } from '@/components/saved-cards/SavedCardsFeedContext';
 
 export function FeedList() {
   const { user, isLoading: authLoading } = useAuth();
@@ -88,8 +89,9 @@ export function FeedList() {
     );
   }
 
+  // 카드 있을때만 SavedCardsFeedProvider 제공
   return (
-    <>
+    <SavedCardsFeedProvider>
       <FeedHeader />
       <ul className="flex flex-col gap-10 pb-2">
         {items.map((item) => (
@@ -98,6 +100,6 @@ export function FeedList() {
           </li>
         ))}
       </ul>
-    </>
+    </SavedCardsFeedProvider>
   );
 }

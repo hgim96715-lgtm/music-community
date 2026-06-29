@@ -1,8 +1,11 @@
 'use client';
+import { SavedCardAlbumBook } from '@/components/saved-cards/SavedCardAlbumBook';
+import { SavedCardAlbumModal } from '@/components/saved-cards/SavedCardAlbumModal';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { PillInput } from '@/components/auth/PillInput';
 import { PillTextarea } from '@/components/auth/PillTextarea';
-import { patchUserProfile } from '@/lib/api';
+import { fetchSavedCards, patchUserProfile } from '@/lib/api';
+import type { ApiSavedCard } from '@/lib/apiTypes';
 import {
   appNavLinkClassName,
   authPageClassName,
@@ -11,10 +14,11 @@ import {
   fieldErrorClassName,
   formLegendClassName,
 } from '@/lib/form';
+import { postCardShell, postCard } from '@/lib/neobrutal';
 import { ChevronLeft, Loader2, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function MyProfilePage() {
   const router = useRouter();
@@ -24,6 +28,10 @@ export default function MyProfilePage() {
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savedCards, setSavedCards] = useState<ApiSavedCard[]>([]);
+  const [albumLoading, setAlbumLoading] = useState(true);
+  const [albumError, setAlbumError] = useState('');
+  const [selected, setSelected] = useState<ApiSavedCard | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) router.replace('/login?next=/users/me');
@@ -33,6 +41,33 @@ export default function MyProfilePage() {
     if (!user) return;
     setNickname(user.nickname);
     setBio(user.bio ?? '');
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+    setAlbumLoading(true);
+    setAlbumError('');
+
+    fetchSavedCards()
+      .then((cards) => {
+        if (!cancelled) setSavedCards(cards);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setAlbumError(
+            err instanceof Error ? err.message : '앨범을 불러오지 못했어요.',
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setAlbumLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   function startEditing() {
@@ -136,46 +171,58 @@ export default function MyProfilePage() {
           </form>
         </section>
       ) : (
-        <section className="flex flex-col items-center gap-3 text-center">
-          <div
-            className="flex size-16 items-center justify-center rounded-full border border-neutral-200 bg-white text-brand-primary shadow-[2px_2px_0_var(--color-brand-shadow-soft)]"
-            aria-hidden>
-            <User className="size-7" />
+        <section className={`${postCardShell} w-full`}>
+          <div className={`${postCard} flex flex-col items-center gap-3 px-6 py-8 text-center`}>
+            <div
+              className="flex size-16 items-center justify-center rounded-full border-2 border-brand-border bg-brand-primary-soft text-brand-primary shadow-[3px_3px_0_var(--color-brand-shadow-soft)]"
+              aria-hidden>
+              <User className="size-7" />
+            </div>
+            <div>
+              <h1 className={authTitleClassName}>@{user.nickname}</h1>
+              {user.bio ? (
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+                  {user.bio}
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-neutral-400">
+                  한 줄 소개가 없어요
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={startEditing}
+              className={`${appNavLinkClassName} border-2 border-brand-border bg-white px-4 py-2 shadow-[2px_2px_0_var(--color-brand-shadow-soft)]`}>
+              프로필 수정
+            </button>
           </div>
-          <div>
-            <h1 className={authTitleClassName}>@{user.nickname}</h1>
-            {user.bio ? (
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-                {user.bio}
-              </p>
-            ) : (
-              <p className="mt-2 text-sm text-neutral-400">
-                한 줄 소개가 없어요
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={startEditing}
-            className={`${appNavLinkClassName} border border-neutral-200 bg-white px-4 py-2`}>
-            프로필 수정
-          </button>
         </section>
       )}
       <section>
-        <h2 className="text-sm font-semibold text-brand-primary">내 앨범</h2>
-        <p className="mt-2 text-sm text-neutral-500">
-          저장한 노래가 여기 모여요 — 9.1 포토카드
-        </p>
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          {Array.from({ length: 3 }, (_, i) => (
-            <div
-              key={i}
-              className="aspect-[2/3] rounded-lg border border-dashed border-neutral-300 bg-white/50"
-            />
-          ))}
-        </div>
+        <SavedCardAlbumBook
+          cards={savedCards}
+          loading={albumLoading}
+          error={albumError}
+          onSelectCard={setSelected}
+        />
       </section>
+
+      <SavedCardAlbumModal
+        card={selected}
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        onDeleted={(id) => {
+          setSavedCards((prev) => prev.filter((c) => c.id !== id));
+          setSelected(null);
+        }}
+        onUpdated={(updated) => {
+          setSavedCards((prev) =>
+            prev.map((c) => (c.id === updated.id ? updated : c)),
+          );
+          setSelected(updated);
+        }}
+      />
     </main>
   );
 }

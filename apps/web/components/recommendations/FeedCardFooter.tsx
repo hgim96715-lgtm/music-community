@@ -1,20 +1,23 @@
 'use client';
 
 import { MessageCircle, Share2 } from 'lucide-react';
-import {
-  ACTION_BTN,
-  ACTION_ICON,
-  COUNT_SLOT,
-} from '@/lib/feedCardActions';
+import { ACTION_BTN, ACTION_ICON, COUNT_SLOT } from '@/lib/feedCardActions';
 import { MoodPill } from './MoodPill';
 import { HeartButton } from './HeartButton';
+import { FeedCardSaveButton } from '@/components/saved-cards/FeedCardSaveButton';
 import { LoginPromptDialog } from '../auth/LoginPromptDialog';
 import { useAuth } from '../auth/AuthProvider';
 import { SubmitEventHandler, useState } from 'react';
 
 type FeedCardFooterProps = {
   recommendationId: string;
+  authorId: string;
+  cardBackground?: string;
+  title: string;
+  artist: string;
+  reason: string;
   moods: string[];
+  postedAt: string;
   likeCount: number;
   likedByMe?: boolean;
   commentCount?: number;
@@ -56,7 +59,13 @@ function ActionCount({
 
 export function FeedCardFooter({
   recommendationId,
+  authorId,
+  cardBackground,
+  title,
+  artist,
+  reason,
   moods,
+  postedAt,
   likeCount,
   likedByMe,
   commentCount = 0,
@@ -65,7 +74,12 @@ export function FeedCardFooter({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDraft, setCommentDraft] = useState('');
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
-  const [shareHint, setShareHint] = useState<string | null>(null);
+  const [actionHint, setActionHint] = useState<string | null>(null);
+
+  function showHint(message: string) {
+    setActionHint(message);
+    window.setTimeout(() => setActionHint(null), 2000);
+  }
 
   async function handleShare() {
     const url =
@@ -79,11 +93,9 @@ export function FeedCardFooter({
         return;
       }
       await navigator.clipboard.writeText(url);
-      setShareHint('링크를 복사했어요');
-      window.setTimeout(() => setShareHint(null), 2000);
+      showHint('링크를 복사했어요');
     } catch {
-      setShareHint('공유를 취소했어요');
-      window.setTimeout(() => setShareHint(null), 2000);
+      showHint('공유를 취소했어요');
     }
   }
 
@@ -99,8 +111,7 @@ export function FeedCardFooter({
     e.preventDefault();
     if (!commentDraft.trim()) return;
     setCommentDraft('');
-    setShareHint('댓글 API 연동 전 — UI만 보여요');
-    window.setTimeout(() => setShareHint(null), 2500);
+    showHint('댓글 API 연동 전 — UI만 보여요');
   };
 
   return (
@@ -130,6 +141,13 @@ export function FeedCardFooter({
             active={commentsOpen}
             onClick={toggleComments}
           />
+          <FeedCardSaveButton
+            recommendationId={recommendationId}
+            authorId={authorId}
+            background={cardBackground}
+            preview={{ title, artist, reason, moods, postedAt }}
+            onHint={showHint}
+          />
           <button
             type="button"
             onClick={handleShare}
@@ -141,9 +159,9 @@ export function FeedCardFooter({
             </span>
           </button>
         </div>
-        {shareHint ? (
+        {actionHint ? (
           <span className="shrink-0 font-sans text-xs text-neutral-400">
-            {shareHint}
+            {actionHint}
           </span>
         ) : null}
       </div>

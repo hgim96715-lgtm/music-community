@@ -67,7 +67,13 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
 
           <FeedCardFooter
             recommendationId={id}
+            authorId={author.id}
+            cardBackground={cardBack}
+            title={title}
+            artist={artist}
+            reason={reason}
             moods={moods}
+            postedAt={createdAt}
             likeCount={likeCount}
             likedByMe={likedByMe}
           />
