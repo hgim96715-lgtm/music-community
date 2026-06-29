@@ -10,6 +10,14 @@ export const brandPillBtnGuest = 'brand-pill-btn-guest';
 export const dialogBack = 'dialog-back';
 export const dialogPanel = 'dialog-panel';
 
+export const savedCardFace = 'saved-card-face';
+export const savedCardFaceLg = 'saved-card-face saved-card-face-lg';
+export const savedCardFormSection = 'saved-card-form-section';
+export const savedCardChip = 'saved-card-chip';
+
+export const albumBookWrap = 'album-book-wrap';
+export const albumBook = 'album-book';
+
 /** 태그 없을 때 헤더 — primary-soft */
 export const neoHeaderDefault = {
   band: 'bg-[#e4eff5]',
