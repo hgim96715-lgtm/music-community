@@ -13,6 +13,7 @@ export function PostButton() {
   const { user, isLoading } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   if (isLoading) return null;
+  if (user?.role === 'admin') return null;
 
   if (user) {
     return (

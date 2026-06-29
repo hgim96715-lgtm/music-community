@@ -27,6 +27,7 @@ export function FeedCardSaveButton({
   const { isSaved, markSaved } = useSavedCardsFeed();
   const [editorOpen, setEditorOpen] = useState(false);
 
+  if (user?.role === 'admin') return null;
   if (user?.id !== authorId) return null;
 
   const saved = isSaved(recommendationId);

@@ -47,9 +47,13 @@ export default function AppHeader() {
               로그인
             </Link>
           )}
-          {loggedIn ? (
+          {loggedIn && user?.role === 'user' ? (
             <Link href="/users/me" className={appNavLinkClassName}>
               마이페이지
+            </Link>
+          ) : user?.role === 'admin' ? (
+            <Link href="/admin" className={appNavLinkClassName}>
+              관리자
             </Link>
           ) : null}
         </nav>

@@ -4,11 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { authFetchApi, authFetchApiVoid } from '@/lib/authFetch';
 import { Heart } from 'lucide-react';
-import {
-  ACTION_BTN,
-  ACTION_ICON,
-  COUNT_SLOT,
-} from '@/lib/feedCardActions';
+import { ACTION_BTN, ACTION_ICON, COUNT_SLOT } from '@/lib/feedCardActions';
 import { LoginPromptDialog } from '../auth/LoginPromptDialog';
 
 type HeartButtonProps = {
@@ -70,20 +66,33 @@ export function HeartButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={isPending}
-        aria-label={liked ? '좋아요 취소' : '좋아요'}
-        aria-pressed={liked}
-        className={`${ACTION_BTN} text-neutral-500 hover:text-neutral-800 disabled:opacity-50`}>
-        <Heart
-          className={`${ACTION_ICON} ${heartClassName}`}
-          strokeWidth={1.75}
-          aria-hidden
-        />
-        <span className={`${COUNT_SLOT} text-neutral-600`}>{likeCount}</span>
-      </button>
+      {user?.role === 'admin' ? (
+        <div
+          className={`${ACTION_BTN} pointer-events-none text-neutral-400`}
+          aria-label={`좋아요 ${likeCount}개`}>
+          <Heart
+            className={`${ACTION_ICON} text-neutral-300`}
+            strokeWidth={1.75}
+            aria-hidden
+          />
+          <span className={`${COUNT_SLOT} text-neutral-500`}>{likeCount}</span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={isPending}
+          aria-label={liked ? '좋아요 취소' : '좋아요'}
+          aria-pressed={liked}
+          className={`${ACTION_BTN} text-neutral-500 hover:text-neutral-800 disabled:opacity-50`}>
+          <Heart
+            className={`${ACTION_ICON} ${heartClassName}`}
+            strokeWidth={1.75}
+            aria-hidden
+          />
+          <span className={`${COUNT_SLOT} text-neutral-600`}>{likeCount}</span>
+        </button>
+      )}
       <LoginPromptDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
