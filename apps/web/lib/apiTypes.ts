@@ -108,3 +108,16 @@ export type CreateSavedCardBody = {
   recommendationId: string;
   customization: ApiSavedCardCustomization;
 };
+
+// Admin
+
+export type ApiAdminStats = {
+  total: number;
+  hidden: number;
+  visible: number;
+  today: number;
+};
+
+export type ApiAdminRecommendation = ApiRecommendation & {
+  hidden: boolean;
+};
