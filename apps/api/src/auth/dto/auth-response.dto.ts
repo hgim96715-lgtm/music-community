@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AuthUserDto {
   @ApiProperty()
@@ -12,6 +12,9 @@ export class AuthUserDto {
 
   @ApiProperty({ enum: ['user', 'admin'] })
   role: 'user' | 'admin';
+
+  @ApiPropertyOptional({ example: '안녕하세요, 저는 노래가 좋아요.' })
+  bio?: string | null;
 }
 
 export class AuthResponseDto {

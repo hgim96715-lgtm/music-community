@@ -16,6 +16,10 @@ type PillTextareaProps = {
   rows?: number;
   hint?: string;
   error?: string;
+  /** 없으면 label과 동일 */
+  placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
 };
 
 export function PillTextarea({
@@ -26,6 +30,9 @@ export function PillTextarea({
   rows = 4,
   hint,
   error,
+  placeholder,
+  value,
+  onChange,
 }: PillTextareaProps) {
   const id = useId();
   const feedbackId = useId();
@@ -42,7 +49,9 @@ export function PillTextarea({
         required={required}
         maxLength={maxLength}
         rows={rows}
-        placeholder={label}
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        placeholder={placeholder ?? label}
         aria-invalid={error ? true : undefined}
         aria-describedby={hasFeedback ? feedbackId : undefined}
         className={`${pillTextareaClassName} ${error ? pillInputErrorClassName : ''}`}

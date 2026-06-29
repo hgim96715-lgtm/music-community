@@ -108,7 +108,7 @@ export class AuthService {
   async getMe(userId: string): Promise<AuthUserDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, nickname: true, role: true },
+      select: { id: true, email: true, nickname: true, role: true, bio: true },
     });
     if (!user) {
       throw new UnauthorizedException('유저를 찾을 수 없습니다.');

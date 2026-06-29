@@ -36,6 +36,7 @@ export type ApiAuthUser = {
   email: string;
   nickname: string;
   role: 'user' | 'admin';
+  bio?: string | null;
 };
 
 export type ApiAuthResponse = {

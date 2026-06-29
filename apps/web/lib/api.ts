@@ -73,3 +73,20 @@ export async function checkNicknameAvailable(
 export function deleteRecommendation(id: string) {
   return authFetchApiVoid(`/recommendations/${id}`, { method: 'DELETE' });
 }
+
+// Users
+export async function fetchUserProfile(): Promise<ApiAuthUser> {
+  return authFetchApi<ApiAuthUser>('/users/me');
+}
+
+/** PATCH /users/me — 닉네임 · bio */
+export async function patchUserProfile(body: {
+  nickname?: string;
+  bio?: string | null;
+}): Promise<ApiAuthUser> {
+  return authFetchApi<ApiAuthUser>('/users/me', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
