@@ -67,7 +67,39 @@ class SavedCardStickerDto {
   scale: number;
 }
 
-class SavedCardCustomizationDto {
+class SavedCardTextColorsDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  artist?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  reason?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  moods?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  postedAt?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  savedAt?: string;
+}
+
+export class SavedCardCustomizationDto {
   @IsOptional()
   @ValidateNested()
   @Type(() => SavedCardDisplayDto)
@@ -78,6 +110,18 @@ class SavedCardCustomizationDto {
   @MaxLength(32)
   background?: string;
 
+  /** data URL 또는 https — 투명 PNG·WebP 권장 · `background` 색 위에 덮음 */
+  @IsOptional()
+  @IsString()
+  @MaxLength(350000)
+  backgroundImage?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  backgroundImageOpacity?: number;
+
   @IsOptional()
   @IsString()
   @MaxLength(32)
@@ -87,6 +131,22 @@ class SavedCardCustomizationDto {
   @IsString()
   @MaxLength(32)
   frame?: string;
+
+  /** music-strip — 하단 플레이어 바 배경 */
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  playerBar?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  textColor?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SavedCardTextColorsDto)
+  textColors?: SavedCardTextColorsDto;
 
   @IsOptional()
   @IsArray()

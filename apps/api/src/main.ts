@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { EnvKeys } from './config/env.keys';
@@ -7,16 +8,19 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { formatValidationMessages } from './common/validation-messages';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useBodyParser('json', { limit: '600kb' });
   const configService = app.get(ConfigService);
   const frontendUrl = configService.get<string>(EnvKeys.FRONTEND_URL);
   app.enableCors({
-    origin: [
-      'http://localhost:3031',
-      'http://127.0.0.1:3031',
-      frontendUrl,
-      frontendUrl?.replace('localhost', '127.0.0.1'),
-    ].filter(Boolean),
+    origin: frontendUrl
+      ? [
+          'http://localhost:3031',
+          'http://127.0.0.1:3031',
+          frontendUrl,
+          frontendUrl.replace('localhost', '127.0.0.1'),
+        ]
+      : undefined,
     credentials: true,
   });
   app.useGlobalPipes(

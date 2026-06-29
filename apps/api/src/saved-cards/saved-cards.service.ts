@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSavedCardDto } from './dto/create-saved-card.dto';
+import { UpdateSavedCardDto } from './dto/update-saved-card.dto';
 
 const savedCardInclude = {
   recommendation: {
@@ -60,6 +61,28 @@ export class SavedCardsService {
       include: savedCardInclude,
     });
   }
+  async update(
+    userId: string,
+    savedCardId: string,
+    dto: UpdateSavedCardDto,
+  ) {
+    const card = await this.prisma.savedCard.findUnique({
+      where: { id: savedCardId },
+      select: { id: true, userId: true },
+    });
+    if (!card) {
+      throw new NotFoundException('저장한 카드를 찾을 수 없어요.');
+    }
+    if (card.userId !== userId) {
+      throw new ForbiddenException('본인 카드만 수정할 수 있어요.');
+    }
+    return this.prisma.savedCard.update({
+      where: { id: savedCardId },
+      data: { customization: dto.customization },
+      include: savedCardInclude,
+    });
+  }
+
   async delete(userId: string, savedCardId: string) {
     const card = await this.prisma.savedCard.findUnique({
       where: { id: savedCardId },
