@@ -15,6 +15,8 @@ import { CreateRecommendationDto } from './dto/create-recommendation.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
@@ -44,7 +46,8 @@ export class RecommendationsController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 등록 (로그인 필요)' })
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user')
   async create(
     @Body() dto: CreateRecommendationDto,
     @UserId() authorId: string,
@@ -55,7 +58,8 @@ export class RecommendationsController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 좋아요 (로그인 필요)' })
   @Post(':id/reactions')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user')
   async addLike(
     @Param('id', ParseUUIDPipe) recommendationId: string,
     @UserId() userId: string,
@@ -67,7 +71,8 @@ export class RecommendationsController {
   @ApiOperation({ summary: '추천 좋아요 취소 (로그인 필요)' })
   @Delete(':id/reactions')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user')
   async removeLike(
     @Param('id', ParseUUIDPipe) recommendationId: string,
     @UserId() userId: string,

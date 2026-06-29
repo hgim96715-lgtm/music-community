@@ -17,11 +17,14 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
 import { CreateSavedCardDto } from './dto/create-saved-card.dto';
 import { UpdateSavedCardDto } from './dto/update-saved-card.dto';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @ApiTags('SavedCards')
 @Controller('saved-cards')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('user')
 export class SavedCardsController {
   constructor(private readonly savedCardsService: SavedCardsService) {}
 
