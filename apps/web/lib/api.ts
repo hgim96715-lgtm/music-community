@@ -1,4 +1,11 @@
-import { ApiAuthResponse, ApiAuthUser, ApiRecommendation } from './apiTypes';
+import {
+  ApiAuthResponse,
+  ApiAuthUser,
+  ApiRecommendation,
+  ApiSavedCard,
+  ApiSavedCardCustomization,
+  CreateSavedCardBody,
+} from './apiTypes';
 import { authFetchApi, authFetchApiVoid } from './authFetch';
 import { removeApiAccessToken, setApiAccessToken } from './authToken';
 import { fetchApi } from './fetchApi';
@@ -89,4 +96,35 @@ export async function patchUserProfile(body: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+}
+
+// saved-cards
+export async function fetchSavedCards(): Promise<ApiSavedCard[]> {
+  return authFetchApi<ApiSavedCard[]>('/saved-cards');
+}
+/** POST /saved-cards — 본인 글만 · 중복 409 */
+export async function createSavedCard(
+  body: CreateSavedCardBody,
+): Promise<ApiSavedCard> {
+  return authFetchApi<ApiSavedCard>('/saved-cards', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+/** PATCH /saved-cards/:id — customization만 · 카드 소유자만 */
+export async function patchSavedCard(
+  id: string,
+  customization: ApiSavedCardCustomization,
+): Promise<ApiSavedCard> {
+  return authFetchApi<ApiSavedCard>(`/saved-cards/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customization }),
+  });
+}
+/** DELETE /saved-cards/:id — 204 */
+export function deleteSavedCard(id: string) {
+  return authFetchApiVoid(`/saved-cards/${id}`, { method: 'DELETE' });
 }
