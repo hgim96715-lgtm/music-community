@@ -137,6 +137,9 @@ export type ApiAdminStats = {
   usersTotal: number;
   signupsToday: number;
   signupsDaily: ApiAdminDailyCount[];
+  activeToday: number;
+  inactive7d: number;
+  activeDaily: ApiAdminDailyCount[];
 };
 
 export type ApiAdminRecommendation = ApiRecommendation & {
@@ -149,6 +152,7 @@ export type ApiAdminUser = {
   nickname: string;
   role: 'user' | 'admin';
   createdAt: string;
+  lastActiveAt: string | null;
   _count: {
     recommendations: number;
     reactions: number;

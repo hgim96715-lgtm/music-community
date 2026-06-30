@@ -116,7 +116,14 @@ export default function AdminDashboardPage() {
             <StatCard label="전체" value={stats.total} />
             <StatCard label="공개" value={stats.visible} />
             <StatCard label="숨김" value={stats.hidden} />
-            <StatCard label="오늘" value={stats.today} />
+            <StatCard label="오늘 작성" value={stats.today} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatCard label="전체 회원" value={stats.usersTotal} />
+            <StatCard label="오늘 가입" value={stats.signupsToday} />
+            <StatCard label="오늘 활동" value={stats.activeToday} />
+            <StatCard label="7일+ 미접속" value={stats.inactive7d} />
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
@@ -127,9 +134,7 @@ export default function AdminDashboardPage() {
           <VisibleHiddenPie visible={stats.visible} hidden={stats.hidden} />
           <DailyCountBar data={stats.daily} title="최근 7일 작성" />
           <DailyCountBar data={stats.signupsDaily} title="최근 7일 가입" />
-          <ActivityLineChart data={stats.daily} />
-          <MonthlyCountBar data={stats.monthly} />
-          <HourlyCountBar data={stats.hourly} />
+          <DailyCountBar data={stats.activeDaily} title="최근 7일 활동" />
         </div>
       ) : null}
     </div>
