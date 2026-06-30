@@ -118,19 +118,20 @@ export default function AdminDashboardPage() {
             <StatCard label="숨김" value={stats.hidden} />
             <StatCard label="오늘" value={stats.today} />
           </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+            <StatCard label="전체 회원" value={stats.usersTotal} />
+            <StatCard label="오늘 가입" value={stats.signupsToday} />
+          </div>
+
           <VisibleHiddenPie visible={stats.visible} hidden={stats.hidden} />
-          <DailyCountBar data={stats.daily} />
+          <DailyCountBar data={stats.daily} title="최근 7일 작성" />
+          <DailyCountBar data={stats.signupsDaily} title="최근 7일 가입" />
           <ActivityLineChart data={stats.daily} />
           <MonthlyCountBar data={stats.monthly} />
           <HourlyCountBar data={stats.hourly} />
         </div>
       ) : null}
-
-      {/* <Link
-        href="/admin/recommendations"
-        className={`${postCardShell} inline-block px-4 py-3 text-sm font-medium text-brand-primary`}>
-        추천 관리 <ArrowRightIcon className="ml-1 inline-block h-4 w-4" />
-      </Link> */}
     </div>
   );
 }
