@@ -25,7 +25,8 @@ model User {
   role         UserRole @default(user)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  bio          String? 
+  bio          String?
+  lastActiveAt DateTime?
 
   recommendations Recommendation[]
   reactions      Reaction[]
