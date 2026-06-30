@@ -1,4 +1,12 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  ParseBoolPipe,
+  ParseEnumPipe,
+  ParseIntPipe,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -26,8 +34,30 @@ export class AdminUsersController {
     description: '이메일 또는 닉네임 검색',
   })
   @ApiQuery({ name: 'role', required: false, enum: UserRole })
+  @ApiQuery({
+    name: 'inactiveDays',
+    required: false,
+    description: 'N일 이상 미접속 (lastActiveAt null 포함)',
+  })
+  @ApiQuery({
+    name: 'activeToday',
+    required: false,
+    description: '오늘 활동한 사용자만 (true)',
+  })
   @Get()
-  findAll(@Query('q') q?: string, @Query('role') role?: UserRole) {
-    return this.adminUsersService.findAll({ q, role });
+  findAll(
+    @Query('q') q?: string,
+    @Query('role') role?: UserRole,
+    @Query('inactiveDays', new ParseIntPipe({ optional: true }))
+    inactiveDays?: number,
+    @Query('activeToday', new ParseBoolPipe({ optional: true }))
+    activeToday?: boolean,
+  ) {
+    return this.adminUsersService.findAll({
+      q,
+      role,
+      inactiveDays,
+      activeToday,
+    });
   }
 }

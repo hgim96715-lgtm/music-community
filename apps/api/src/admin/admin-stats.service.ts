@@ -73,13 +73,19 @@ export class AdminStatsService {
     const now = new Date();
     const currentYear = now.getFullYear();
 
+    // 오늘 00:00 — 「오늘」 카운트·DAU 기준 (서버 로컬)
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
 
+    // 최근 7일 창 시작 — 오늘 포함 (오늘 − 6일)
     const startOfDaily = new Date(startOfToday);
     startOfDaily.setDate(startOfDaily.getDate() - (DAILY_STATS_DAYS - 1));
 
     const startOfMonthly = this.startOfYear(now);
+
+    // inactive7d — lastActiveAt 이 이 시각보다 이전이면 「7일+ 미접속」(null 포함)
+    const inactiveSince = new Date(startOfToday);
+    inactiveSince.setDate(inactiveSince.getDate() - 7);
 
     const [
       total,
@@ -91,34 +97,63 @@ export class AdminStatsService {
       usersTotal,
       signupsToday,
       recentSignups,
+      activeToday,
+      recentActive,
+      inactive7d,
     ] = await Promise.all([
+      // total
       this.prisma.recommendation.count(),
+      // hidden — 숨김 추천
       this.prisma.recommendation.count({ where: { hidden: true } }),
+      // today — 오늘 작성한 추천 수
       this.prisma.recommendation.count({
         where: { createdAt: { gte: startOfToday } },
       }),
+      // recentDaily — daily[] 버킷용 (최근 7일 추천 createdAt)
       this.prisma.recommendation.findMany({
         where: { createdAt: { gte: startOfDaily } },
         select: { createdAt: true },
       }),
+      // recentMonthly — monthly[] 버킷용 (올해 추천 createdAt)
       this.prisma.recommendation.findMany({
         where: { createdAt: { gte: startOfMonthly } },
         select: { createdAt: true },
       }),
+      // recentHourlyToday — hourly[] 버킷용 (오늘 추천만 · 자정 리셋)
       this.prisma.recommendation.findMany({
         where: { createdAt: { gte: startOfToday } },
         select: { createdAt: true },
       }),
+      // usersTotal — role: user 회원 수
       this.prisma.user.count({ where: { role: 'user' } }),
+      // signupsToday — 오늘 가입 수 (createdAt 기준 · 가입일)
       this.prisma.user.count({
         where: { role: 'user', createdAt: { gte: startOfToday } },
       }),
+      // recentSignups — signupsDaily[] 버킷용 (최근 7일 가입 createdAt)
       this.prisma.user.findMany({
         where: { role: 'user', createdAt: { gte: startOfDaily } },
         select: { createdAt: true },
       }),
+      // activeToday — 오늘 DAU (lastActiveAt >= 오늘 0시 · role: user)
+      this.prisma.user.count({
+        where: { role: 'user', lastActiveAt: { gte: startOfToday } },
+      }),
+      // recentActive — activeDaily[] 버킷용 (최근 7일 lastActiveAt)
+      this.prisma.user.findMany({
+        where: { role: 'user', lastActiveAt: { gte: startOfDaily } },
+        select: { lastActiveAt: true },
+      }),
+      // inactive7d — 7일 이상 미접속
+      this.prisma.user.count({
+        where: {
+          role: 'user',
+          OR: [{ lastActiveAt: null }, { lastActiveAt: { lt: inactiveSince } }],
+        },
+      }),
     ]);
 
+    // signupsDaily[] — 일별 가입 (User.createdAt)
     const signupsDailyBuckets = this.buildDailyBuckets(DAILY_STATS_DAYS);
     for (const row of recentSignups) {
       const key = this.toLocalDateKey(row.createdAt);
@@ -127,7 +162,6 @@ export class AdminStatsService {
       }
     }
 
-    // console.log(signupsDailyBuckets.entries());
     const signupsDaily = Array.from(signupsDailyBuckets.entries()).map(
       ([date, count]) => ({
         date,
@@ -135,6 +169,24 @@ export class AdminStatsService {
       }),
     );
 
+    // activeDaily[] — 일별 활동 (User.lastActiveAt 날짜 키 · signupsDaily와 같은 shape)
+    const activeDailyBuckets = this.buildDailyBuckets(DAILY_STATS_DAYS);
+    for (const row of recentActive) {
+      if (!row.lastActiveAt) continue;
+      const key = this.toLocalDateKey(row.lastActiveAt);
+      if (activeDailyBuckets.has(key)) {
+        activeDailyBuckets.set(key, (activeDailyBuckets.get(key) ?? 0) + 1);
+      }
+    }
+
+    const activeDaily = Array.from(activeDailyBuckets.entries()).map(
+      ([date, count]) => ({
+        date,
+        count,
+      }),
+    );
+
+    // daily[] — 일별 추천 작성 (Recommendation.createdAt)
     const dailyBuckets = this.buildDailyBuckets(DAILY_STATS_DAYS);
     for (const row of recentDaily) {
       const key = this.toLocalDateKey(row.createdAt);
@@ -189,6 +241,9 @@ export class AdminStatsService {
       usersTotal,
       signupsToday,
       signupsDaily,
+      activeToday,
+      activeDaily,
+      inactive7d,
     };
   }
 }

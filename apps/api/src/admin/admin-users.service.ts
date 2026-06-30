@@ -19,12 +19,15 @@ const adminUserSelect = {
   nickname: true,
   role: true,
   createdAt: true,
+  lastActiveAt: true,
 } as const;
 
 // 관리자 사용자 이메일 , 닉네임 검색 필터링
 export type AdminUserListQuery = {
   q?: string;
   role?: UserRole;
+  inactiveDays?: number;
+  activeToday?: boolean;
 };
 
 @Injectable()
@@ -42,6 +45,27 @@ export class AdminUsersService {
     if (query.role) {
       where.role = query.role;
     }
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    if (query.activeToday) {
+      where.lastActiveAt = { gte: startOfToday };
+    } else if (query.inactiveDays != null && query.inactiveDays > 0) {
+      const inactiveSince = new Date(startOfToday);
+      inactiveSince.setDate(inactiveSince.getDate() - query.inactiveDays);
+
+      const inactiveFilter: Prisma.UserWhereInput = {
+        OR: [{ lastActiveAt: null }, { lastActiveAt: { lt: inactiveSince } }],
+      };
+      const existingAnd = where.AND
+        ? Array.isArray(where.AND)
+          ? where.AND
+          : [where.AND]
+        : [];
+      where.AND = [...existingAnd, inactiveFilter];
+    }
+
     return this.prisma.user.findMany({
       where,
       orderBy: { createdAt: 'desc' },

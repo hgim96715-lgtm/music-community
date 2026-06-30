@@ -9,7 +9,15 @@ import { AdminUsersController } from './admin-users.controller';
 
 @Module({
   imports: [AuthModule],
-  controllers: [AdminStatsController, AdminRecommendationsController, AdminUsersController],
-  providers: [AdminStatsService, AdminRecommendationsService, AdminUsersService],
+  controllers: [
+    AdminStatsController,
+    AdminRecommendationsController,
+    AdminUsersController,
+  ],
+  providers: [
+    AdminStatsService,
+    AdminRecommendationsService,
+    AdminUsersService,
+  ],
 })
 export class AdminModule {}
