@@ -80,9 +80,11 @@ export function FeedList() {
             아직 올라온 곡이 없어요
           </p>
           <p className="text-sm leading-relaxed text-neutral-500">
-            {user
-              ? '위 올리기 버튼으로 첫 추천을 남겨보세요.'
-              : '로그인하고 분위기에 맞는 곡을 추천해 보세요.'}
+            {user?.role === 'admin'
+              ? '관리자는 글을 작성할 수 없습니다.'
+              : user
+                ? '올리기 버튼으로 첫 추천을 남겨보세요.'
+                : '로그인하고 분위기에 맞는 곡을 추천해 보세요.'}
           </p>
         </div>
       </>
