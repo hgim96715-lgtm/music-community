@@ -10,6 +10,7 @@ import { JwtPayload } from './jwt-payload';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { AuthResponseDto, AuthUserDto } from './dto/auth-response.dto';
+import { UserRole } from 'src/generated/prisma/enums';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -23,6 +24,14 @@ export class AuthService {
   /** trim만 — 이메일·닉네임 대소문자 유지 */
   private trimField(value: string): string {
     return value.trim();
+  }
+
+  private async touchLastActiveAt(userId: string, role: UserRole): Promise<void> {
+    if (role !== UserRole.user) return;
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { lastActiveAt: new Date() },
+    });
   }
 
   private async buildAuthResponse(user: AuthUserDto): Promise<AuthResponseDto> {
@@ -102,6 +111,7 @@ export class AuthService {
         '이메일 또는 비밀번호가 올바르지 않습니다.',
       );
     }
+    await this.touchLastActiveAt(user.id, user.role);
     return this.buildAuthResponse(user);
   }
 
@@ -113,6 +123,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('유저를 찾을 수 없습니다.');
     }
+    await this.touchLastActiveAt(userId, user.role);
     return user;
   }
 }
