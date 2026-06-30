@@ -98,23 +98,18 @@ pnpm workspace 모노레포. **Web URL path = API path** (`/recommendations`, `/
 
 ---
 
-## 배포 목표
+## 지금까지
 
-| 단계 | 구성 |
-|------|------|
-| **첫 배포 (MVP·포트폴리오)** | **Vercel** (Web) + **Railway** (Nest API) + **Railway Postgres** 또는 **Neon** |
-| **이미지·S3·앱 본격** | API **AWS ECR/Fargate** 검토 · DB **RDS/Neon** · Web **Vercel** 유지 — AWS는 비용 때문에 **필요할 때만** |
+| | |
+| --- | --- |
+| **라이브** | [music-community-web.vercel.app](https://music-community-web.vercel.app) |
+| **배포** | Vercel (Web) · Railway (API) · Neon (DB) |
 
-- [x] 로컬 개발 환경 기본 세팅 (0·1 — workspace · health 연동)
-- [x] 2·2a — Prisma · `GET/POST /recommendations` · Web lib (`api.ts` 체인)
-- [ ] 3단계 — `FeedCard` · `FeedList` mock UI (`components/recommendations/`)
-- [ ] MVP 기능: 피드 · 가입·로그인 · 글 · 좋아요 (**개발 7단계**)
-- [ ] **첫 배포 (7.5):** Vercel + Railway + Neon — 포트폴리오 URL
-- [ ] Admin · 프로필 · 친구 (8~10)
-- [ ] 댓글 · 그룹방 · 친구 피드
-- [ ] (나중) S3 · AWS API · 모바일 앱
+- 피드 · embed · 가입·로그인 · 추천 올리기 · 좋아요 · 본인 글 삭제
+- 마이페이지 (`/users/me`) · SavedCard 포토카드 앨범
+- Admin — 추천 운영 · 통계 · 사용자 목록 · `lastActiveAt` DAU
 
-상세·시점: `apps/docs/overview.md` 「배포」·「개발 순서 7.5」
+로컬 실행·배포 상세 — `apps/docs/` (`changelog.md` · `deploy.md`)
 
 ---
 

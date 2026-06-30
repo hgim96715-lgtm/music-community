@@ -41,7 +41,7 @@ export async function fetchApi<T>(
     res = await fetch(`${getApiBaseUrl()}${path}`, init);
   } catch {
     throw new Error(
-      'API 서버에 연결할 수 없습니다. apps/api dev(3030) 실행·CORS·NEXT_PUBLIC_API_URL을 확인해주세요.',
+      'API 서버에 연결할 수 없습니다. NEXT_PUBLIC_API_URL · Railway FRONTEND_URL(CORS)을 확인해주세요.',
     );
   }
   await throwIfNotOk(res, path);

@@ -62,8 +62,10 @@ export function FeedList() {
           {loadError}
         </p>
         <p className="mt-2 text-center text-xs text-neutral-500">
-          API 서버(3030)가 켜져 있는지, 주소창이 localhost:3031 인지
-          확인해주세요.
+          {typeof window !== 'undefined' &&
+          window.location.hostname === 'localhost'
+            ? '로컬: pnpm dev:api · NEXT_PUBLIC_API_URL=http://localhost:3030'
+            : '배포: Vercel NEXT_PUBLIC_API_URL · Railway FRONTEND_URL은 경로 없이 앱 주소만 (예: https://xxx.vercel.app)'}
         </p>
       </>
     );

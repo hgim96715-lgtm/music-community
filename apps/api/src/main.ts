@@ -12,13 +12,15 @@ async function bootstrap() {
   app.useBodyParser('json', { limit: '600kb' });
   const configService = app.get(ConfigService);
   const frontendUrl = configService.get<string>(EnvKeys.FRONTEND_URL);
+  const frontendOrigin = frontendUrl
+    ? new URL(frontendUrl).origin
+    : undefined;
   app.enableCors({
-    origin: frontendUrl
+    origin: frontendOrigin
       ? [
           'http://localhost:3031',
           'http://127.0.0.1:3031',
-          frontendUrl,
-          frontendUrl.replace('localhost', '127.0.0.1'),
+          frontendOrigin,
         ]
       : undefined,
     credentials: true,
