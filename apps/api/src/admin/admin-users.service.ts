@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { UserRole } from 'src/generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { startOfKstDay } from 'src/common/kst-date';
+
+const MS_PER_DAY = 86_400_000;
 
 const adminUserInclude = {
   _count: {
@@ -46,14 +49,14 @@ export class AdminUsersService {
       where.role = query.role;
     }
 
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
+    const startOfToday = startOfKstDay();
 
     if (query.activeToday) {
       where.lastActiveAt = { gte: startOfToday };
     } else if (query.inactiveDays != null && query.inactiveDays > 0) {
-      const inactiveSince = new Date(startOfToday);
-      inactiveSince.setDate(inactiveSince.getDate() - query.inactiveDays);
+      const inactiveSince = new Date(
+        startOfToday.getTime() - query.inactiveDays * MS_PER_DAY,
+      );
 
       const inactiveFilter: Prisma.UserWhereInput = {
         OR: [{ lastActiveAt: null }, { lastActiveAt: { lt: inactiveSince } }],

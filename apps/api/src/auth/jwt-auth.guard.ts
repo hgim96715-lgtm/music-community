@@ -11,6 +11,7 @@ import { Request } from 'express';
 import { EnvKeys } from 'src/config/env.keys';
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
 import type { JwtPayload } from './jwt-payload';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -18,6 +19,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly reflector: Reflector,
+    private readonly authService: AuthService,
   ) {}
 
   private extractBearerToken(request: Request): string | undefined {
@@ -44,6 +46,7 @@ export class JwtAuthGuard implements CanActivate {
         secret: this.configService.getOrThrow(EnvKeys.API_JWT_SECRET),
       });
       request.user = payload;
+      this.authService.touchLastActiveAtFromGuard(payload.sub, payload.role);
       return true;
     } catch {
       throw new UnauthorizedException('유효하지 않은 토큰입니다.');

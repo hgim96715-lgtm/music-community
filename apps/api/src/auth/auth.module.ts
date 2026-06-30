@@ -19,7 +19,7 @@ import { AuthController } from './auth.controller';
     }),
   ],
   providers: [JwtAuthGuard, RolesGuard, AuthService],
-  exports: [JwtModule, JwtAuthGuard, RolesGuard],
+  exports: [JwtModule, JwtAuthGuard, RolesGuard, AuthService],
   controllers: [AuthController],
 })
 export class AuthModule {}

@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -13,6 +14,7 @@ import { AuthResponseDto, AuthUserDto } from './dto/auth-response.dto';
 import { UserRole } from 'src/generated/prisma/enums';
 
 const BCRYPT_ROUNDS = 12;
+const LAST_ACTIVE_THROTTLE_MS = 60_000;
 
 @Injectable()
 export class AuthService {
@@ -20,17 +22,41 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
+  private readonly logger = new Logger(AuthService.name);
 
   /** trim만 — 이메일·닉네임 대소문자 유지 */
   private trimField(value: string): string {
     return value.trim();
   }
 
-  private async touchLastActiveAt(userId: string, role: UserRole): Promise<void> {
+  private readonly lastActiveAt = new Map<string, number>();
+
+  private async touchLastActiveAt(
+    userId: string,
+    role: UserRole,
+    options?: { force?: boolean },
+  ): Promise<void> {
     if (role !== UserRole.user) return;
+    const now = Date.now();
+    if (!options?.force) {
+      const prev = this.lastActiveAt.get(userId) ?? 0;
+      if (now - prev < LAST_ACTIVE_THROTTLE_MS) {
+        return;
+      }
+    }
+    this.lastActiveAt.set(userId, now);
     await this.prisma.user.update({
       where: { id: userId },
-      data: { lastActiveAt: new Date() },
+      data: { lastActiveAt: new Date(now) },
+    });
+  }
+
+  touchLastActiveAtFromGuard(userId: string, role: UserRole): void {
+    void this.touchLastActiveAt(userId, role).catch((error) => {
+      this.logger.warn(
+        `lastActiveAt 업데이트 실패: user=${userId}`,
+        error instanceof Error ? error.stack : String(error),
+      );
     });
   }
 
@@ -111,7 +137,7 @@ export class AuthService {
         '이메일 또는 비밀번호가 올바르지 않습니다.',
       );
     }
-    await this.touchLastActiveAt(user.id, user.role);
+    await this.touchLastActiveAt(user.id, user.role, { force: true });
     return this.buildAuthResponse(user);
   }
 
@@ -123,7 +149,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('유저를 찾을 수 없습니다.');
     }
-    await this.touchLastActiveAt(userId, user.role);
+    await this.touchLastActiveAt(userId, user.role, { force: true });
     return user;
   }
 }

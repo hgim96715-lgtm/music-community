@@ -1,22 +1,30 @@
 /** 피드 날짜 표시 — 정본: apps/docs/date.md */
 
-function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
+const KST = 'Asia/Seoul';
+
+function kstDateKey(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: KST,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function startOfKstDay(date: Date): Date {
+  const key = kstDateKey(date);
+  return new Date(`${key}T00:00:00+09:00`);
 }
 
 function differenceInCalendarDays(latter: Date, earlier: Date): number {
-  const ms = startOfDay(latter).getTime() - startOfDay(earlier).getTime();
+  const ms = startOfKstDay(latter).getTime() - startOfKstDay(earlier).getTime();
   return Math.round(ms / 86_400_000);
 }
 
 export function formatDisplayDate(iso: string): string {
-  const d = new Date(iso);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}.${m}.${day}`;
+  const key = kstDateKey(new Date(iso));
+  const [y, m, d] = key.split('-');
+  return `${y}.${m}.${d}`;
 }
 
 export function formatFeedDate(iso: string): string {
