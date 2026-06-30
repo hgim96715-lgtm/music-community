@@ -134,8 +134,24 @@ export type ApiAdminStats = {
   daily: ApiAdminDailyCount[];
   monthly: ApiAdminMonthlyCount[];
   hourly: ApiAdminHourlyCount[];
+  usersTotal: number;
+  signupsToday: number;
+  signupsDaily: ApiAdminDailyCount[];
 };
 
 export type ApiAdminRecommendation = ApiRecommendation & {
   hidden: boolean;
+};
+
+export type ApiAdminUser = {
+  id: string;
+  email: string;
+  nickname: string;
+  role: 'user' | 'admin';
+  createdAt: string;
+  _count: {
+    recommendations: number;
+    reactions: number;
+    savedCards: number;
+  };
 };

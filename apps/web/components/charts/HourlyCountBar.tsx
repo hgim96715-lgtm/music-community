@@ -19,7 +19,7 @@ function formatAxisHour(hour: number) {
 
 export function HourlyCountBar({
   data,
-  title = '시간대별 작성',
+  title = '오늘 시간대별',
 }: HourlyCountBarProps) {
   const hasActivity = data.some((row) => row.count > 0);
 

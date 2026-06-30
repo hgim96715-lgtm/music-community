@@ -81,22 +81,59 @@ export class AdminStatsService {
 
     const startOfMonthly = this.startOfYear(now);
 
-    const [total, hidden, today, recentDaily, recentMonthly] =
-      await Promise.all([
-        this.prisma.recommendation.count(),
-        this.prisma.recommendation.count({ where: { hidden: true } }),
-        this.prisma.recommendation.count({
-          where: { createdAt: { gte: startOfToday } },
-        }),
-        this.prisma.recommendation.findMany({
-          where: { createdAt: { gte: startOfDaily } },
-          select: { createdAt: true },
-        }),
-        this.prisma.recommendation.findMany({
-          where: { createdAt: { gte: startOfMonthly } },
-          select: { createdAt: true },
-        }),
-      ]);
+    const [
+      total,
+      hidden,
+      today,
+      recentDaily,
+      recentMonthly,
+      recentHourlyToday,
+      usersTotal,
+      signupsToday,
+      recentSignups,
+    ] = await Promise.all([
+      this.prisma.recommendation.count(),
+      this.prisma.recommendation.count({ where: { hidden: true } }),
+      this.prisma.recommendation.count({
+        where: { createdAt: { gte: startOfToday } },
+      }),
+      this.prisma.recommendation.findMany({
+        where: { createdAt: { gte: startOfDaily } },
+        select: { createdAt: true },
+      }),
+      this.prisma.recommendation.findMany({
+        where: { createdAt: { gte: startOfMonthly } },
+        select: { createdAt: true },
+      }),
+      this.prisma.recommendation.findMany({
+        where: { createdAt: { gte: startOfToday } },
+        select: { createdAt: true },
+      }),
+      this.prisma.user.count({ where: { role: 'user' } }),
+      this.prisma.user.count({
+        where: { role: 'user', createdAt: { gte: startOfToday } },
+      }),
+      this.prisma.user.findMany({
+        where: { role: 'user', createdAt: { gte: startOfDaily } },
+        select: { createdAt: true },
+      }),
+    ]);
+
+    const signupsDailyBuckets = this.buildDailyBuckets(DAILY_STATS_DAYS);
+    for (const row of recentSignups) {
+      const key = this.toLocalDateKey(row.createdAt);
+      if (signupsDailyBuckets.has(key)) {
+        signupsDailyBuckets.set(key, (signupsDailyBuckets.get(key) ?? 0) + 1);
+      }
+    }
+
+    // console.log(signupsDailyBuckets.entries());
+    const signupsDaily = Array.from(signupsDailyBuckets.entries()).map(
+      ([date, count]) => ({
+        date,
+        count,
+      }),
+    );
 
     const dailyBuckets = this.buildDailyBuckets(DAILY_STATS_DAYS);
     for (const row of recentDaily) {
@@ -107,7 +144,6 @@ export class AdminStatsService {
     }
 
     const monthlyBuckets = this.buildMonthlyBuckets(now);
-    const hourlyBuckets = this.buildHourlyBuckets();
     for (const row of recentMonthly) {
       if (row.createdAt.getFullYear() !== currentYear) {
         continue;
@@ -117,7 +153,10 @@ export class AdminStatsService {
       if (monthlyBuckets.has(monthKey)) {
         monthlyBuckets.set(monthKey, (monthlyBuckets.get(monthKey) ?? 0) + 1);
       }
+    }
 
+    const hourlyBuckets = this.buildHourlyBuckets();
+    for (const row of recentHourlyToday) {
       const hour = row.createdAt.getHours();
       hourlyBuckets.set(hour, (hourlyBuckets.get(hour) ?? 0) + 1);
     }
@@ -147,6 +186,9 @@ export class AdminStatsService {
       daily,
       monthly,
       hourly,
+      usersTotal,
+      signupsToday,
+      signupsDaily,
     };
   }
 }
