@@ -45,6 +45,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               className={appNavLinkClassName}>
               추천 관리
             </Link>
+            <Link href={`${ADMIN_BASE}/users`} className={appNavLinkClassName}>
+              사용자 관리
+            </Link>
             <Link href="/recommendations" className={appNavLinkClassName}>
               피드로
             </Link>
