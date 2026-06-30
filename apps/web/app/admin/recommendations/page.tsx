@@ -2,7 +2,7 @@
 import { adminFetchJson, adminFetchVoid } from '@/lib/adminFetch';
 import type { ApiAdminRecommendation } from '@/lib/apiTypes';
 import { postCard } from '@/lib/neobrutal';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function AdminRecommendationsPage() {
   const [rows, setRows] = useState<ApiAdminRecommendation[]>([]);
@@ -10,22 +10,26 @@ export default function AdminRecommendationsPage() {
   const [error, setError] = useState('');
   const [pendingId, setPendingId] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setError('');
-    try {
-      const data =
-        await adminFetchJson<ApiAdminRecommendation[]>('/recommendations');
-      setRows(data);
-    } catch {
-      setError('추천 목록을 불러오지 못했어요.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    async function loadRecommendations() {
+      setError('');
+      setIsLoading(true);
+      try {
+        const data =
+          await adminFetchJson<ApiAdminRecommendation[]>('/recommendations');
+        if (!cancelled) setRows(data);
+      } catch {
+        if (!cancelled) setError('추천 목록을 불러오지 못했어요.');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+    void loadRecommendations();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function toggleHidden(row: ApiAdminRecommendation) {
     setPendingId(row.id);
