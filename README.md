@@ -39,8 +39,9 @@
 
 ### 2. 미리듣기 (Embed)
 
-- Spotify / YouTube / Apple Music embed로 **짧게 맛보기**
+- Spotify / YouTube embed로 **짧게 맛보기** (Apple Music — 준비 중)
 - 전체 앱 없이도 곡을 바로 들어볼 수 있음
+- YouTube 임베드 제한 — 아래 「YouTube 임베드 정책」 참고
 
 ### 3. 소셜 & 알림
 
@@ -62,6 +63,27 @@
 
 - **새로운 노래 한곡 받기** 버튼
 - 내 취향과 **반대 방향**의 곡을 랜덤 추천 → 안전지대 탈출
+
+---
+
+## YouTube 임베드 정책
+
+일부 YouTube 영상은 업로더가 **다른 사이트 임베드 재생을 막아 둔** 경우가 있습니다.  
+「동영상 소유자가 다른 웹사이트에서 재생할 수 없도록 설정했습니다」는 **YouTube 쪽 정책**이며, 우리 서비스 버그가 아닙니다.
+
+| | |
+| --- | --- |
+| **올리기** | 임베드 불가 URL도 **추천 글은 그대로 등록** (이유·태그·소셜이 핵심) |
+| **재생** | 앱 안에서 될 때만 embed · 안 되면 **YouTube로 이어주기** |
+
+### 이렇게 해결합니다
+
+- 피드에서 ▶ 누르면 **YouTube IFrame Player API**로 재생 시도
+- 임베드가 막힌 영상(`onError` **101 · 150**)은 검은 에러 화면 대신 **안내 패널** 표시
+- **「YouTube로 가볼까요? 🚀」** 버튼 → `youtube.com/watch` 새 탭 (외부에서 듣기)
+- 올리기 화면에도 「앱 안 재생이 막혀 있을 수 있다」는 **사전 안내** 문구
+
+> 구현: `YouTubeFeedEmbed` · `EmbedPlaybackFallback` · `FeedCardMedia` — 로컬 상세 `apps/docs/youtube.md`
 
 ---
 
@@ -106,7 +128,7 @@ pnpm workspace 모노레포. **Web URL path = API path** (`/recommendations`, `/
 | **라이브 API** | [api-production-4b66.up.railway.app](https://api-production-4b66.up.railway.app) |
 | **배포** | Vercel (Web) · Railway (API) · Neon (DB) |
 
-- 피드 · embed · 가입·로그인 · 추천 올리기 · 좋아요 · 본인 글 삭제
+- 피드 · embed · **YouTube fallback** · 가입·로그인 · 추천 올리기 · 좋아요 · 본인 글 삭제
 - 마이페이지 (`/users/me`) · SavedCard 포토카드 앨범
 - Admin — 추천 운영 · 통계 · 사용자 목록 · `lastActiveAt` DAU
 
