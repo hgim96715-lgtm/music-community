@@ -31,6 +31,12 @@ export class RecommendationsController {
     return await this.recommendationsService.findAll();
   }
 
+  @ApiOperation({ summary: '댓글 목록(공개)' })
+  @Get(':id/comments')
+  async findComments(@Param('id', ParseUUIDPipe) recommendationId: string) {
+    return await this.recommendationsService.findComments(recommendationId);
+  }
+
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 삭제 (사용자만)' })
   @Delete(':id')

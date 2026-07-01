@@ -88,4 +88,15 @@ export class RecommendationsService {
     }
     await this.prisma.reaction.delete({ where: { id: existing.id } });
   }
+
+  // Comment
+  async findComments(recommendationId: string) {
+    return this.prisma.comment.findMany({
+      where: { recommendationId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        author: { select: { id: true, nickname: true } },
+      },
+    });
+  }
 }
