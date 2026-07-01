@@ -30,6 +30,8 @@ type PillInputProps = {
   success?: string;
   /** 필드 아래 빨간 에러 */
   error?: string;
+  /** hint·에러 밖 추가 설명 id — `aria-describedby`에 합침 */
+  additionalDescribedBy?: string;
 };
 
 export function PillInput({
@@ -47,6 +49,7 @@ export function PillInput({
   hint,
   success,
   error,
+  additionalDescribedBy,
 }: PillInputProps) {
   const id = useId();
   const feedbackId = useId();
@@ -54,7 +57,11 @@ export function PillInput({
   const isPassword = type === 'password';
   const inputType =
     isPassword && showPasswordToggle && passwordVisible ? 'text' : type;
-  const hasFeedback = Boolean(error || success || hint);
+  const hasInlineFeedback = Boolean(error || success || hint);
+  const describedBy =
+    [hasInlineFeedback ? feedbackId : null, additionalDescribedBy]
+      .filter(Boolean)
+      .join(' ') || undefined;
 
   return (
     <div>
@@ -83,7 +90,7 @@ export function PillInput({
           autoComplete={autoComplete}
           placeholder={label}
           aria-invalid={error ? true : undefined}
-          aria-describedby={hasFeedback ? feedbackId : undefined}
+          aria-describedby={describedBy}
           className={`${pillInputClassName} pl-10 ${error ? pillInputErrorClassName : ''} ${showPasswordToggle && isPassword ? 'pr-11' : 'pr-4'}`}
         />
         {showPasswordToggle && isPassword ? (

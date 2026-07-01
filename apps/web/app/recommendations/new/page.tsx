@@ -11,6 +11,7 @@ import {
   authTitleClassName,
   fieldErrorClassName,
   formLegendClassName,
+  fieldHintClassName,
 } from '@/lib/form';
 import { MAX_MOODS, MIN_MOODS, MOODS, type Mood } from '@/lib/moods';
 import { buildLoginHref } from '@/lib/redirect';
@@ -18,10 +19,17 @@ import {
   MAX_ARTIST_LENGTH,
   MAX_TITLE_LENGTH,
 } from '@/lib/recommendationFields';
-import { ChevronLeftIcon, Link2, Loader2, Music2, User } from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  Info,
+  Link2,
+  Loader2,
+  Music2,
+  User,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useId, useState } from 'react';
 
 const NEW_PATH = '/recommendations/new';
 
@@ -32,6 +40,7 @@ type FormState = {
 
 export default function NewRecommendationPage() {
   const router = useRouter();
+  const embedUrlNoticeId = useId();
   const [selectedMoods, setSelectedMoods] = useState<Mood[]>([]);
 
   useEffect(() => {
@@ -81,7 +90,10 @@ export default function NewRecommendationPage() {
     }
   }
 
-  const [state, formAction, isPending] = useActionState(submitRecommendation, {});
+  const [state, formAction, isPending] = useActionState(
+    submitRecommendation,
+    {},
+  );
 
   return (
     <main className={authPageClassName}>
@@ -97,14 +109,30 @@ export default function NewRecommendationPage() {
       </header>
 
       <form action={formAction} className="flex flex-col gap-4">
-        <PillInput
-          label="재생 URL"
-          name="embedUrl"
-          type="text"
-          required
-          icon={Link2}
-          hint="YouTube·Spotify 공유 링크 붙여넣기"
-        />
+        <div>
+          <PillInput
+            label="재생 URL"
+            name="embedUrl"
+            type="text"
+            required
+            icon={Link2}
+            hint="YouTube · Spotify 공유 링크 (Apple Music — 준비 중)"
+            additionalDescribedBy={embedUrlNoticeId}
+          />
+          <p
+            id={embedUrlNoticeId}
+            className={`${fieldHintClassName} flex gap-1.5`}>
+            <Info
+              className="size-4 shrink-0 mt-0.5 text-neutral-400"
+              aria-hidden
+            />
+            <span>
+              YouTube는 업로더 정책으로 앱 안 재생이 막혀 있을 수 있어요. 추천
+              글은 그대로 올라가고, 그때는 YouTube에서 들을 수 있어요. Apple
+              Music 링크 지원은 준비 중이에요.
+            </span>
+          </p>
+        </div>
         <PillInput
           label="곡 제목"
           name="title"
