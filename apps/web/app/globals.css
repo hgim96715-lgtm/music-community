@@ -103,6 +103,33 @@
     box-shadow: none;
   }
 
+  /* 펼친 embed / fallback — track-card와 같은 쉘 */
+  .embed-player-shell {
+    overflow: hidden;
+    border: 1.5px solid #3d3d3d;
+    border-radius: 1.25rem;
+    background: #fafafa;
+    box-shadow: 4px 4px 0 var(--color-brand-shadow-soft);
+  }
+
+  .embed-player-footer {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border-top: 1px solid rgb(53 53 53 / 0.15);
+    padding: 0.625rem 0;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: #737373;
+    transition: background-color 150ms ease;
+  }
+
+  .embed-player-footer:hover {
+    background: #f6f6f6;
+  }
+
   /* 태그 — 약한 입체감 */
   .mood-pill-depth {
     box-shadow: 1px 1px 0 var(--color-brand-shadow-soft);

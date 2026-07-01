@@ -71,3 +71,13 @@ export function getEmbedPreview(embedUrl: string): EmbedPreview {
 
   return { platform: 'unknown', thumbnailUrl: null };
 }
+
+//
+export function youtubeWatchUrl(videoId: string): string {
+  return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
+//Google YouTube IFrame Player API 공식 문서의 onError 코드
+export function isYouTubeEmbedBlockedError(code: number): boolean {
+  return code === 101 || code === 150;
+}

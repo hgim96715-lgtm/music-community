@@ -4,6 +4,9 @@ export const postCardShell = 'post-card-shell';
 export const postCard = 'post-card';
 export const trackCard = 'track-card';
 export const playButton = 'play-button';
+/** 펼친 embed · fallback — track-card와 동일 톤 (#fafafa · soft shadow) */
+export const embedPlayerShell = 'embed-player-shell';
+export const embedPlayerFooter = 'embed-player-footer';
 
 export const brandPillBtn = 'brand-pill-btn';
 export const brandPillBtnGuest = 'brand-pill-btn-guest';
