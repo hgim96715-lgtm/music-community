@@ -102,7 +102,8 @@ pnpm workspace 모노레포. **Web URL path = API path** (`/recommendations`, `/
 
 | | |
 | --- | --- |
-| **라이브** | [music-community-web.vercel.app](https://music-community-web.vercel.app) |
+| **라이브 Web** | [music-community-web.vercel.app](https://music-community-web.vercel.app) |
+| **라이브 API** | [api-production-4b66.up.railway.app](https://api-production-4b66.up.railway.app) |
 | **배포** | Vercel (Web) · Railway (API) · Neon (DB) |
 
 - 피드 · embed · 가입·로그인 · 추천 올리기 · 좋아요 · 본인 글 삭제
