@@ -36,3 +36,12 @@ export function formatFeedDate(iso: string): string {
   if (days === 1) return `어제 · ${absolute}`;
   return `${days}일 전 · ${absolute}`;
 }
+
+/** 댓글·방 메시지 — 닉네임 옆 짧은 표기  */
+export function formatCommentDate(iso: string): string {
+  const days = differenceInCalendarDays(new Date(), new Date(iso));
+  if (days >= 7) return formatDisplayDate(iso);
+  if (days <= 0) return `오늘`;
+  if (days === 1) return `어제`;
+  return `${days}일 전`;
+}

@@ -27,6 +27,7 @@ export type ApiRecommendation = {
   reactions: ApiReaction[];
   authorId: string;
   author: ApiAuthor;
+  _count?: { comments: number };
 };
 
 /** POST /auth/login · /auth/register — Nest AuthResponseDto */
@@ -158,4 +159,14 @@ export type ApiAdminUser = {
     reactions: number;
     savedCards: number;
   };
+};
+
+export type ApiComment = {
+  id: string;
+  recommendationId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  author: ApiAuthor;
 };

@@ -1,6 +1,7 @@
 import {
   ApiAuthResponse,
   ApiAuthUser,
+  ApiComment,
   ApiRecommendation,
   ApiSavedCard,
   ApiSavedCardCustomization,
@@ -127,4 +128,57 @@ export async function patchSavedCard(
 /** DELETE /saved-cards/:id — 204 */
 export function deleteSavedCard(id: string) {
   return authFetchApiVoid(`/saved-cards/${id}`, { method: 'DELETE' });
+}
+
+// comments
+
+export async function fetchComments(recommendationId: string) {
+  return fetchApi<ApiComment[]>(
+    `/recommendations/${recommendationId}/comments`,
+    {
+      cache: 'no-store',
+    },
+  );
+}
+
+/** POST /recommendations/:id/comments — 로그인 필요 */
+export async function createComment(
+  recommendationId: string,
+  body: string,
+): Promise<ApiComment> {
+  return authFetchApi<ApiComment>(
+    `/recommendations/${recommendationId}/comments`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body }),
+    },
+  );
+}
+
+/** PATCH /recommendations/:id/comments/:commentId — 본인만 */
+export async function updateComment(
+  recommendationId: string,
+  commentId: string,
+  body: string,
+): Promise<ApiComment> {
+  return authFetchApi<ApiComment>(
+    `/recommendations/${recommendationId}/comments/${commentId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body: body.trim() }),
+    },
+  );
+}
+
+/** DELETE /recommendations/:id/comments/:commentId — 본인·관리자 · 204 */
+export function deleteComment(
+  recommendationId: string,
+  commentId: string,
+): Promise<void> {
+  return authFetchApiVoid(
+    `/recommendations/${recommendationId}/comments/${commentId}`,
+    { method: 'DELETE' },
+  );
 }

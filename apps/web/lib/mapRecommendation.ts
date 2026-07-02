@@ -31,6 +31,7 @@ export function mapRecommendation(
     moods: api.moods,
     likeCount: countLikes(api.reactions),
     likedByMe,
+    commentCount: api._count?.comments ?? 0,
     author: api.author
       ? { id: api.author.id, nickname: api.author.nickname }
       : ANONYMOUS_AUTHOR,

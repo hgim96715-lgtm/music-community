@@ -16,6 +16,7 @@ export type Recommendation = {
   moods: string[]; // apiTypes와 동일 — 허용값은 Nest MOODS (5단계 moods.ts)
   likeCount: number;
   likedByMe?: boolean;
+  commentCount: number;
   author: Author;
   createdAt: string; // ISO 8601
 };
