@@ -27,7 +27,11 @@ export class RecommendationsService {
     return this.prisma.recommendation.findMany({
       where: { hidden: false },
       orderBy: { createdAt: 'desc' },
-      include: { reactions: true, author: true },
+      include: {
+        reactions: true,
+        author: true,
+        _count: { select: { comments: true } },
+      },
     });
   }
 
@@ -98,5 +102,65 @@ export class RecommendationsService {
         author: { select: { id: true, nickname: true } },
       },
     });
+  }
+  async updateComment(
+    recommendationId: string,
+    commentId: string,
+    userId: string,
+    body: string,
+  ) {
+    const comment = await this.prisma.comment.findFirst({
+      where: { id: commentId, recommendationId },
+      select: { id: true, authorId: true },
+    });
+    if (!comment) {
+      throw new NotFoundException('댓글을 찾을 수 없어요.');
+    }
+    if (comment.authorId !== userId) {
+      throw new ForbiddenException('본인 댓글만 수정할 수 있습니다.');
+    }
+    return this.prisma.comment.update({
+      where: { id: commentId },
+      data: { body },
+      include: { author: { select: { id: true, nickname: true } } },
+    });
+  }
+
+  async createComment(
+    recommendationId: string,
+    authorId: string,
+    body: string,
+  ) {
+    await this.assertVisibleRecommendation(recommendationId);
+    return this.prisma.comment.create({
+      data: { recommendationId, authorId, body },
+      include: { author: { select: { id: true, nickname: true } } },
+    });
+  }
+
+  // 본인·admin 삭제 — where에 authorId 넣으면 admin 경로가 막혀서 find 후 권한 검사
+  async removeComment(
+    recommendationId: string,
+    commentId: string,
+    userId: string,
+  ) {
+    await this.assertVisibleRecommendation(recommendationId);
+    const comment = await this.prisma.comment.findFirst({
+      where: { id: commentId, recommendationId },
+      select: { id: true, authorId: true },
+    });
+    if (!comment) {
+      throw new NotFoundException('댓글을 찾을 수 없어요.');
+    }
+    if (comment.authorId !== userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      if (user?.role !== 'admin') {
+        throw new ForbiddenException('본인 댓글만 삭제할 수 있습니다.');
+      }
+    }
+    await this.prisma.comment.delete({ where: { id: commentId } });
   }
 }

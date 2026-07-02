@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
@@ -35,6 +37,60 @@ export class RecommendationsController {
   @Get(':id/comments')
   async findComments(@Param('id', ParseUUIDPipe) recommendationId: string) {
     return await this.recommendationsService.findComments(recommendationId);
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '댓글 작성(로그인 필요)' })
+  @Post(':id/comments')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user')
+  async createComment(
+    @Param('id', ParseUUIDPipe) recommendationId: string,
+    @Body() dto: CreateCommentDto,
+    @UserId() authorId: string,
+  ) {
+    return await this.recommendationsService.createComment(
+      recommendationId,
+      authorId,
+      dto.body,
+    );
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '댓글 수정 (사용자만)' })
+  @Patch(':id/comments/:commentId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user')
+  async updateComment(
+    @Param('id', ParseUUIDPipe) recommendationId: string,
+    @Param('commentId', ParseUUIDPipe) commentId: string,
+    @UserId() userId: string,
+    @Body() dto: CreateCommentDto,
+  ) {
+    return await this.recommendationsService.updateComment(
+      recommendationId,
+      commentId,
+      userId,
+      dto.body,
+    );
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '댓글 삭제 (사용자만)' })
+  @Delete(':id/comments/:commentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'admin')
+  async removeComment(
+    @Param('id', ParseUUIDPipe) recommendationId: string,
+    @Param('commentId', ParseUUIDPipe) commentId: string,
+    @UserId() userId: string,
+  ) {
+    return await this.recommendationsService.removeComment(
+      recommendationId,
+      commentId,
+      userId,
+    );
   }
 
   @ApiBearerAuth('access-token')
