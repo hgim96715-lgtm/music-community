@@ -1,13 +1,24 @@
 'use client';
 
-import { MessageCircle, Share2 } from 'lucide-react';
+import { MessageCircle, PencilIcon, Share2, Trash2 } from 'lucide-react';
 import { ACTION_BTN, ACTION_ICON, COUNT_SLOT } from '@/lib/feedCardActions';
 import { MoodPill } from './MoodPill';
 import { HeartButton } from './HeartButton';
 import { FeedCardSaveButton } from '@/components/saved-cards/FeedCardSaveButton';
 import { LoginPromptDialog } from '../auth/LoginPromptDialog';
 import { useAuth } from '../auth/AuthProvider';
-import { SubmitEventHandler, useState } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  createComment,
+  deleteComment,
+  fetchComments,
+  updateComment,
+} from '@/lib/api';
+import { ApiComment } from '@/lib/apiTypes';
+import { formatCommentDate } from '@/lib/date';
+import { brandPillBtn } from '@/lib/neobrutal';
+import { CommentAvatar } from './CommentAvatar';
+import { CommentEmojiPicker } from './CommentEmojiPicker';
 
 type FeedCardFooterProps = {
   recommendationId: string;
@@ -20,7 +31,7 @@ type FeedCardFooterProps = {
   postedAt: string;
   likeCount: number;
   likedByMe?: boolean;
-  commentCount?: number;
+  commentCount: number;
 };
 
 type ActionCountProps = {
@@ -68,13 +79,23 @@ export function FeedCardFooter({
   postedAt,
   likeCount,
   likedByMe,
-  commentCount = 0,
+  commentCount,
 }: FeedCardFooterProps) {
   const { user } = useAuth();
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDraft, setCommentDraft] = useState('');
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [actionHint, setActionHint] = useState<string | null>(null);
+  const [comments, setComments] = useState<ApiComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [displayedCommentCount, setDisplayedCommentCount] =
+    useState(commentCount);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
+
+  useEffect(() => {
+    setDisplayedCommentCount(commentCount);
+  }, [commentCount]);
 
   function showHint(message: string) {
     setActionHint(message);
@@ -99,20 +120,80 @@ export function FeedCardFooter({
     }
   }
 
-  function toggleComments() {
+  async function toggleComments() {
+    if (commentsOpen) {
+      setCommentsOpen(false);
+      return;
+    }
+    setCommentsOpen(true);
+    setCommentsLoading(true);
+    try {
+      const data = await fetchComments(recommendationId);
+      setComments(data);
+      setDisplayedCommentCount(data.length);
+    } catch {
+      setCommentsOpen(false);
+      showHint('댓글을 불러오지 못했어요');
+    } finally {
+      setCommentsLoading(false);
+    }
+  }
+
+  async function handleCommentSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const body = commentDraft.trim();
+    if (!body) return;
     if (!user) {
       setLoginDialogOpen(true);
       return;
     }
-    setCommentsOpen((v) => !v);
+    try {
+      const created = await createComment(recommendationId, body);
+      setComments((prev) => [created, ...prev]);
+      setDisplayedCommentCount((count) => count + 1);
+      setCommentDraft('');
+    } catch {
+      showHint('댓글을 저장하지 못했어요');
+    }
   }
 
-  const handleCommentSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault();
-    if (!commentDraft.trim()) return;
-    setCommentDraft('');
-    showHint('댓글 API 연동 전 — UI만 보여요');
-  };
+  function startCommentEdit(comment: ApiComment) {
+    setEditingCommentId(comment.id);
+    setEditDraft(comment.body);
+  }
+
+  function cancelCommentEdit() {
+    setEditingCommentId(null);
+    setEditDraft('');
+  }
+
+  async function handleCommentUpdate(commentId: string) {
+    const body = editDraft.trim();
+    if (!body) return;
+    try {
+      const updated = await updateComment(recommendationId, commentId, body);
+      setComments((prev) =>
+        prev.map((comment) => (comment.id === commentId ? updated : comment)),
+      );
+      cancelCommentEdit();
+    } catch {
+      showHint('댓글을 수정하지 못했어요');
+    }
+  }
+
+  async function handleCommentDelete(commentId: string) {
+    if (!user) {
+      setLoginDialogOpen(true);
+      return;
+    }
+    try {
+      await deleteComment(recommendationId, commentId);
+      setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+      setDisplayedCommentCount((count) => Math.max(0, count - 1));
+    } catch {
+      showHint('댓글을 삭제하지 못했어요');
+    }
+  }
 
   return (
     <footer className="mt-2">
@@ -136,7 +217,7 @@ export function FeedCardFooter({
           />
           <ActionCount
             icon={MessageCircle}
-            count={commentCount}
+            count={displayedCommentCount}
             label={commentsOpen ? '댓글 접기' : '댓글'}
             active={commentsOpen}
             onClick={toggleComments}
@@ -170,29 +251,148 @@ export function FeedCardFooter({
         <section
           aria-label="댓글"
           className="mt-4 border-t border-neutral-200/60 pt-4">
-          <form onSubmit={handleCommentSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={commentDraft}
-              onChange={(e) => setCommentDraft(e.target.value)}
-              placeholder="댓글을 입력해 주세요"
-              className="min-w-0 flex-1 rounded-full border border-neutral-200/80 bg-white/60 px-3 py-2 font-sans text-sm backdrop-blur-sm placeholder:text-neutral-400"
-            />
+          {user ? (
+            <form
+              onSubmit={handleCommentSubmit}
+              className="flex items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white/70 py-1 pl-1 pr-1.5 shadow-[2px_2px_0_var(--color-brand-shadow-soft)] backdrop-blur-sm">
+              <CommentEmojiPicker
+                onPick={(emoji) => setCommentDraft((prev) => prev + emoji)}
+              />
+              <input
+                type="text"
+                value={commentDraft}
+                onChange={(e) => setCommentDraft(e.target.value)}
+                placeholder="댓글을 입력해 주세요"
+                className="min-w-0 flex-1 bg-transparent px-1 py-2 font-sans text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!commentDraft.trim()}
+                className={`${brandPillBtn} shrink-0 !px-3.5 !py-1.5 !text-xs disabled:opacity-40`}>
+                등록
+              </button>
+            </form>
+          ) : (
             <button
-              type="submit"
-              disabled={!commentDraft.trim()}
-              className="shrink-0 rounded-full bg-neutral-800 px-3 py-2 font-sans text-sm font-medium text-white disabled:opacity-40">
-              등록
+              type="button"
+              onClick={() => setLoginDialogOpen(true)}
+              className="group flex w-full items-center gap-1.5 rounded-full border border-dashed border-neutral-300/70 bg-white/50 py-1 pl-1 pr-2 text-left backdrop-blur-sm transition-colors hover:border-brand-primary/30 hover:bg-white/80">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-300 transition-colors group-hover:text-neutral-400">
+                <MessageCircle
+                  className="size-5"
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
+              </span>
+              <span className="min-w-0 flex-1 font-sans text-sm text-neutral-400 transition-colors group-hover:text-neutral-500">
+                로그인하고 댓글을 남겨 보세요
+              </span>
+              <span className="shrink-0 rounded-full border-2 border-brand-border bg-white px-3 py-1 font-sans text-xs font-semibold text-brand-primary shadow-[2px_2px_0_var(--color-brand-shadow-soft)] transition-[transform,box-shadow,background-color] group-hover:-translate-x-px group-hover:-translate-y-px group-hover:bg-brand-primary-soft group-hover:shadow-[3px_3px_0_var(--color-brand-shadow-soft)]">
+                로그인
+              </span>
             </button>
-          </form>
-          {commentCount === 0 ? (
+          )}
+          {commentsLoading ? (
+            <p className="mt-3 text-center font-sans text-xs text-neutral-400">
+              불러오는 중…
+            </p>
+          ) : comments.length === 0 ? (
             <p className="mt-3 text-center font-sans text-xs text-neutral-400">
               아직 댓글이 없어요
             </p>
-          ) : null}
-          <p className="mt-2 text-center font-sans text-[11px] text-neutral-400">
-            댓글 저장 API — 추후 연동 (UI 미리보기)
-          </p>
+          ) : (
+            <ul className="mt-4 divide-y divide-neutral-100/90">
+              {comments.map((comment) => (
+                <li
+                  key={comment.id}
+                  className="flex gap-2.5 py-3 first:pt-0 last:pb-0">
+                  <CommentAvatar nickname={comment.author.nickname} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="min-w-0 font-sans text-xs leading-5">
+                        <span className="font-semibold text-neutral-800">
+                          @{comment.author.nickname}
+                        </span>
+                        <span className="text-neutral-300"> · </span>
+                        <time
+                          dateTime={comment.createdAt}
+                          className="font-medium text-neutral-400">
+                          {formatCommentDate(comment.createdAt)}
+                        </time>
+                        {comment.updatedAt !== comment.createdAt ? (
+                          <span className="ml-1.5 inline rounded-full bg-brand-primary-soft px-1.5 py-px text-[10px] font-medium text-brand-primary">
+                            수정됨
+                          </span>
+                        ) : null}
+                      </p>
+
+                      {user &&
+                      comment.authorId === user.id &&
+                      editingCommentId !== comment.id ? (
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => startCommentEdit(comment)}
+                            aria-label="댓글 수정"
+                            className="rounded-full p-1 text-neutral-400 hover:bg-neutral-100 hover:text-brand-primary">
+                            <PencilIcon className="size-3.5" aria-hidden />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCommentDelete(comment.id)}
+                            aria-label="댓글 삭제"
+                            className="rounded-full p-1 text-neutral-400 hover:bg-red-50 hover:text-red-500">
+                            <Trash2 className="size-3.5" aria-hidden />
+                          </button>
+                        </div>
+                      ) : user?.role === 'admin' &&
+                        comment.authorId !== user.id ? (
+                        <button
+                          type="button"
+                          onClick={() => handleCommentDelete(comment.id)}
+                          aria-label="댓글 삭제"
+                          className="shrink-0 rounded-full p-1 text-neutral-400 hover:bg-red-50 hover:text-red-500">
+                          <Trash2 className="size-3.5" aria-hidden />
+                        </button>
+                      ) : null}
+                    </div>
+
+                    {editingCommentId === comment.id ? (
+                      <form
+                        className="mt-2 flex items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white/80 py-1 pl-3 pr-1.5"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          void handleCommentUpdate(comment.id);
+                        }}>
+                        <input
+                          type="text"
+                          value={editDraft}
+                          onChange={(e) => setEditDraft(e.target.value)}
+                          className="min-w-0 flex-1 bg-transparent py-1.5 font-sans text-sm text-neutral-800 focus:outline-none"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!editDraft.trim()}
+                          className={`${brandPillBtn} shrink-0 !px-2.5 !py-1 !text-[11px] disabled:opacity-40`}>
+                          저장
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelCommentEdit}
+                          className="shrink-0 px-2 font-sans text-[11px] text-neutral-400 hover:text-neutral-600">
+                          취소
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="mt-1 break-words font-sans text-[0.9375rem] leading-relaxed text-neutral-700">
+                        {comment.body}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       ) : null}
 

@@ -22,6 +22,7 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
     moods,
     likeCount,
     likedByMe,
+    commentCount,
     author,
     createdAt,
   } = recommendation;
@@ -76,6 +77,7 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
             postedAt={createdAt}
             likeCount={likeCount}
             likedByMe={likedByMe}
+            commentCount={commentCount}
           />
         </div>
       </article>
