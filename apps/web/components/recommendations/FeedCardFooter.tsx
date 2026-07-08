@@ -91,7 +91,11 @@ export function FeedCardFooter({
   const [displayedCommentCount, setDisplayedCommentCount] =
     useState(commentCount);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingPendingId, setEditingPendingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState('');
+  const [deletingPendingId, setDeletingPendingId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     setDisplayedCommentCount(commentCount);
@@ -149,7 +153,7 @@ export function FeedCardFooter({
     }
     try {
       const created = await createComment(recommendationId, body);
-      setComments((prev) => [created, ...prev]);
+      setComments((prev) => [...prev, created]);
       setDisplayedCommentCount((count) => count + 1);
       setCommentDraft('');
     } catch {
@@ -171,6 +175,7 @@ export function FeedCardFooter({
     const body = editDraft.trim();
     if (!body) return;
     try {
+      setEditingPendingId(commentId);
       const updated = await updateComment(recommendationId, commentId, body);
       setComments((prev) =>
         prev.map((comment) => (comment.id === commentId ? updated : comment)),
@@ -178,6 +183,8 @@ export function FeedCardFooter({
       cancelCommentEdit();
     } catch {
       showHint('댓글을 수정하지 못했어요');
+    } finally {
+      setEditingPendingId(null);
     }
   }
 
@@ -187,11 +194,15 @@ export function FeedCardFooter({
       return;
     }
     try {
+      setDeletingPendingId(commentId);
       await deleteComment(recommendationId, commentId);
       setComments((prev) => prev.filter((comment) => comment.id !== commentId));
       setDisplayedCommentCount((count) => Math.max(0, count - 1));
+      if (editingCommentId === commentId) cancelCommentEdit();
     } catch {
       showHint('댓글을 삭제하지 못했어요');
+    } finally {
+      setDeletingPendingId(null);
     }
   }
 
@@ -341,6 +352,7 @@ export function FeedCardFooter({
                             type="button"
                             onClick={() => handleCommentDelete(comment.id)}
                             aria-label="댓글 삭제"
+                            disabled={deletingPendingId === comment.id}
                             className="rounded-full p-1 text-neutral-400 hover:bg-red-50 hover:text-red-500">
                             <Trash2 className="size-3.5" aria-hidden />
                           </button>
@@ -351,6 +363,7 @@ export function FeedCardFooter({
                           type="button"
                           onClick={() => handleCommentDelete(comment.id)}
                           aria-label="댓글 삭제"
+                          disabled={deletingPendingId === comment.id}
                           className="shrink-0 rounded-full p-1 text-neutral-400 hover:bg-red-50 hover:text-red-500">
                           <Trash2 className="size-3.5" aria-hidden />
                         </button>
@@ -369,16 +382,22 @@ export function FeedCardFooter({
                           value={editDraft}
                           onChange={(e) => setEditDraft(e.target.value)}
                           className="min-w-0 flex-1 bg-transparent py-1.5 font-sans text-sm text-neutral-800 focus:outline-none"
+                          disabled={editingPendingId === comment.id}
                         />
                         <button
                           type="submit"
-                          disabled={!editDraft.trim()}
+                          disabled={
+                            !editDraft.trim() || editingPendingId === comment.id
+                          }
                           className={`${brandPillBtn} shrink-0 !px-2.5 !py-1 !text-[11px] disabled:opacity-40`}>
-                          저장
+                          {editingPendingId === comment.id
+                            ? '수정 중…'
+                            : '저장'}
                         </button>
                         <button
                           type="button"
                           onClick={cancelCommentEdit}
+                          disabled={editingPendingId === comment.id}
                           className="shrink-0 px-2 font-sans text-[11px] text-neutral-400 hover:text-neutral-600">
                           취소
                         </button>
