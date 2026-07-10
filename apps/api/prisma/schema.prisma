@@ -17,6 +17,13 @@ enum UserRole {
   admin
 }
 
+enum OAuthProvider {
+    google
+    naver
+    kakao
+    apple
+}
+
 model User {
   id           String   @id @default(uuid(7)) @db.Uuid
   email        String   @unique
@@ -32,6 +39,19 @@ model User {
   reactions      Reaction[]
   savedCards SavedCard[]
   comments Comment[]
+  oauthAccounts OAuthAccount[]
+}
+
+model OAuthAccount {
+    id String @id @default(uuid(7)) @db.Uuid
+    provider OAuthProvider
+    providerAccountId String
+    userId String @db.Uuid
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+    @@unique([provider,providerAccountId])
+    @@index([provider])
 }
 
 model Recommendation {
