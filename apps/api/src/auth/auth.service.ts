@@ -11,16 +11,23 @@ import { JwtPayload } from './jwt-payload';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { AuthResponseDto, AuthUserDto } from './dto/auth-response.dto';
-import { UserRole } from 'src/generated/prisma/enums';
+import { OAuthProvider, UserRole } from 'src/generated/prisma/enums';
+import { ConfigService } from '@nestjs/config';
+import { GoogleOAuthProfile } from './google.strategy';
+import { EnvKeys } from 'src/config/env.keys';
 
 const BCRYPT_ROUNDS = 12;
 const LAST_ACTIVE_THROTTLE_MS = 60_000;
+
+const NICKNAME_MAX = 10;
+const NICKNAME_MIN = 2;
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
   private readonly logger = new Logger(AuthService.name);
 
@@ -70,6 +77,58 @@ export class AuthService {
       role: user.role,
     };
     return { accessToken, user: authUser };
+  }
+
+  private mapOAuthError(
+    error: unknown,
+  ):
+    | 'email_not_verified'
+    | 'email_missing'
+    | 'provider_error'
+    | 'account_link_failed' {
+    if (
+      error instanceof Error &&
+      [
+        'email_not_verified',
+        'email_missing',
+        'provider_error',
+        'account_link_failed',
+      ].includes(error.message)
+    ) {
+      return error.message as
+        | 'email_not_verified'
+        | 'email_missing'
+        | 'provider_error'
+        | 'account_link_failed';
+    }
+    return 'provider_error';
+  }
+
+  private buildOAuthSuccessRedirect(accessToken: string, next: string): string {
+    const url = new URL(
+      '/auth/oauth/callback',
+      this.configService.getOrThrow<string>(EnvKeys.FRONTEND_URL),
+    );
+    url.searchParams.set('accessToken', accessToken);
+    url.searchParams.set('next', next);
+    return url.toString();
+  }
+
+  private buildOAuthFailureRedirect(
+    oauthError:
+      | 'email_not_verified'
+      | 'email_missing'
+      | 'provider_error'
+      | 'account_link_failed',
+    next: string,
+  ): string {
+    const url = new URL(
+      '/login',
+      this.configService.getOrThrow<string>(EnvKeys.FRONTEND_URL),
+    );
+    url.searchParams.set('next', next);
+    url.searchParams.set('oauthError', oauthError);
+    return url.toString();
   }
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
@@ -151,5 +210,108 @@ export class AuthService {
     }
     await this.touchLastActiveAt(userId, user.role, { force: true });
     return user;
+  }
+
+  async loginWithGoogle(profile: GoogleOAuthProfile): Promise<AuthResponseDto> {
+    if (!profile.emailVerified) {
+      throw new Error('email_not_verified');
+    }
+    if (!profile.email) {
+      throw new Error('email_missing');
+    }
+    const email = this.trimField(profile.email);
+    const provider = OAuthProvider.google;
+    const providerAccountId = profile.providerAccountId;
+    try {
+      const existingAccount = await this.prisma.oAuthAccount.findUnique({
+        where: {
+          provider_providerAccountId: { provider, providerAccountId },
+        },
+        include: { user: true },
+      });
+      if (existingAccount) {
+        await this.touchLastActiveAt(
+          existingAccount.user.id,
+          existingAccount.user.role,
+          { force: true },
+        );
+        return this.buildAuthResponse(existingAccount.user);
+      }
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email },
+      });
+      if (existingUser) {
+        await this.prisma.oAuthAccount.create({
+          data: { provider, providerAccountId, userId: existingUser.id },
+        });
+        await this.touchLastActiveAt(existingUser.id, existingUser.role, {
+          force: true,
+        });
+        return this.buildAuthResponse(existingUser);
+      }
+      const nickname = await this.suggestNickname(profile.displayName, email);
+      const user = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.user.create({
+          data: { email, nickname, passwordHash: null },
+        });
+        await tx.oAuthAccount.create({
+          data: { provider, providerAccountId, userId: created.id },
+        });
+        return created;
+      });
+      await this.touchLastActiveAt(user.id, user.role, { force: true });
+      return this.buildAuthResponse(user);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('email_')) {
+        throw error;
+      }
+      this.logger.error(
+        'Google OAuth 로그인 실패',
+        error instanceof Error ? error.stack : String(error),
+      );
+      throw new Error('account_link_failed');
+    }
+  }
+
+  private normalizeNicknameBase(
+    displayName: string | null,
+    email: string,
+  ): string {
+    const raw = (displayName?.trim() || email.split('@')[0] || 'user')
+      .replace(/\./g, '')
+      .replace(/\s+/g, '');
+    if (raw.length < NICKNAME_MIN) {
+      return `user${raw}`.slice(0, NICKNAME_MAX);
+    }
+    return raw.slice(0, NICKNAME_MAX);
+  }
+
+  private async suggestNickname(
+    displayName: string | null,
+    email: string,
+  ): Promise<string> {
+    const base = this.normalizeNicknameBase(displayName, email);
+    let candidate = base;
+    let suffix = 2;
+    while (
+      await this.prisma.user.findUnique({ where: { nickname: candidate } })
+    ) {
+      const suffixText = String(suffix);
+      candidate = `${base.slice(0, NICKNAME_MAX - suffixText.length)}${suffixText}`;
+      suffix += 1;
+    }
+    return candidate;
+  }
+
+  async handleGoogleCallback(
+    profile: GoogleOAuthProfile,
+    next: string,
+  ): Promise<string> {
+    try {
+      const { accessToken } = await this.loginWithGoogle(profile);
+      return this.buildOAuthSuccessRedirect(accessToken, next);
+    } catch (error) {
+      return this.buildOAuthFailureRedirect(this.mapOAuthError(error), next);
+    }
   }
 }

@@ -6,25 +6,35 @@ import { EnvKeys } from './config/env.keys';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { formatValidationMessages } from './common/validation-messages';
+import session from 'express-session';
+import passport from 'passport';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useBodyParser('json', { limit: '600kb' });
   const configService = app.get(ConfigService);
   const frontendUrl = configService.get<string>(EnvKeys.FRONTEND_URL);
-  const frontendOrigin = frontendUrl
-    ? new URL(frontendUrl).origin
-    : undefined;
+  const frontendOrigin = frontendUrl ? new URL(frontendUrl).origin : undefined;
   app.enableCors({
     origin: frontendOrigin
-      ? [
-          'http://localhost:3031',
-          'http://127.0.0.1:3031',
-          frontendOrigin,
-        ]
+      ? ['http://localhost:3031', 'http://127.0.0.1:3031', frontendOrigin]
       : undefined,
     credentials: true,
   });
+  app.use(
+    session({
+      secret: configService.getOrThrow<string>(EnvKeys.SESSION_SECRET),
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 10 * 60 * 1000, // OAuth 플로우용 10분
+      },
+    }),
+  );
+  app.use(passport.initialize());
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

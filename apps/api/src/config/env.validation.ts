@@ -10,4 +10,7 @@ export const envValidationSchema = Joi.object({
   [EnvKeys.POSTGRES_PASSWORD]: Joi.string().optional(),
   [EnvKeys.POSTGRES_DB]: Joi.string().default('music_community_db').optional(),
   [EnvKeys.API_JWT_SECRET]: Joi.string().required(),
+  [EnvKeys.SESSION_SECRET]: Joi.string().required(),
+  [EnvKeys.GOOGLE_CLIENT_ID]: Joi.string().required(),
+  [EnvKeys.GOOGLE_CLIENT_SECRET]: Joi.string().required(),
 });
