@@ -50,6 +50,7 @@ function LoginForm() {
               : null;
 
   const googleHref = `${getApiBaseUrl()}/auth/oauth/google?${REDIRECT_QUERY_KEY}=${encodeURIComponent(redirectPath)}`;
+  const naverHref = `${getApiBaseUrl()}/auth/oauth/naver?${REDIRECT_QUERY_KEY}=${encodeURIComponent(redirectPath)}`;
 
   function resetLoginForm() {
     setEmail('');
@@ -147,6 +148,35 @@ function LoginForm() {
           className="inline-flex w-full items-center justify-center rounded-full border border-neutral-200 bg-white py-3 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-50">
           Google로 계속하기
         </a>
+        <a
+          href={naverHref}
+          className="inline-flex w-full items-center justify-center rounded-full border border-neutral-200 bg-white py-3 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-50">
+          Naver로 계속하기
+        </a>
+        <div className="flex flex-col gap-1.5">
+          <button
+            type="button"
+            disabled
+            className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 py-3 text-sm font-semibold text-neutral-400">
+            Kakao로 계속하기
+          </button>
+          <p className="px-1 text-center text-xs leading-relaxed text-neutral-500">
+            카카오 비즈 앱으로 변경 후 이메일 동의가 되면 카카오 로그인을 사용할
+            수 있습니다.
+          </p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <button
+            type="button"
+            disabled
+            className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 py-3 text-sm font-semibold text-neutral-400">
+            Apple로 계속하기
+          </button>
+          <p className="px-1 text-center text-xs leading-relaxed text-neutral-500">
+            Apple Developer Program(유료) 등록 후 Sign in with Apple를 연결할 수
+            있습니다.
+          </p>
+        </div>
       </div>
 
       <p className="mt-8 text-center text-sm text-neutral-600">
