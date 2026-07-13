@@ -13,8 +13,8 @@ import * as bcrypt from 'bcrypt';
 import { AuthResponseDto, AuthUserDto } from './dto/auth-response.dto';
 import { OAuthProvider, UserRole } from 'src/generated/prisma/enums';
 import { ConfigService } from '@nestjs/config';
-import { GoogleOAuthProfile } from './google.strategy';
 import { EnvKeys } from 'src/config/env.keys';
+import type { OAuthProfile } from './oauth-profile';
 
 const BCRYPT_ROUNDS = 12;
 const LAST_ACTIVE_THROTTLE_MS = 60_000;
@@ -212,16 +212,16 @@ export class AuthService {
     return user;
   }
 
-  async loginWithGoogle(profile: GoogleOAuthProfile): Promise<AuthResponseDto> {
+  async loginWithOAuth(profile: OAuthProfile): Promise<AuthResponseDto> {
     if (!profile.emailVerified) {
       throw new Error('email_not_verified');
     }
     if (!profile.email) {
       throw new Error('email_missing');
     }
+
     const email = this.trimField(profile.email);
-    const provider = OAuthProvider.google;
-    const providerAccountId = profile.providerAccountId;
+    const { provider, providerAccountId } = profile;
     try {
       const existingAccount = await this.prisma.oAuthAccount.findUnique({
         where: {
@@ -244,9 +244,6 @@ export class AuthService {
         await this.prisma.oAuthAccount.create({
           data: { provider, providerAccountId, userId: existingUser.id },
         });
-        await this.touchLastActiveAt(existingUser.id, existingUser.role, {
-          force: true,
-        });
         return this.buildAuthResponse(existingUser);
       }
       const nickname = await this.suggestNickname(profile.displayName, email);
@@ -266,10 +263,22 @@ export class AuthService {
         throw error;
       }
       this.logger.error(
-        'Google OAuth 로그인 실패',
+        `${provider} OAuth 로그인 실패`,
         error instanceof Error ? error.stack : String(error),
       );
       throw new Error('account_link_failed');
+    }
+  }
+
+  async handleOAuthCallback(
+    profile: OAuthProfile,
+    next: string,
+  ): Promise<string> {
+    try {
+      const { accessToken } = await this.loginWithOAuth(profile);
+      return this.buildOAuthSuccessRedirect(accessToken, next);
+    } catch (error) {
+      return this.buildOAuthFailureRedirect(this.mapOAuthError(error), next);
     }
   }
 
@@ -301,17 +310,5 @@ export class AuthService {
       suffix += 1;
     }
     return candidate;
-  }
-
-  async handleGoogleCallback(
-    profile: GoogleOAuthProfile,
-    next: string,
-  ): Promise<string> {
-    try {
-      const { accessToken } = await this.loginWithGoogle(profile);
-      return this.buildOAuthSuccessRedirect(accessToken, next);
-    } catch (error) {
-      return this.buildOAuthFailureRedirect(this.mapOAuthError(error), next);
-    }
   }
 }

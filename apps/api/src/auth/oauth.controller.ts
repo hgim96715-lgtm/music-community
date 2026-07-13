@@ -1,11 +1,9 @@
 import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import passport from 'passport';
-import { EnvKeys } from 'src/config/env.keys';
 import { AuthService } from './auth.service';
-import { GoogleOAuthProfile } from './google.strategy';
+import type { OAuthProfile } from './oauth-profile';
 
 const DEFAULT_NEXT = '/recommendations';
 
@@ -35,9 +33,52 @@ export class OAuthController {
   async googleCallback(@Req() req: Request, @Res() res: Response) {
     const next = sanitizeRedirectPath(req.session.oauthNext);
     delete req.session.oauthNext;
+    const redirectUrl = await this.authService.handleOAuthCallback(
+      req.user as unknown as OAuthProfile,
+      next,
+    );
+    return res.redirect(redirectUrl);
+  }
 
-    const redirectUrl = await this.authService.handleGoogleCallback(
-      req.user as GoogleOAuthProfile,
+  @Get('naver')
+  naverStart(
+    @Query('next') next: string | undefined,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    req.session.oauthNext = sanitizeRedirectPath(next);
+    return passport.authenticate('naver')(req, res);
+  }
+
+  @Get('naver/callback')
+  @UseGuards(AuthGuard('naver'))
+  async naverCallback(@Req() req: Request, @Res() res: Response) {
+    const next = sanitizeRedirectPath(req.session.oauthNext);
+    delete req.session.oauthNext;
+    const redirectUrl = await this.authService.handleOAuthCallback(
+      req.user as unknown as OAuthProfile,
+      next,
+    );
+    return res.redirect(redirectUrl);
+  }
+
+  @Get('kakao')
+  kakaoStart(
+    @Query('next') next: string | undefined,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    req.session.oauthNext = sanitizeRedirectPath(next);
+    return passport.authenticate('kakao')(req, res);
+  }
+
+  @Get('kakao/callback')
+  @UseGuards(AuthGuard('kakao'))
+  async kakaoCallback(@Req() req: Request, @Res() res: Response) {
+    const next = sanitizeRedirectPath(req.session.oauthNext);
+    delete req.session.oauthNext;
+    const redirectUrl = await this.authService.handleOAuthCallback(
+      req.user as unknown as OAuthProfile,
       next,
     );
     return res.redirect(redirectUrl);

@@ -1,4 +1,5 @@
 import type { JwtPayload } from '../auth/jwt-payload';
+import type { OAuthProfile } from '../auth/oauth-profile';
 import type { Session } from 'express-session';
 
 declare module 'express-session' {
@@ -9,8 +10,8 @@ declare module 'express-session' {
 
 declare global {
   namespace Express {
+    interface User extends JwtPayload {}
     interface Request {
-      user?: JwtPayload | GoogleOAuthProfile;
       session: Session;
     }
   }

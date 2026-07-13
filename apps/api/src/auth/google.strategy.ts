@@ -3,24 +3,20 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, type Profile } from 'passport-google-oauth20';
 import { EnvKeys } from 'src/config/env.keys';
-
-export type GoogleOAuthProfile = {
-  providerAccountId: string;
-  email: string | null;
-  emailVerified: boolean;
-  displayName: string | null;
-};
+import { OAuthProvider } from 'src/generated/prisma/client';
+import type { OAuthProfile } from './oauth-profile';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(configService: ConfigService) {
-    const port = configService.getOrThrow<string>(EnvKeys.PORT);
     super({
       clientID: configService.getOrThrow<string>(EnvKeys.GOOGLE_CLIENT_ID),
       clientSecret: configService.getOrThrow<string>(
         EnvKeys.GOOGLE_CLIENT_SECRET,
       ),
-      callbackURL: `http://localhost:${port}/auth/oauth/google/callback`,
+      callbackURL: configService.getOrThrow<string>(
+        EnvKeys.GOOGLE_CALLBACK_URL,
+      ),
       scope: ['email', 'profile'],
     });
   }
@@ -28,10 +24,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     _accessToken: string,
     _refreshToken: string,
     profile: Profile,
-  ): GoogleOAuthProfile {
+  ): OAuthProfile {
     const email = profile.emails?.[0]?.value ?? null;
     const emailVerified = profile.emails?.[0]?.verified ?? false;
     return {
+      provider: OAuthProvider.google,
       providerAccountId: profile.id,
       email,
       emailVerified,

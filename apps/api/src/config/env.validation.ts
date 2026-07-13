@@ -13,4 +13,11 @@ export const envValidationSchema = Joi.object({
   [EnvKeys.SESSION_SECRET]: Joi.string().required(),
   [EnvKeys.GOOGLE_CLIENT_ID]: Joi.string().required(),
   [EnvKeys.GOOGLE_CLIENT_SECRET]: Joi.string().required(),
+  [EnvKeys.NAVER_CLIENT_ID]: Joi.string().required(),
+  [EnvKeys.NAVER_CLIENT_SECRET]: Joi.string().required(),
+  [EnvKeys.KAKAO_CLIENT_ID]: Joi.string().required(),
+  [EnvKeys.KAKAO_CLIENT_SECRET]: Joi.string().required(),
+  [EnvKeys.GOOGLE_CALLBACK_URL]: Joi.string().uri().required(),
+  [EnvKeys.NAVER_CALLBACK_URL]: Joi.string().uri().required(),
+  [EnvKeys.KAKAO_CALLBACK_URL]: Joi.string().uri().required(),
 });
