@@ -2,6 +2,10 @@
 import { useAuth } from '@/components/auth/AuthProvider';
 import { fetchMe } from '@/lib/api';
 import { setApiAccessToken } from '@/lib/authToken';
+import {
+  parseOAuthProviderParam,
+  setLastLoginMethod,
+} from '@/lib/lastLoginMethod';
 import { getRedirectPathFromSearchParams } from '@/lib/redirect';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
@@ -16,12 +20,16 @@ function OAuthCallbackContent() {
     async function finishOAuth() {
       const accessToken = searchParams.get('accessToken');
       const next = getRedirectPathFromSearchParams(searchParams);
+      const provider = parseOAuthProviderParam(searchParams.get('provider'));
 
       if (!accessToken) {
         router.replace('/login');
         return;
       }
       setApiAccessToken(accessToken);
+      if (provider) {
+        setLastLoginMethod(provider);
+      }
       try {
         const me = await fetchMe();
         if (cancelled) return;

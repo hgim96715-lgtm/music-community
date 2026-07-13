@@ -104,13 +104,18 @@ export class AuthService {
     return 'provider_error';
   }
 
-  private buildOAuthSuccessRedirect(accessToken: string, next: string): string {
+  private buildOAuthSuccessRedirect(
+    accessToken: string,
+    next: string,
+    provider: OAuthProvider,
+  ): string {
     const url = new URL(
       '/auth/oauth/callback',
       this.configService.getOrThrow<string>(EnvKeys.FRONTEND_URL),
     );
     url.searchParams.set('accessToken', accessToken);
     url.searchParams.set('next', next);
+    url.searchParams.set('provider', provider);
     return url.toString();
   }
 
@@ -276,7 +281,11 @@ export class AuthService {
   ): Promise<string> {
     try {
       const { accessToken } = await this.loginWithOAuth(profile);
-      return this.buildOAuthSuccessRedirect(accessToken, next);
+      return this.buildOAuthSuccessRedirect(
+        accessToken,
+        next,
+        profile.provider,
+      );
     } catch (error) {
       return this.buildOAuthFailureRedirect(this.mapOAuthError(error), next);
     }
