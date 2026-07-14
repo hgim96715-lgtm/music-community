@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import AppHeader from '@/components/layout/AppHeader';
 import { AuthProvider } from '@/components/auth/AuthProvider';
+import { FriendRequestPromptHost } from '@/components/friends/FriendRequestPromptHost';
 
 export const metadata: Metadata = {
   title: 'Music Community',
@@ -19,6 +20,7 @@ export default function RootLayout({
         <AuthProvider>
           <AppHeader />
           {children}
+          <FriendRequestPromptHost />
         </AuthProvider>
       </body>
     </html>
