@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { SavedCardsModule } from './saved-cards/saved-cards.module';
 import { AdminModule } from './admin/admin.module';
+import { FriendsModule } from './friends/friends.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AdminModule } from './admin/admin.module';
     UsersModule,
     SavedCardsModule,
     AdminModule,
+    FriendsModule,
   ],
   controllers: [HealthController],
 })

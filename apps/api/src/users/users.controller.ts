@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -23,5 +35,35 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   async updateMe(@UserId() userId: string, @Body() dto: UpdateUserDto) {
     return await this.usersService.updateMe(userId, dto);
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '사용자 차단' })
+  @Post(':id/block')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async block(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) blockedId: string,
+  ) {
+    return await this.usersService.blockUser(userId, blockedId);
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '사용자 차단 해제' })
+  @Delete(':id/block')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unblock(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) blockedId: string,
+  ) {
+    return await this.usersService.unblockerUser(userId, blockedId);
+  }
+
+  @ApiOperation({ summary: '공개 프로필 조회' })
+  @Get(':id')
+  async findPublicProfile(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.usersService.findPublicProfile(id);
   }
 }

@@ -24,6 +24,13 @@ enum OAuthProvider {
     apple
 }
 
+enum FriendshipStatus {
+    pending
+    accepted
+    declined
+    removed
+}
+
 model User {
   id           String   @id @default(uuid(7)) @db.Uuid
   email        String   @unique
@@ -34,13 +41,20 @@ model User {
   updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
   bio          String?
   lastActiveAt DateTime? @db.Timestamptz(3)
+  image String?
 
   recommendations Recommendation[]
   reactions      Reaction[]
   savedCards SavedCard[]
   comments Comment[]
   oauthAccounts OAuthAccount[]
+
+  sentFriendRequests Friendship[] @relation("FriendshipRequester")
+  receivedFriendRequests Friendship[] @relation("FriendshipAddressee")
+  blocksOutgoing         Block[]      @relation("BlockBlocker")
+  blocksIncoming         Block[]      @relation("BlockBlocked")
 }
+
 
 model OAuthAccount {
     id String @id @default(uuid(7)) @db.Uuid
@@ -118,4 +132,33 @@ model Comment {
 
     @@index([recommendationId])
     @@index([authorId])
+}
+
+model Friendship {
+    id String @id @default(uuid(7)) @db.Uuid
+    requesterId String @db.Uuid
+    addresseeId String @db.Uuid
+    status FriendshipStatus @default(pending)
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+    respondedAt DateTime? @db.Timestamptz(3)
+
+    requester User @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+    addressee User @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+    @@unique([requesterId, addresseeId])
+    @@index([requesterId,status])
+    @@index([addresseeId,status])
+}
+
+model Block {
+    id String @id @default(uuid(7)) @db.Uuid
+    blockerId String @db.Uuid
+    blockedId String @db.Uuid
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+    blocker User @relation("BlockBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+    blocked User @relation("BlockBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+    @@unique([blockerId, blockedId])
+    @@index([blockedId])
 }
