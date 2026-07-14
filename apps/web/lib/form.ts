@@ -33,6 +33,10 @@ export const authSubmitClassName =
 export const authLinkClassName =
   'inline rounded-full px-2 py-0.5 font-semibold text-brand-primary transition-colors hover:bg-brand-primary-soft active:opacity-80';
 
+/** 피드·댓글 `@닉` — 밑줄 X · soft pill hover */
+export const feedNicknameLinkClassName =
+  'inline max-w-full truncate rounded-full px-1.5 py-0.5 font-semibold no-underline transition-colors hover:bg-brand-primary-soft hover:text-brand-primary active:opacity-80';
+
 export const fieldHintClassName =
   'mt-1.5 px-1 text-xs leading-relaxed text-neutral-500';
 

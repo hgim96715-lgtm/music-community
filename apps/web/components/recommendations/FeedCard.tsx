@@ -3,10 +3,10 @@ import { Recommendation } from '@/lib/types';
 import { formatFeedDate } from '@/lib/date';
 import { getMoodColors } from '@/lib/moodColors';
 import { neoHeaderDefault, postCard, postCardShell } from '@/lib/neobrutal';
+import { FeedAuthorNickname } from '@/components/friends/FeedAuthorNickname';
 import { FeedCardFooter } from './FeedCardFooter';
 import { FeedCardMedia } from './FeedCardMedia';
 import { FeedCardMenu } from './FeedCardMenu';
-import Link from 'next/link';
 
 type FeedCardProps = {
   recommendation: Recommendation;
@@ -41,11 +41,12 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
       <article className={postCard}>
         <header
           className={`flex items-center justify-between gap-3 border-b border-[#353535]/15 px-4 py-3 ${headerBand}`}>
-          <Link
-            href={`/users/${author.id}`}
-            className={`min-w-0 truncate text-sm font-semibold leading-5 [font-family:ui-sans-serif,system-ui,sans-serif] hover:underline ${headerNicknameClass}`}>
-            @{author.nickname}
-          </Link>
+          <FeedAuthorNickname
+            userId={author.id}
+            nickname={author.nickname}
+            className={`text-sm leading-5 [font-family:ui-sans-serif,system-ui,sans-serif] ${headerNicknameClass}`}
+          />
+
           <div className="flex shrink-0 items-center gap-1">
             <time
               className={`text-xs font-medium leading-5 opacity-80 ${headerDateClass}`}

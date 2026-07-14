@@ -17,9 +17,9 @@ import {
 import { ApiComment } from '@/lib/apiTypes';
 import { formatCommentDate } from '@/lib/date';
 import { brandPillBtn } from '@/lib/neobrutal';
+import { FeedAuthorNickname } from '@/components/friends/FeedAuthorNickname';
 import { CommentAvatar } from './CommentAvatar';
 import { CommentEmojiPicker } from './CommentEmojiPicker';
-import Link from 'next/link';
 
 type FeedCardFooterProps = {
   recommendationId: string;
@@ -322,11 +322,12 @@ export function FeedCardFooter({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <p className="min-w-0 font-sans text-xs leading-5">
-                        <Link
-                          href={`/users/${comment.author.id}`}
-                          className="font-semibold text-neutral-800 hover:underline">
-                          @{comment.author.nickname}
-                        </Link>
+                        <FeedAuthorNickname
+                          userId={comment.author.id}
+                          nickname={comment.author.nickname}
+                          className="text-neutral-800"
+                        />
+
                         <span className="text-neutral-300"> · </span>
                         <time
                           dateTime={comment.createdAt}
