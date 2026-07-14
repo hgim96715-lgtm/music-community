@@ -50,6 +50,17 @@ export class UsersController {
   }
 
   @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '내가 이 사용자를 차단했는지' })
+  @Get(':id/block-status')
+  @UseGuards(JwtAuthGuard)
+  async getBlockStatus(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) blockedId: string,
+  ) {
+    return await this.usersService.getBlockStatus(userId, blockedId);
+  }
+
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '사용자 차단 해제' })
   @Delete(':id/block')
   @UseGuards(JwtAuthGuard)

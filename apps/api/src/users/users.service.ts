@@ -121,4 +121,17 @@ export class UsersService {
       throw new NotFoundException('차단 기록을 찾을 수 없습니다.');
     }
   }
+
+  async getBlockStatus(blockerId: string, blockedId: string) {
+    if (blockerId === blockedId) {
+      return { blockedByMe: false };
+    }
+    const row = await this.prisma.block.findUnique({
+      where: {
+        blockerId_blockedId: { blockerId, blockedId },
+      },
+      select: { id: true },
+    });
+    return { blockedByMe: row !== null };
+  }
 }

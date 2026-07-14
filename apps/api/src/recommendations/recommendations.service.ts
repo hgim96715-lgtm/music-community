@@ -15,12 +15,28 @@ export class RecommendationsService {
   private async assertVisibleRecommendation(recommendationId: string) {
     const recommendation = await this.prisma.recommendation.findFirst({
       where: { id: recommendationId, hidden: false },
-      select: { id: true },
+      select: { id: true, authorId: true },
     });
     if (!recommendation) {
       throw new NotFoundException('추천을 찾을 수 없어요.');
     }
     return recommendation;
+  }
+  private async assertNotBlocked(a: string, b: string) {
+    const blocked = await this.prisma.block.findFirst({
+      where: {
+        OR: [
+          { blockerId: a, blockedId: b },
+          { blockerId: b, blockedId: a },
+        ],
+      },
+      select: { id: true },
+    });
+    if (blocked) {
+      throw new ForbiddenException(
+        '차단된 사용자와는 댓글을 남길 수 없습니다.',
+      );
+    }
   }
 
   findAll() {
@@ -131,7 +147,11 @@ export class RecommendationsService {
     authorId: string,
     body: string,
   ) {
-    await this.assertVisibleRecommendation(recommendationId);
+    const recommendation =
+      await this.assertVisibleRecommendation(recommendationId);
+    if (recommendation.authorId !== authorId) {
+      await this.assertNotBlocked(authorId, recommendation.authorId);
+    }
     return this.prisma.comment.create({
       data: { recommendationId, authorId, body },
       include: { author: { select: { id: true, nickname: true } } },
