@@ -28,6 +28,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useActionState, useState } from 'react';
 import { getApiBaseUrl } from '@/lib/fetchApi';
+import { WelcomeDialog } from '@/components/auth/WelcomeDialog';
 
 function LoginForm() {
   const { setUser } = useAuth();
@@ -37,6 +38,14 @@ function LoginForm() {
   const oauthError = searchParams.get('oauthError');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeNickname, setWelcomeNickname] = useState('');
+
+  function goAfterWelcome() {
+    setWelcomeOpen(false);
+    router.push(redirectPath);
+  }
 
   const oauthErrorMessage =
     oauthError === 'email_not_verified'
@@ -74,7 +83,8 @@ function LoginForm() {
       setLastLoginMethod('email');
       setUser(data.user);
       resetLoginForm();
-      router.push(redirectPath);
+      setWelcomeNickname(data.user.nickname);
+      setWelcomeOpen(true);
       return {};
     } catch (error) {
       const message =
@@ -150,6 +160,12 @@ function LoginForm() {
           회원가입
         </Link>
       </p>
+      <WelcomeDialog
+        open={welcomeOpen}
+        nickname={welcomeNickname}
+        onContinue={goAfterWelcome}
+        onClose={goAfterWelcome}
+      />
     </main>
   );
 }

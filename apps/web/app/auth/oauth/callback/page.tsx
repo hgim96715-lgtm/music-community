@@ -1,5 +1,6 @@
 'use client';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { WelcomeDialog } from '@/components/auth/WelcomeDialog';
 import { fetchMe } from '@/lib/api';
 import { setApiAccessToken } from '@/lib/authToken';
 import {
@@ -8,12 +9,21 @@ import {
 } from '@/lib/lastLoginMethod';
 import { getRedirectPathFromSearchParams } from '@/lib/redirect';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 function OAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser } = useAuth();
+
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeNickname, setWelcomeNickname] = useState('');
+  const [redirectPath, setRedirectPath] = useState('/recommendations');
+
+  function goAfterWelcome() {
+    setWelcomeOpen(false);
+    router.push(redirectPath);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -34,7 +44,8 @@ function OAuthCallbackContent() {
         const me = await fetchMe();
         if (cancelled) return;
         setUser(me);
-        router.replace(next);
+        setWelcomeNickname(me.nickname);
+        setWelcomeOpen(true);
       } catch {
         if (!cancelled) router.replace('/login');
       }
@@ -46,7 +57,15 @@ function OAuthCallbackContent() {
   }, [router, searchParams, setUser]);
   return (
     <main className="flex min-h-[50vh] items-center justify-center">
-      <p className="text-sm text-neutral-500">로그인 처리 중…</p>
+      {!welcomeOpen ? (
+        <p className="text-sm text-neutral-500">로그인 처리 중…</p>
+      ) : null}
+      <WelcomeDialog
+        open={welcomeOpen}
+        nickname={welcomeNickname}
+        onContinue={goAfterWelcome}
+        onClose={goAfterWelcome}
+      />
     </main>
   );
 }

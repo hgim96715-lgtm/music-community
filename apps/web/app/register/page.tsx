@@ -38,6 +38,7 @@ import { Loader2, Lock, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useActionState, useEffect, useState } from 'react';
+import { WelcomeDialog } from '@/components/auth/WelcomeDialog';
 
 type AvailabilityStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error';
 
@@ -57,6 +58,14 @@ function RegisterForm() {
     useState<AvailabilityStatus>('idle');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeNickname, setWelcomeNickname] = useState('');
+
+  function goAfterWelcome() {
+    setWelcomeOpen(false);
+    router.push(redirectPath);
+  }
 
   const email = buildEmail(emailLocal, emailDomain, emailCustomDomain);
 
@@ -169,7 +178,8 @@ function RegisterForm() {
       const data = await register(formEmail, trimmedPassword, formNickname);
       setUser(data.user);
       resetRegisterForm();
-      router.push(redirectPath);
+      setWelcomeNickname(data.user.nickname);
+      setWelcomeOpen(true);
       return {};
     } catch (error) {
       const message =
@@ -297,6 +307,12 @@ function RegisterForm() {
           로그인
         </Link>
       </p>
+      <WelcomeDialog
+        open={welcomeOpen}
+        nickname={welcomeNickname}
+        onContinue={goAfterWelcome}
+        onClose={goAfterWelcome}
+      />
     </main>
   );
 }
