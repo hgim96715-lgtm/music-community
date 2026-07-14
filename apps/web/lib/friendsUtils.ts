@@ -45,3 +45,24 @@ export function friendRelationWith(args: {
   }
   return 'none';
 }
+
+export function friendRelationLabel(
+  relation: FriendRelation,
+  blockedByMe = false,
+): string {
+  if (blockedByMe) return '차단함';
+  switch (relation) {
+    case 'guest':
+      return '로그인이 필요해요';
+    case 'self':
+      return '나';
+    case 'none':
+      return '친구 아님';
+    case 'pending_sent':
+      return '요청 보냄';
+    case 'pending_received':
+      return '친구 요청 받음';
+    case 'friends':
+      return '친구';
+  }
+}

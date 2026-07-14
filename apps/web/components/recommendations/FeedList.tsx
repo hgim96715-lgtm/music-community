@@ -8,6 +8,7 @@ import { FriendIdsProvider } from '@/components/friends/FriendIdsContext';
 import { FeedCard } from './FeedCard';
 import { FeedHeader } from './FeedHeader';
 import { SavedCardsFeedProvider } from '@/components/saved-cards/SavedCardsFeedContext';
+import { AvatarActionProvider } from '../friends/AvatarActionContext';
 
 export function FeedList() {
   const { user, isLoading: authLoading } = useAuth();
@@ -97,16 +98,18 @@ export function FeedList() {
   // 카드 있을때만 SavedCardsFeedProvider 제공
   return (
     <FriendIdsProvider>
-      <SavedCardsFeedProvider>
-        <FeedHeader />
-        <ul className="flex flex-col gap-10 pb-2">
-          {items.map((item) => (
-            <li key={item.id}>
-              <FeedCard recommendation={item} onDeleted={handleDeleted} />
-            </li>
-          ))}
-        </ul>
-      </SavedCardsFeedProvider>
+      <AvatarActionProvider>
+        <SavedCardsFeedProvider>
+          <FeedHeader />
+          <ul className="flex flex-col gap-10 pb-2">
+            {items.map((item) => (
+              <li key={item.id}>
+                <FeedCard recommendation={item} onDeleted={handleDeleted} />
+              </li>
+            ))}
+          </ul>
+        </SavedCardsFeedProvider>
+      </AvatarActionProvider>
     </FriendIdsProvider>
   );
 }
