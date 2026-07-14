@@ -1,7 +1,12 @@
 'use client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { UserProfileActions } from '@/components/users/UserProfileActions';
-import { fetchFriendRequests, fetchFriends, fetchPublicUser } from '@/lib/api';
+import {
+  fetchBlockStatus,
+  fetchFriendRequests,
+  fetchFriends,
+  fetchPublicUser,
+} from '@/lib/api';
 import type {
   ApiFriendRequests,
   ApiFriendship,
@@ -31,6 +36,7 @@ export default function PublicUserPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [blockedByMe, setBlockedByMe] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -40,15 +46,18 @@ export default function PublicUserPage() {
       const publicUser = await fetchPublicUser(id);
       setProfile(publicUser);
       if (user) {
-        const [friendsList, requestList] = await Promise.all([
+        const [friendsList, requestList, blockStatus] = await Promise.all([
           fetchFriends(),
           fetchFriendRequests(),
+          fetchBlockStatus(id),
         ]);
         setFriends(friendsList);
         setRequests(requestList);
+        setBlockedByMe(blockStatus.blockedByMe);
       } else {
         setFriends([]);
         setRequests({ received: [], sent: [] });
+        setBlockedByMe(false);
       }
     } catch (error) {
       setError(
@@ -123,6 +132,7 @@ export default function PublicUserPage() {
               relation={relation}
               profileUserId={profile.id}
               pendingFriendshipId={pendingFriendshipId}
+              blockedByMe={blockedByMe}
               onChanged={load}
             />
           </div>

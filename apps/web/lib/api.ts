@@ -221,6 +221,14 @@ export function respondFriendRequest(
 export function removeFriend(otherUserId: string): Promise<void> {
   return authFetchApiVoid(`/friends/${otherUserId}`, { method: 'DELETE' });
 }
+/** GET /users/:id/block-status — 내가 차단했는지 */
+export function fetchBlockStatus(
+  userId: string,
+): Promise<{ blockedByMe: boolean }> {
+  return authFetchApi<{ blockedByMe: boolean }>(
+    `/users/${userId}/block-status`,
+  );
+}
 
 /** GET /users/:id — 공개 프로필 (게스트 OK) */
 export function fetchPublicUser(userId: string): Promise<ApiPublicUser> {
