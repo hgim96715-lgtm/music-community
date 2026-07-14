@@ -4,7 +4,12 @@ import { SavedCardAlbumModal } from '@/components/saved-cards/SavedCardAlbumModa
 import { useAuth } from '@/components/auth/AuthProvider';
 import { PillInput } from '@/components/auth/PillInput';
 import { PillTextarea } from '@/components/auth/PillTextarea';
-import { fetchSavedCards, patchUserProfile } from '@/lib/api';
+import {
+  fetchFriendRequests,
+  fetchFriends,
+  fetchSavedCards,
+  patchUserProfile,
+} from '@/lib/api';
 import type { ApiSavedCard } from '@/lib/apiTypes';
 import {
   appNavLinkClassName,
@@ -32,6 +37,9 @@ export default function MyProfilePage() {
   const [albumLoading, setAlbumLoading] = useState(true);
   const [albumError, setAlbumError] = useState('');
   const [selected, setSelected] = useState<ApiSavedCard | null>(null);
+  const [friendCount, setFriendCount] = useState(0);
+  const [requestCount, setRequestCount] = useState(0);
+  const [friendsOpen, setFriendsOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) router.replace('/login?next=/users/me');
@@ -63,6 +71,25 @@ export default function MyProfilePage() {
       })
       .finally(() => {
         if (!cancelled) setAlbumLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+    Promise.all([fetchFriends(), fetchFriendRequests()])
+      .then(([friendsList, requests]) => {
+        if (cancelled) return;
+        setFriendCount(friendsList.length);
+        setRequestCount(requests.received.length + requests.sent.length);
+      })
+      .catch(() => {
+        /* 카운터 실패는 프로필을 막지 않음 */
       });
 
     return () => {
@@ -196,6 +223,34 @@ export default function MyProfilePage() {
               className={`${appNavLinkClassName} border-2 border-brand-border bg-white px-4 py-2 shadow-[2px_2px_0_var(--color-brand-shadow-soft)]`}>
               프로필 수정
             </button>
+
+            <div className="mt-1 w-full border-t border-neutral-200/80 pt-3">
+              <button
+                type="button"
+                aria-expanded={friendsOpen}
+                onClick={() => setFriendsOpen((open) => !open)}
+                className="w-full text-sm font-medium text-neutral-700 transition-colors hover:text-brand-primary">
+                친구
+                {friendCount > 0 ? ` ${friendCount}` : ''}
+                {requestCount > 0 ? ` · 요청 ${requestCount}` : ''}
+              </button>
+              {friendsOpen ? (
+                <ul className="mt-2 space-y-1">
+                  <li>
+                    <Link href="/friends" className={appNavLinkClassName}>
+                      친구 목록
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/friends/requests"
+                      className={appNavLinkClassName}>
+                      친구 요청
+                    </Link>
+                  </li>
+                </ul>
+              ) : null}
+            </div>
           </div>
         </section>
       )}

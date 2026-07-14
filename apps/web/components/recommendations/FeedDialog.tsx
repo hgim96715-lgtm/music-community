@@ -10,7 +10,13 @@ type FeedDialogProps = {
   onConfirm: () => void;
   title?: string;
   description?: string;
+  /** 확인 버튼 문구 */
+  confirmLabel?: string;
+  /** @deprecated 오타 — `confirmLabel` 사용 */
   comfirmLabel?: string;
+  /** pending 중 확인 버튼 문구 */
+  pendingLabel?: string;
+  cancelLabel?: string;
   isPending?: boolean;
 };
 
@@ -19,7 +25,10 @@ export function FeedDialog({
   onClose,
   title = '삭제하시겠습니까?',
   description = '삭제하면 되돌릴 수 없어요.',
-  comfirmLabel = '삭제',
+  confirmLabel,
+  comfirmLabel,
+  pendingLabel,
+  cancelLabel = '취소',
   isPending = false,
   onConfirm,
 }: FeedDialogProps) {
@@ -27,6 +36,19 @@ export function FeedDialog({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const actionLabel = confirmLabel ?? comfirmLabel ?? '삭제';
+  const actionPendingLabel = pendingLabel ?? `${actionLabel} 중…`;
+
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !isPending) onClose();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, isPending, onClose]);
+
   if (!open || !mounted) return null;
 
   return createPortal(
@@ -35,7 +57,9 @@ export function FeedDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="feed-dialog-title"
-      onClick={onClose}>
+      onClick={() => {
+        if (!isPending) onClose();
+      }}>
       <div
         className="relative w-full max-w-sm"
         onClick={(e) => e.stopPropagation()}>
@@ -54,15 +78,15 @@ export function FeedDialog({
               type="button"
               onClick={onConfirm}
               disabled={isPending}
-              className={`${brandPillBtn} disabled:opacity-50 justify-center`}>
-              {isPending ? '삭제 중…' : comfirmLabel}
+              className={`${brandPillBtn} justify-center disabled:opacity-50`}>
+              {isPending ? actionPendingLabel : actionLabel}
             </button>
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
               className="rounded-full py-2 text-sm font-medium text-neutral-500 transition-colors hover:text-brand-primary disabled:opacity-50">
-              취소
+              {cancelLabel}
             </button>
           </div>
         </div>

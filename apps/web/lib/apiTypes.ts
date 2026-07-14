@@ -12,6 +12,7 @@ export type ApiReaction = {
 export type ApiAuthor = {
   id: string;
   nickname: string;
+  image: string | null;
 };
 
 export type ApiRecommendation = {
@@ -36,6 +37,7 @@ export type ApiAuthUser = {
   id: string;
   email: string;
   nickname: string;
+  image: string | null;
   role: 'user' | 'admin';
   bio?: string | null;
 };
@@ -169,4 +171,35 @@ export type ApiComment = {
   createdAt: string;
   updatedAt: string;
   author: ApiAuthor;
+};
+
+// Friendships
+
+export type ApiPublicUser = {
+  id: string;
+  nickname: string;
+  image: string | null;
+  bio: string | null;
+};
+
+export type ApiFriendshipStatus =
+  | 'pending'
+  | 'accepted'
+  | 'declined'
+  | 'removed';
+
+export type ApiFriendship = {
+  id: string;
+  requesterId: string;
+  addresseeId: string;
+  status: ApiFriendshipStatus;
+  createdAt: string;
+  respondedAt: string | null;
+  requester: Pick<ApiPublicUser, 'id' | 'nickname' | 'image'>;
+  addressee: ApiPublicUser;
+};
+
+export type ApiFriendRequests = {
+  received: ApiFriendship[];
+  sent: ApiFriendship[];
 };
