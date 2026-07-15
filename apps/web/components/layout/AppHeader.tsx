@@ -35,6 +35,11 @@ export default function AppHeader() {
         </Link>
         <nav className="flex items-center gap-2">
           {loggedIn ? `@${user?.nickname}` : null}
+          {loggedIn ? (
+            <Link href="/rooms" className={appNavLinkClassName}>
+              방
+            </Link>
+          ) : null}
           {isLoading ? null : user ? (
             <button
               type="button"

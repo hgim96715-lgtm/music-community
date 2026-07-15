@@ -31,6 +31,29 @@ enum FriendshipStatus {
     removed
 }
 
+enum RoomVisibility {
+    public
+    private
+    invite
+}
+
+enum RoomStatus {
+    active
+    closed
+    archived
+}
+
+enum RoomMemberRole {
+    member
+    moderator
+    owner
+}
+
+enum RoomMessageType {
+    text
+    recommendation
+}
+
 model User {
   id           String   @id @default(uuid(7)) @db.Uuid
   email        String   @unique
@@ -53,7 +76,13 @@ model User {
   receivedFriendRequests Friendship[] @relation("FriendshipAddressee")
   blocksOutgoing         Block[]      @relation("BlockBlocker")
   blocksIncoming         Block[]      @relation("BlockBlocked")
+
+  ownedRooms Room[] @relation("RoomOwner")
+  roomMembers RoomMember[]
+  roomMessages RoomMessage[]
 }
+
+
 
 
 model OAuthAccount {
@@ -162,3 +191,55 @@ model Block {
     @@unique([blockerId, blockedId])
     @@index([blockedId])
 }
+
+model Room {
+    id String @id @default(uuid(7)) @db.Uuid
+    name String
+    ownerId String @db.Uuid
+    description String?
+    topicTags String[] @default([])
+    visibility RoomVisibility @default(public)
+    status RoomStatus @default(active)
+    memberCount Int @default(1)
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+    updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+    owner User @relation("RoomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+    members RoomMember[]
+    messages RoomMessage[]
+
+    @@index([status,visibility])
+    @@index([ownerId])
+}   
+
+
+
+model RoomMember {
+  id         String         @id @default(uuid(7)) @db.Uuid
+  roomId     String         @db.Uuid
+  userId     String         @db.Uuid
+  role       RoomMemberRole @default(member)
+  mutedUntil DateTime?      @db.Timestamptz(3)
+  joinedAt   DateTime       @default(now()) @db.Timestamptz(3)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([roomId, userId])
+  @@index([userId])
+}
+
+model RoomMessage {
+  id               String          @id @default(uuid(7)) @db.Uuid
+  roomId           String          @db.Uuid
+  senderId         String          @db.Uuid
+  type             RoomMessageType @default(text)
+  body             String?
+  recommendationId String?         @db.Uuid
+  createdAt        DateTime        @default(now()) @db.Timestamptz(3)
+  deletedAt        DateTime?       @db.Timestamptz(3)
+  room   Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  @@index([roomId, createdAt])
+  @@index([senderId])
+}
+
+

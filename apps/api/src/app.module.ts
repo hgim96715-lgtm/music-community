@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { SavedCardsModule } from './saved-cards/saved-cards.module';
 import { AdminModule } from './admin/admin.module';
 import { FriendsModule } from './friends/friends.module';
+import { RoomsModule } from './rooms/rooms.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { FriendsModule } from './friends/friends.module';
     SavedCardsModule,
     AdminModule,
     FriendsModule,
+    RoomsModule,
   ],
   controllers: [HealthController],
 })

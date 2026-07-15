@@ -1,0 +1,118 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UserId } from 'src/auth/decorators/user-id.decorator';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CreateRoomDto } from './dto/create-room.dto';
+import { RoomsService } from './rooms.service';
+import { CreateRoomMessageDto } from './dto/create-room-message.dto';
+import { UpdateRoomDto } from './dto/update-room.dto';
+import { RoomsGateway } from './rooms.gateway';
+
+@ApiTags('Rooms')
+@Controller('rooms')
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard)
+export class RoomsController {
+  constructor(
+    private readonly roomsService: RoomsService,
+    private readonly roomsGateway: RoomsGateway,
+  ) {}
+
+  @ApiOperation({ summary: '공개 방 목록 조회' })
+  @Get()
+  async listPublic() {
+    return await this.roomsService.listPublic();
+  }
+
+  @ApiOperation({ summary: '내 방 목록(멤버인 방)' })
+  @Get('mine')
+  async listMine(@UserId() userId: string) {
+    return await this.roomsService.listMine(userId);
+  }
+
+  @ApiOperation({ summary: '방 메시지 목록 조회' })
+  @Get(':id/messages')
+  async listMessages(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+  ) {
+    return await this.roomsService.listMessages(roomId, userId);
+  }
+
+  @ApiOperation({ summary: '방 상세 조회' })
+  @Get(':id')
+  async findById(@Param('id', ParseUUIDPipe) roomId: string) {
+    return await this.roomsService.findById(roomId);
+  }
+
+  @ApiOperation({ summary: '방 생성 (생성자=방장)' })
+  @Post()
+  async create(@UserId() userId: string, @Body() dto: CreateRoomDto) {
+    return await this.roomsService.create(userId, dto);
+  }
+
+  @ApiOperation({ summary: '공개 방 입장' })
+  @Post(':id/join')
+  async join(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+  ) {
+    return await this.roomsService.join(roomId, userId);
+  }
+
+  @ApiOperation({ summary: '방 퇴장' })
+  @Post(':id/leave')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async leave(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+  ) {
+    return await this.roomsService.leave(roomId, userId);
+  }
+
+  @ApiOperation({ summary: '방 설정 수정(방장)' })
+  @Patch(':id')
+  async update(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+    @Body() dto: UpdateRoomDto,
+  ) {
+    return await this.roomsService.update(roomId, userId, dto);
+  }
+
+  @ApiOperation({ summary: '방 메시지 전송' })
+  @Post(':id/messages')
+  async sendMessage(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+    @Body() dto: CreateRoomMessageDto,
+  ) {
+    const message = await this.roomsService.createMessage(roomId, userId, dto);
+    this.roomsGateway.emitMessage(roomId, message);
+    return message;
+  }
+
+  @ApiOperation({ summary: '메시지 전체에서 삭제(작성자·방장)' })
+  @Delete(':id/messages/:messageId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteMessage(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+    @Param('messageId', ParseUUIDPipe) messageId: string,
+  ) {
+    await this.roomsService.deleteMessage(roomId, messageId, userId);
+    this.roomsGateway.emitMessageDeleted(roomId, messageId);
+  }
+}
