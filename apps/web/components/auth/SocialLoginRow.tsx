@@ -50,14 +50,22 @@ function GoogleMark({ size = 18 }: { size?: number }) {
   );
 }
 
-function NaverMark({ compact = false }: { compact?: boolean }) {
+function NaverMark({
+  compact = false,
+  onBrand = false,
+}: {
+  compact?: boolean;
+  /** 초록 히어로 버튼 위 — 반투명 흰 박스 · 그 외는 브랜드 초록 */
+  onBrand?: boolean;
+}) {
   return (
     <span
       className={[
         'flex items-center justify-center font-black text-white',
         compact
-          ? 'h-5 w-5 rounded text-[10px] bg-[#03C75A]'
-          : 'h-7 w-7 rounded-lg text-sm bg-white/20',
+          ? 'h-5 w-5 rounded text-[10px]'
+          : 'h-7 w-7 rounded-lg text-sm',
+        onBrand ? 'bg-white/25' : 'bg-[#03C75A]',
       ].join(' ')}
       aria-hidden>
       N
@@ -108,15 +116,18 @@ function AppleMark({ compact = false }: { compact?: boolean }) {
 function ProviderIcon({
   provider,
   hero,
+  onBrand,
 }: {
   provider: SocialProvider;
   hero?: boolean;
+  /** 브랜드색 채운 히어로 칩 위 아이콘 */
+  onBrand?: boolean;
 }) {
   switch (provider) {
     case 'google':
       return <GoogleMark size={hero ? 22 : 16} />;
     case 'naver':
-      return <NaverMark compact={!hero} />;
+      return <NaverMark compact={!hero} onBrand={onBrand} />;
     case 'kakao':
       return <KakaoMark compact={!hero} />;
     case 'apple':
@@ -154,7 +165,7 @@ const QUIET_CLASS: Record<
   },
   naver: {
     enabled:
-      'border border-[#03C75A]/30 bg-white text-[#027A3A] hover:bg-[#F3FBF6]',
+      'border border-[#03C75A]/60 bg-white text-[#027A3A] hover:bg-[#F3FBF6]',
     disabled: 'border border-neutral-200 bg-neutral-50 text-neutral-400',
   },
   kakao: {
@@ -203,7 +214,7 @@ function HeroChip({
         HERO_CLASS[provider],
       ].join(' ')}>
       <RecentLoginBubble />
-      <ProviderIcon provider={provider} hero />
+      <ProviderIcon provider={provider} hero onBrand />
       <span className={HERO_LABEL[provider]}>
         {LABELS[provider]}로 계속하기
       </span>
