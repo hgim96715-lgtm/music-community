@@ -3,7 +3,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { authPageClassName } from '@/lib/form';
 import { brandPillBtn } from '@/lib/neobrutal';
 import { fetchMyRooms, fetchPublicRooms, type ApiRoom } from '@/lib/rooms';
-import { ChevronLeft, Loader2, Plus } from 'lucide-react';
+import { ChevronLeft, Loader2, LockIcon, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -25,8 +25,14 @@ function RoomRow({ room }: { room: ApiRoom }) {
           {roomInitial(room)}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold tracking-tight text-neutral-800">
-            {room.name}
+          <p className="flex min-w-0 items-center gap-1 truncate text-[15px] font-semibold tracking-tight text-neutral-800">
+            {room.visibility === 'private' ? (
+              <LockIcon
+                className="size-3.5 shrink-0 text-neutral-400"
+                aria-label="비공개"
+              />
+            ) : null}
+            <span className="truncate">{room.name}</span>
           </p>
           <p className="mt-0.5 truncate text-[13px] text-neutral-400">
             {room.owner
@@ -142,11 +148,7 @@ export default function RoomsPage() {
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      <RoomSection
-        title="내 방"
-        rooms={mine}
-        empty="아직 들어간 방이 없어요"
-      />
+      <RoomSection title="내 방" rooms={mine} empty="아직 들어간 방이 없어요" />
       <RoomSection
         title="둘러보기"
         rooms={discover}

@@ -14,6 +14,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { CreateRoomMessageDto } from './dto/create-room-message.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+import { Prisma } from 'src/generated/prisma/client';
 
 @Injectable()
 export class RoomsService {
@@ -94,20 +95,33 @@ export class RoomsService {
       return existing;
     }
 
-    const [member] = await this.prisma.$transaction([
-      this.prisma.roomMember.create({
-        data: {
-          roomId,
-          userId,
-          role: RoomMemberRole.member,
-        },
-      }),
-      this.prisma.room.update({
-        where: { id: roomId },
-        data: { memberCount: { increment: 1 } },
-      }),
-    ]);
-    return member;
+    try {
+      const [member] = await this.prisma.$transaction([
+        this.prisma.roomMember.create({
+          data: {
+            roomId,
+            userId,
+            role: RoomMemberRole.member,
+          },
+        }),
+        this.prisma.room.update({
+          where: { id: roomId },
+          data: { memberCount: { increment: 1 } },
+        }),
+      ]);
+      return member;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const again = await this.prisma.roomMember.findUnique({
+          where: { roomId_userId: { roomId, userId } },
+        });
+        if (again) return again;
+      }
+      throw error;
+    }
   }
 
   async leave(roomId: string, userId: string) {
@@ -272,6 +286,34 @@ export class RoomsService {
           select: { id: true, nickname: true, image: true },
         },
       },
+    });
+  }
+
+  /** 멤버만 · owner 먼저 · 나머지 joinedAt */
+  async listMembers(roomId: string, userId: string) {
+    await this.findById(roomId);
+    const me = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+      select: { id: true },
+    });
+    if (!me) {
+      throw new ForbiddenException('방 멤버만 멤버 목록을 조회할 수 있습니다.');
+    }
+    const members = await this.prisma.roomMember.findMany({
+      where: { roomId },
+      orderBy: { joinedAt: 'asc' },
+      include: {
+        user: {
+          select: { id: true, nickname: true, image: true },
+        },
+      },
+    });
+    return members.sort((a, b) => {
+      if (a.role === RoomMemberRole.owner && b.role !== RoomMemberRole.owner)
+        return -1;
+      if (b.role === RoomMemberRole.owner && a.role !== RoomMemberRole.owner)
+        return 1;
+      return a.joinedAt.getTime() - b.joinedAt.getTime();
     });
   }
 }

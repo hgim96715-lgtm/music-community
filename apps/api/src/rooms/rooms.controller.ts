@@ -104,6 +104,15 @@ export class RoomsController {
     return message;
   }
 
+  @ApiOperation({ summary: '방 멤버 목록(멤버만)' })
+  @Get(':id/members')
+  async listMembers(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+  ) {
+    return await this.roomsService.listMembers(roomId, userId);
+  }
+
   @ApiOperation({ summary: '메시지 전체에서 삭제(작성자·방장)' })
   @Delete(':id/messages/:messageId')
   @HttpCode(HttpStatus.NO_CONTENT)

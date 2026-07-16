@@ -33,6 +33,16 @@ export type ApiRoomMember = {
   joinedAt: string;
 };
 
+export type ApiRoomMemberWithUser = ApiRoomMember & {
+  user: ApiRoomOwner;
+};
+
+export function fetchRoomMembers(
+  roomId: string,
+): Promise<ApiRoomMemberWithUser[]> {
+  return authFetchApi<ApiRoomMemberWithUser[]>(`/rooms/${roomId}/members`);
+}
+
 export type ApiRoomMessage = {
   id: string;
   roomId: string;

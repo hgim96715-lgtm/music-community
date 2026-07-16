@@ -1,7 +1,10 @@
 'use client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authPageClassName, fieldErrorClassName } from '@/lib/form';
-import { formatMessageTimeDivider, shouldInsertMessageDivider } from '@/lib/date';
+import {
+  formatMessageTimeDivider,
+  shouldInsertMessageDivider,
+} from '@/lib/date';
 import {
   createRoomMessage,
   deleteRoomMessage,
@@ -18,13 +21,25 @@ import {
   socketJoinRoom,
   socketLeaveRoom,
 } from '@/lib/roomsSocket';
-import { ChevronLeft, ImageIcon, Link2, Loader2, Music2, Plus, Send } from 'lucide-react';
+import {
+  ChevronLeft,
+  ImageIcon,
+  Link2,
+  Loader2,
+  Music2,
+  Plus,
+  Send,
+  Settings,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FeedDialog } from '@/components/recommendations/FeedDialog';
 import { CommentEmojiPicker } from '@/components/recommendations/CommentEmojiPicker';
+import { AvatarActionProvider } from '@/components/friends/AvatarActionContext';
+import { FriendIdsProvider } from '@/components/friends/FriendIdsContext';
+import { RoomMembersSheet } from '@/components/rooms/RoomMembersSheet';
 
 const ATTACH_ITEMS = [
   {
@@ -62,6 +77,7 @@ export default function RoomPage() {
   const [actionTargetId, setActionTargetId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
   /** OS 키보드가 가린 높이(px) — visualViewport */
@@ -70,6 +86,8 @@ export default function RoomPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
+
+  const [membersOpen, setMembersOpen] = useState(false);
 
   function clearLongPress() {
     if (longPressTimerRef.current !== null) {
@@ -106,7 +124,10 @@ export default function RoomPage() {
     if (!vv) return;
 
     function syncKeyboard() {
-      const inset = Math.max(0, window.innerHeight - vv!.height - vv!.offsetTop);
+      const inset = Math.max(
+        0,
+        window.innerHeight - vv!.height - vv!.offsetTop,
+      );
       setKeyboardInset(inset);
       if (inset > 64) {
         setEmojiOpen(false);
@@ -220,13 +241,14 @@ export default function RoomPage() {
     }
   }
 
-  async function onLeave() {
+  async function confirmLeave() {
     if (!roomId || leaving) return;
     setLeaving(true);
     setError('');
     try {
       await leaveRoom(roomId);
       void socketLeaveRoom(roomId);
+      setLeaveConfirmOpen(false);
       router.replace('/rooms');
     } catch (err) {
       setError(err instanceof Error ? err.message : '퇴장에 실패했습니다.');
@@ -256,44 +278,64 @@ export default function RoomPage() {
   }
 
   return (
-    <main
-      className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col bg-[#eef2f5]"
-      style={{
-        // 키보드만큼 화면을 위로 — 메시지·composer가 가려지지 않게
-        paddingBottom: keyboardInset,
-        transition: 'padding-bottom 120ms ease-out',
-      }}>
-      <header className="flex shrink-0 items-center gap-1 border-b border-black/[0.04] bg-[#eef2f5]/95 px-2 pb-2.5 pt-2 backdrop-blur-sm">
-        <Link
-          href="/rooms"
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[#335b73] transition-colors hover:bg-white/70"
-          aria-label="방 목록">
-          <ChevronLeft className="size-5" aria-hidden />
-        </Link>
-        <div className="min-w-0 flex-1 px-1 text-center">
-          <h1 className="truncate text-[15px] font-semibold tracking-tight text-neutral-800">
-            {room.name}
-          </h1>
-          <p className="truncate text-[11px] text-neutral-400">
-            {room.owner
-              ? `@${room.owner.nickname} · ${room.memberCount}명`
-              : `${room.memberCount}명`}
-          </p>
-        </div>
-        {room.ownerId !== user.id ? (
-          <button
-            type="button"
-            disabled={leaving}
-            onClick={() => void onLeave()}
-            className="shrink-0 rounded-full px-2.5 py-1.5 text-[12px] font-medium text-neutral-400 transition-colors hover:bg-white/70 hover:text-red-500 disabled:opacity-50">
-            {leaving ? '…' : '퇴장'}
-          </button>
-        ) : (
-          <span className="shrink-0 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-medium text-neutral-400">
-            방장
-          </span>
-        )}
-      </header>
+    <FriendIdsProvider>
+      <AvatarActionProvider>
+        <main
+          className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col bg-[#eef2f5]"
+          style={{
+            // 키보드만큼 화면을 위로 — 메시지·composer가 가려지지 않게
+            paddingBottom: keyboardInset,
+            transition: 'padding-bottom 120ms ease-out',
+          }}>
+          <header className="flex shrink-0 items-center gap-1 border-b border-black/[0.04] bg-[#eef2f5]/95 px-2 pb-2.5 pt-2 backdrop-blur-sm">
+            <Link
+              href="/rooms"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[#335b73] transition-colors hover:bg-white/70"
+              aria-label="방 목록">
+              <ChevronLeft className="size-5" aria-hidden />
+            </Link>
+            <div className="min-w-0 flex-1 px-1 text-center">
+              <h1 className="truncate text-[15px] font-semibold tracking-tight text-neutral-800">
+                {room.name}
+              </h1>
+              <p className="truncate text-[11px] text-neutral-400">
+                {room.owner ? (
+                  <>
+                    @{room.owner.nickname} ·{' '}
+                    <button
+                      type="button"
+                      onClick={() => setMembersOpen(true)}
+                      className="font-medium text-neutral-500 underline-offset-2 hover:underline">
+                      {room.memberCount}명
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setMembersOpen(true)}
+                    className="font-medium text-neutral-500 underline-offset-2 hover:underline">
+                    {room.memberCount}명
+                  </button>
+                )}
+              </p>
+            </div>
+            {room.ownerId !== user.id ? (
+              <button
+                type="button"
+                disabled={leaving}
+                onClick={() => setLeaveConfirmOpen(true)}
+                className="shrink-0 rounded-full px-2.5 py-1.5 text-[12px] font-medium text-neutral-400 transition-colors hover:bg-white/70 hover:text-red-500 disabled:opacity-50">
+                퇴장
+              </button>
+            ) : (
+              <Link
+                href={`/rooms/${room.id}/settings`}
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-white/70 hover:text-[#335b73]"
+                aria-label="방 설정">
+                <Settings className="size-4" aria-hidden />
+              </Link>
+            )}
+          </header>
 
       {error ? (
         <p className={`${fieldErrorClassName} px-4 py-1`}>{error}</p>
@@ -529,6 +571,27 @@ export default function RoomPage() {
         onClose={() => !deleting && setDeleteTargetId(null)}
         onConfirm={() => void confirmDelete()}
       />
-    </main>
+
+      <FeedDialog
+        open={leaveConfirmOpen}
+        title="이 방에서 나갈까요?"
+        description="다시 들어오려면 목록에서 입장하면 됩니다."
+        confirmLabel="퇴장"
+        pendingLabel="나가는 중…"
+        isPending={leaving}
+        onClose={() => !leaving && setLeaveConfirmOpen(false)}
+        onConfirm={() => void confirmLeave()}
+      />
+
+        <RoomMembersSheet
+          open={membersOpen}
+          onClose={() => setMembersOpen(false)}
+          roomId={room.id}
+          roomName={room.name}
+          myUserId={user.id}
+        />
+        </main>
+      </AvatarActionProvider>
+    </FriendIdsProvider>
   );
 }
