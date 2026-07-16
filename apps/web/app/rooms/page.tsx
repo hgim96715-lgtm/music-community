@@ -1,39 +1,71 @@
 'use client';
 import { useAuth } from '@/components/auth/AuthProvider';
-import {
-  appNavLinkClassName,
-  authPageClassName,
-  authTitleClassName,
-} from '@/lib/form';
+import { authPageClassName } from '@/lib/form';
 import { brandPillBtn } from '@/lib/neobrutal';
 import { fetchMyRooms, fetchPublicRooms, type ApiRoom } from '@/lib/rooms';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-function RoomCard({ room }: { room: ApiRoom }) {
+function roomInitial(room: ApiRoom) {
+  const raw = room.name.trim().charAt(0);
+  return raw || '♪';
+}
+
+function RoomRow({ room }: { room: ApiRoom }) {
   return (
     <li>
       <Link
         href={`/rooms/${room.id}`}
-        className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(51,91,115,0.07)] transition-[box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(51,91,115,0.12)] active:translate-y-0 active:shadow-[0_1px_3px_rgba(51,91,115,0.07)]">
-        <div className="min-w-0">
-          <p className="truncate text-[15px] font-semibold text-neutral-800">
+        className="flex items-center gap-3 px-3.5 py-3 transition-colors active:bg-neutral-50/80">
+        <span
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#dce8ef] text-[15px] font-semibold text-[#335b73]"
+          aria-hidden>
+          {roomInitial(room)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-semibold tracking-tight text-neutral-800">
             {room.name}
           </p>
-          <p className="mt-0.5 truncate text-xs text-neutral-400">
+          <p className="mt-0.5 truncate text-[13px] text-neutral-400">
             {room.owner
               ? `@${room.owner.nickname} · ${room.memberCount}명`
               : `${room.memberCount}명`}
+            {room.description ? ` · ${room.description}` : ''}
           </p>
         </div>
-        <ChevronRight
-          className="size-4 shrink-0 text-neutral-300"
-          aria-hidden
-        />
       </Link>
     </li>
+  );
+}
+
+function RoomSection({
+  title,
+  rooms,
+  empty,
+}: {
+  title: string;
+  rooms: ApiRoom[];
+  empty: string;
+}) {
+  return (
+    <section className="flex w-full flex-col gap-2">
+      <h2 className="px-1 text-[12px] font-semibold tracking-wide text-neutral-400">
+        {title}
+      </h2>
+      {rooms.length === 0 ? (
+        <p className="rounded-2xl bg-white/70 px-4 py-8 text-center text-sm text-neutral-400">
+          {empty}
+        </p>
+      ) : (
+        <ul className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(51,91,115,0.06)] divide-y divide-neutral-100/90">
+          {rooms.map((room) => (
+            <RoomRow key={room.id} room={room} />
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -85,54 +117,47 @@ export default function RoomsPage() {
   const discover = publicRooms.filter((r) => !mineIds.has(r.id));
 
   return (
-    <main className={`${authPageClassName} gap-6`}>
+    <main className={`${authPageClassName} gap-5`}>
       <div className="flex items-center justify-between gap-3">
         <Link
           href="/recommendations"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
+          className="inline-flex items-center gap-0.5 rounded-full px-1 py-1 text-sm font-medium text-neutral-500 transition-colors hover:text-brand-primary">
           <ChevronLeft className="size-4" aria-hidden />
           피드
         </Link>
-        <Link href="/rooms/new" className={appNavLinkClassName}>
-          만들기 →
+        <Link
+          href="/rooms/new"
+          className="inline-flex items-center gap-1 rounded-full bg-brand-primary-soft px-3 py-1.5 text-sm font-semibold text-brand-primary transition-colors hover:bg-[#c5d9e6]">
+          <Plus className="size-3.5" strokeWidth={2.25} aria-hidden />
+          만들기
         </Link>
       </div>
-      <h1 className={authTitleClassName}>방</h1>
+
+      <div className="flex flex-col gap-1">
+        <h1 className="text-[28px] font-semibold tracking-tight text-neutral-800">
+          방
+        </h1>
+        <p className="text-sm text-neutral-400">같이 듣는 공간</p>
+      </div>
+
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      <section className="flex w-full flex-col gap-2.5">
-        <h2 className="px-0.5 text-[11px] font-medium tracking-wide text-neutral-400">
-          내 방
-        </h2>
-        {mine.length === 0 ? (
-          <p className="text-sm text-neutral-400">아직 들어간 방이 없어요.</p>
-        ) : (
-          <ul className="flex flex-col gap-2.5">
-            {mine.map((room) => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </ul>
-        )}
-      </section>
+      <RoomSection
+        title="내 방"
+        rooms={mine}
+        empty="아직 들어간 방이 없어요"
+      />
+      <RoomSection
+        title="둘러보기"
+        rooms={discover}
+        empty="새 공개 방이 없어요"
+      />
 
-      <section className="flex w-full flex-col gap-2.5">
-        <h2 className="px-0.5 text-[11px] font-medium tracking-wide text-neutral-400">
-          둘러보기
-        </h2>
-        {discover.length === 0 ? (
-          <p className="text-sm text-neutral-400">새 공개 방이 없어요.</p>
-        ) : (
-          <ul className="flex flex-col gap-2.5">
-            {discover.map((room) => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <Link href="/rooms/new" className={`${brandPillBtn} text-center`}>
-        새 방 만들기
-      </Link>
+      {mine.length === 0 ? (
+        <Link href="/rooms/new" className={`${brandPillBtn} mt-1 text-center`}>
+          첫 방 만들기
+        </Link>
+      ) : null}
     </main>
   );
 }

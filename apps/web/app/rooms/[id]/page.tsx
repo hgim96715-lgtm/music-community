@@ -1,7 +1,7 @@
 'use client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authPageClassName, fieldErrorClassName } from '@/lib/form';
-import { formatCommentDate } from '@/lib/date';
+import { formatMessageTimeDivider, shouldInsertMessageDivider } from '@/lib/date';
 import {
   createRoomMessage,
   deleteRoomMessage,
@@ -18,10 +18,11 @@ import {
   socketJoinRoom,
   socketLeaveRoom,
 } from '@/lib/roomsSocket';
-import { ChevronLeft, ImageIcon, Link2, Loader2, MoreHorizontal, Music2, Plus, Send } from 'lucide-react';
+import { ChevronLeft, ImageIcon, Link2, Loader2, Music2, Plus, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FeedDialog } from '@/components/recommendations/FeedDialog';
 import { CommentEmojiPicker } from '@/components/recommendations/CommentEmojiPicker';
 
@@ -57,6 +58,8 @@ export default function RoomPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  /** Messages/인스타 — 꾹 누르면 뜨는 액션 시트 */
+  const [actionTargetId, setActionTargetId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
@@ -65,6 +68,37 @@ export default function RoomPage() {
   const [keyboardInset, setKeyboardInset] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+
+  function clearLongPress() {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }
+
+  function openMessageActions(messageId: string) {
+    clearLongPress();
+    longPressFiredRef.current = true;
+    setEmojiOpen(false);
+    setAttachOpen(false);
+    setActionTargetId(messageId);
+    try {
+      navigator.vibrate?.(12);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function startLongPress(messageId: string) {
+    longPressFiredRef.current = false;
+    clearLongPress();
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressTimerRef.current = null;
+      openMessageActions(messageId);
+    }, 420);
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -223,21 +257,21 @@ export default function RoomPage() {
 
   return (
     <main
-      className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col bg-brand-bg"
+      className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col bg-[#eef2f5]"
       style={{
         // 키보드만큼 화면을 위로 — 메시지·composer가 가려지지 않게
         paddingBottom: keyboardInset,
         transition: 'padding-bottom 120ms ease-out',
       }}>
-      <header className="flex shrink-0 items-center gap-2 px-3 pb-1.5 pt-2">
+      <header className="flex shrink-0 items-center gap-1 border-b border-black/[0.04] bg-[#eef2f5]/95 px-2 pb-2.5 pt-2 backdrop-blur-sm">
         <Link
           href="/rooms"
-          className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:text-brand-primary"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[#335b73] transition-colors hover:bg-white/70"
           aria-label="방 목록">
           <ChevronLeft className="size-5" aria-hidden />
         </Link>
-        <div className="min-w-0 flex-1 text-center">
-          <h1 className="truncate text-sm font-semibold text-neutral-800">
+        <div className="min-w-0 flex-1 px-1 text-center">
+          <h1 className="truncate text-[15px] font-semibold tracking-tight text-neutral-800">
             {room.name}
           </h1>
           <p className="truncate text-[11px] text-neutral-400">
@@ -251,11 +285,11 @@ export default function RoomPage() {
             type="button"
             disabled={leaving}
             onClick={() => void onLeave()}
-            className="shrink-0 px-2 text-[11px] font-medium text-neutral-400 transition-colors hover:text-red-500 disabled:opacity-50">
+            className="shrink-0 rounded-full px-2.5 py-1.5 text-[12px] font-medium text-neutral-400 transition-colors hover:bg-white/70 hover:text-red-500 disabled:opacity-50">
             {leaving ? '…' : '퇴장'}
           </button>
         ) : (
-          <span className="w-8 shrink-0 text-center text-[10px] font-medium text-neutral-300">
+          <span className="shrink-0 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-medium text-neutral-400">
             방장
           </span>
         )}
@@ -265,49 +299,103 @@ export default function RoomPage() {
         <p className={`${fieldErrorClassName} px-4 py-1`}>{error}</p>
       ) : null}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 py-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3.5 py-4">
         {messages.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-1.5 text-center">
-            <p className="text-sm text-neutral-500">아직 메시지가 없어요</p>
-            <p className="text-xs text-neutral-400">
+            <p className="text-[15px] font-medium text-neutral-500">
+              아직 메시지가 없어요
+            </p>
+            <p className="text-[13px] text-neutral-400">
               같이 듣는 첫 말을 걸어 보세요
             </p>
           </div>
         ) : (
-          messages.map((m) => {
+          messages.map((m, index) => {
             const mine = m.senderId === user.id;
             const canDelete = mine || room.ownerId === user.id;
+            const prev = index > 0 ? messages[index - 1] : null;
+            const showDivider = shouldInsertMessageDivider(
+              prev?.createdAt,
+              m.createdAt,
+            );
             return (
-              <div
-                key={m.id}
-                className={`group/msg flex max-w-[82%] flex-col ${mine ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
-                {!mine ? (
-                  <span className="mb-1 px-1 text-[11px] text-neutral-400">
-                    @{m.sender.nickname}
-                  </span>
+              <div key={m.id} className="flex w-full flex-col gap-3">
+                {showDivider ? (
+                  <p className="py-1 text-center text-[11px] font-medium tabular-nums text-neutral-400">
+                    {formatMessageTimeDivider(m.createdAt)}
+                  </p>
                 ) : null}
                 <div
-                  className={`relative rounded-[1.15rem] px-3.5 py-2 text-[13px] leading-relaxed ${
-                    mine
-                      ? 'rounded-br-md bg-[#4a6f86] text-white'
-                      : 'rounded-bl-md bg-white text-neutral-800 shadow-[0_1px_2px_rgba(51,91,115,0.08)]'
-                  } ${canDelete ? 'pr-8' : ''}`}>
-                  {m.type === 'text' ? m.body : '추천 곡'}
-                  {canDelete ? (
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTargetId(m.id)}
-                      className={`absolute right-1 top-1 rounded-full p-1 opacity-0 transition-opacity duration-150 group-hover/msg:opacity-70 hover:!opacity-100 focus-visible:opacity-100 ${
-                        mine ? 'text-white/80' : 'text-neutral-400'
-                      }`}
-                      aria-label="메시지 삭제">
-                      <MoreHorizontal className="size-3.5" aria-hidden />
-                    </button>
+                  className={`group/msg relative flex max-w-[78%] flex-col ${mine ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
+                  {!mine ? (
+                    <span className="mb-1 px-1.5 text-[11px] font-medium text-neutral-400">
+                      @{m.sender.nickname}
+                    </span>
                   ) : null}
+
+                  <div
+                    role={canDelete ? 'button' : undefined}
+                    tabIndex={canDelete ? 0 : undefined}
+                    onPointerDown={
+                      canDelete
+                        ? () => {
+                            startLongPress(m.id);
+                          }
+                        : undefined
+                    }
+                    onPointerMove={
+                      canDelete
+                        ? (e) => {
+                            // 스크롤 중이면 롱프레스 취소
+                            if (
+                              longPressTimerRef.current !== null &&
+                              (Math.abs(e.movementX) > 6 ||
+                                Math.abs(e.movementY) > 6)
+                            ) {
+                              clearLongPress();
+                            }
+                          }
+                        : undefined
+                    }
+                    onPointerUp={canDelete ? clearLongPress : undefined}
+                    onPointerLeave={canDelete ? clearLongPress : undefined}
+                    onPointerCancel={canDelete ? clearLongPress : undefined}
+                    onClick={
+                      canDelete
+                        ? (e) => {
+                            if (longPressFiredRef.current) {
+                              e.preventDefault();
+                              longPressFiredRef.current = false;
+                            }
+                          }
+                        : undefined
+                    }
+                    onContextMenu={
+                      canDelete
+                        ? (e) => {
+                            e.preventDefault();
+                            openMessageActions(m.id);
+                          }
+                        : undefined
+                    }
+                    onKeyDown={
+                      canDelete
+                        ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              openMessageActions(m.id);
+                            }
+                          }
+                        : undefined
+                    }
+                    className={`select-none px-3.5 py-2 text-[15px] leading-snug outline-none touch-manipulation ${
+                      mine
+                        ? 'rounded-[1.25rem] rounded-br-md bg-[#335b73] text-white'
+                        : 'rounded-[1.25rem] rounded-bl-md bg-white text-neutral-800 shadow-[0_0.5px_1px_rgba(0,0,0,0.06)]'
+                    }`}>
+                    {m.type === 'text' ? m.body : '추천 곡'}
+                  </div>
                 </div>
-                <span className="mt-0.5 px-1 text-[10px] text-neutral-300">
-                  {formatCommentDate(m.createdAt)}
-                </span>
               </div>
             );
           })
@@ -315,12 +403,12 @@ export default function RoomPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* composer — 하단 고정 흐름 · safe-area · 피커는 이 위(bottom-full) */}
+      {/* composer — Messages식 하단 바 · safe-area */}
       <form
         onSubmit={onSend}
-        className="relative z-20 flex shrink-0 items-center gap-1.5 overflow-visible bg-brand-bg px-3 pt-1"
+        className="relative z-20 flex shrink-0 items-center gap-1.5 overflow-visible border-t border-black/[0.04] bg-[#e8ecef] px-2.5 pt-2"
         style={{
-          paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))',
+          paddingBottom: 'max(0.65rem, env(safe-area-inset-bottom, 0px))',
         }}>
         <div className="relative shrink-0">
           <button
@@ -332,7 +420,7 @@ export default function RoomPage() {
             }}
             aria-label="첨부"
             aria-expanded={attachOpen}
-            className="flex size-9 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 disabled:opacity-40">
+            className="flex size-9 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-white/80 hover:text-neutral-700 disabled:opacity-40">
             <Plus className="size-5" strokeWidth={1.75} aria-hidden />
           </button>
           {attachOpen ? (
@@ -350,8 +438,12 @@ export default function RoomPage() {
                     disabled
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-neutral-400 disabled:cursor-not-allowed">
                     <Icon className="size-4 shrink-0" strokeWidth={1.75} />
-                    <span className="min-w-0 flex-1 font-medium">{item.label}</span>
-                    <span className="text-[10px] text-neutral-300">{item.hint}</span>
+                    <span className="min-w-0 flex-1 font-medium">
+                      {item.label}
+                    </span>
+                    <span className="text-[10px] text-neutral-300">
+                      {item.hint}
+                    </span>
                   </button>
                 );
               })}
@@ -376,21 +468,56 @@ export default function RoomPage() {
             setAttachOpen(false);
           }}
           maxLength={2000}
-          placeholder="메시지…"
-          className="min-w-0 flex-1 rounded-full border-0 bg-white px-3.5 py-2.5 text-sm text-neutral-800 shadow-[0_1px_2px_rgba(51,91,115,0.06)] outline-none placeholder:text-neutral-300 focus:ring-2 focus:ring-[#335b73]/20"
+          placeholder="메시지"
+          className="min-w-0 flex-1 rounded-[1.25rem] border-0 bg-white px-3.5 py-2 text-[15px] text-neutral-800 outline-none placeholder:text-neutral-300 focus:ring-2 focus:ring-[#335b73]/15"
         />
         <button
           type="submit"
           disabled={sending || !body.trim()}
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#335b73] text-white shadow-[0_1px_3px_rgba(51,91,115,0.25)] transition-transform active:scale-95 disabled:opacity-35"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[#335b73] text-white transition-transform active:scale-95 disabled:opacity-30"
           aria-label="보내기">
           {sending ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
-            <Send className="size-4" aria-hidden />
+            <Send className="size-3.5" aria-hidden />
           )}
         </button>
       </form>
+
+      {typeof document !== 'undefined' && actionTargetId
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label="메시지 메뉴"
+              onClick={() => setActionTargetId(null)}>
+              <div
+                className="w-full max-w-sm px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-0 sm:pb-0"
+                onClick={(e) => e.stopPropagation()}>
+                <div className="overflow-hidden rounded-[14px] bg-white/95 shadow-[0_8px_32px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                  <button
+                    type="button"
+                    disabled={deleting}
+                    onClick={() => {
+                      setDeleteTargetId(actionTargetId);
+                      setActionTargetId(null);
+                    }}
+                    className="w-full py-3.5 text-[17px] font-semibold text-red-500 transition-colors active:bg-neutral-100">
+                    삭제
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActionTargetId(null)}
+                  className="mt-2 w-full rounded-[14px] bg-white py-3.5 text-[17px] font-semibold text-[#335b73] shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-colors active:bg-neutral-50">
+                  취소
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
 
       <FeedDialog
         open={deleteTargetId !== null}

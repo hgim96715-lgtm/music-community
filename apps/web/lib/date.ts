@@ -45,3 +45,37 @@ export function formatCommentDate(iso: string): string {
   if (days === 1) return `어제`;
   return `${days}일 전`;
 }
+
+/** Apple Messages식 — 가운데 시간 구분 `(오늘) 오전 8:42` */
+export function formatMessageTimeDivider(iso: string): string {
+  const date = new Date(iso);
+  const time = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: KST,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(date);
+  const days = differenceInCalendarDays(new Date(), date);
+  if (days <= 0) return `(오늘) ${time}`;
+  if (days === 1) return `(어제) ${time}`;
+  if (days < 7) return `(${days}일 전) ${time}`;
+  const day = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: KST,
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+  return `(${day}) ${time}`;
+}
+
+/** 첫 메시지 · 날짜 바뀜 · 직전 대비 45분+ 공백이면 구분선 */
+export function shouldInsertMessageDivider(
+  previousIso: string | null | undefined,
+  nextIso: string,
+): boolean {
+  if (!previousIso) return true;
+  const prev = new Date(previousIso);
+  const next = new Date(nextIso);
+  if (kstDateKey(prev) !== kstDateKey(next)) return true;
+  return Math.abs(next.getTime() - prev.getTime()) >= 45 * 60 * 1000;
+}
+
