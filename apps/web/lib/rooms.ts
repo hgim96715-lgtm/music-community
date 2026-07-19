@@ -55,6 +55,15 @@ export type ApiRoomMessage = {
   sender: ApiRoomOwner;
 };
 
+/** 공백·쉼표 구분 · `#` 제거 · 최대 8개 */
+export function parseTopicTags(raw: string): string[] {
+  return raw
+    .split(/[\s,]+/)
+    .map((t) => t.replace(/^#/, '').trim())
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
 export type CreateRoomBody = {
   name: string;
   description?: string;
@@ -119,6 +128,28 @@ export function joinRoom(roomId: string): Promise<ApiRoomMember> {
 /** POST /rooms/:id/leave — 204 */
 export function leaveRoom(roomId: string): Promise<void> {
   return authFetchApiVoid(`/rooms/${roomId}/leave`, { method: 'POST' });
+}
+/** POST /rooms/:id/close — 방장만 · status=closed */
+export function closeRoom(roomId: string): Promise<ApiRoom> {
+  return authFetchApi<ApiRoom>(`/rooms/${roomId}/close`, {
+    method: 'POST',
+  });
+}
+
+/** POST /rooms/:id/transfer — 방장만 · body { userId } */
+export function transferRoom(roomId: string, userId: string): Promise<ApiRoom> {
+  return authFetchApi<ApiRoom>(`/rooms/${roomId}/transfer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  });
+}
+
+/** POST /rooms/:id/members/:userId/kick — 방장만 · 204 */
+export function kickRoomMember(roomId: string, userId: string): Promise<void> {
+  return authFetchApiVoid(`/rooms/${roomId}/members/${userId}/kick`, {
+    method: 'POST',
+  });
 }
 
 /** GET /rooms/:id/messages */

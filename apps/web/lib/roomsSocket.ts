@@ -59,3 +59,13 @@ export function onRoomMessageDeleted(
     s.off('message:deleted', handler);
   };
 }
+
+export function onRoomKicked(
+  handler: (payload: { roomId: string }) => void,
+): () => void {
+  const s = getRoomSocket();
+  s.on('room:kicked', handler);
+  return () => {
+    s.off('room:kicked', handler);
+  };
+}
