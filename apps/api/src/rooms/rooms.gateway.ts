@@ -52,6 +52,7 @@ export class RoomsGateway implements OnGatewayConnection {
         secret: this.configService.getOrThrow(EnvKeys.API_JWT_SECRET),
       });
       client.data.userId = payload.sub;
+      await client.join(`user:${payload.sub}`);
     } catch {
       client.disconnect();
     }
@@ -88,5 +89,9 @@ export class RoomsGateway implements OnGatewayConnection {
   /** 전체에서 삭제된 메시지 */
   emitMessageDeleted(roomId: string, messageId: string) {
     this.server.to(`room:${roomId}`).emit('message:deleted', { messageId });
+  }
+  /** 강퇴 — 대상 유저 소켓만 (방 전체에 뿌리지 않음) */
+  emitMemberKicked(roomId: string, targetUserId: string) {
+    this.server.to(`user:${targetUserId}`).emit('room:kicked', { roomId });
   }
 }

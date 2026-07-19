@@ -19,6 +19,7 @@ import { RoomsService } from './rooms.service';
 import { CreateRoomMessageDto } from './dto/create-room-message.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { RoomsGateway } from './rooms.gateway';
+import { TransfreRoomDto } from './dto/tansfer-room.dto';
 
 @ApiTags('Rooms')
 @Controller('rooms')
@@ -82,6 +83,17 @@ export class RoomsController {
     return await this.roomsService.leave(roomId, userId);
   }
 
+  @ApiOperation({ summary: '멤버 강퇴(방장)' })
+  @Post(':id/members/:userId/kick')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async kick(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+    @Param('userId', ParseUUIDPipe) targetUserId: string,
+  ) {
+    await this.roomsService.kick(roomId, userId, targetUserId);
+    this.roomsGateway.emitMemberKicked(roomId, targetUserId);
+  }
   @ApiOperation({ summary: '방 설정 수정(방장)' })
   @Patch(':id')
   async update(
@@ -90,6 +102,25 @@ export class RoomsController {
     @Body() dto: UpdateRoomDto,
   ) {
     return await this.roomsService.update(roomId, userId, dto);
+  }
+
+  @ApiOperation({ summary: '방 닫기(방장만)' })
+  @Post(':id/close')
+  async close(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+  ) {
+    return await this.roomsService.close(roomId, userId);
+  }
+
+  @ApiOperation({ summary: '방장 넘기기' })
+  @Post(':id/transfer')
+  async transfer(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+    @Body() dto: TransfreRoomDto,
+  ) {
+    return await this.roomsService.transfer(roomId, userId, dto.userId);
   }
 
   @ApiOperation({ summary: '방 메시지 전송' })

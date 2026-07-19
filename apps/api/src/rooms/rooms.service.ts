@@ -86,6 +86,13 @@ export class RoomsService {
         '초대·비공개 방은 초대 없이 입장할 수 없습니다.',
       );
     }
+
+    const banned = await this.prisma.roomBan.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+    });
+    if (banned) {
+      throw new ForbiddenException('이 방에 다시 들어갈 수 없습니다.');
+    }
     const existing = await this.prisma.roomMember.findUnique({
       where: {
         roomId_userId: { roomId, userId },
@@ -315,5 +322,96 @@ export class RoomsService {
         return 1;
       return a.joinedAt.getTime() - b.joinedAt.getTime();
     });
+  }
+
+  async close(roomId: string, actorId: string) {
+    const room = await this.findById(roomId);
+    if (room.ownerId !== actorId) {
+      throw new ForbiddenException('방장만 방을 닫을 수 있습니다.');
+    }
+    return this.prisma.room.update({
+      where: { id: roomId },
+      data: { status: RoomStatus.closed },
+      include: {
+        owner: {
+          select: { id: true, nickname: true, image: true },
+        },
+      },
+    });
+  }
+
+  async transfer(roomId: string, actorId: string, newOwnerId: string) {
+    const room = await this.findById(roomId);
+    if (room.ownerId !== actorId) {
+      throw new ForbiddenException('방장만 방을 넘길 수 있습니다.');
+    }
+    if (newOwnerId === actorId) {
+      throw new BadRequestException('자기 자신을 방장으로 넘길 수 없습니다.');
+    }
+
+    const target = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId: newOwnerId } },
+    });
+    if (!target) {
+      throw new NotFoundException('방에 속하지 않은 사용자 입니다.');
+    }
+    const oldOwner = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId: room.ownerId } },
+    });
+    if (!oldOwner) {
+      throw new NotFoundException('방장 멤버 정보를 찾을 수 없습니다.');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.room.update({
+        where: { id: roomId },
+        data: { ownerId: newOwnerId },
+      }),
+      this.prisma.roomMember.update({
+        where: { id: target.id },
+        data: { role: RoomMemberRole.owner },
+      }),
+      this.prisma.roomMember.update({
+        where: { id: oldOwner.id },
+        data: { role: RoomMemberRole.member },
+      }),
+    ]);
+    return this.findById(roomId);
+  }
+
+  async kick(roomId: string, actorId: string, targetUserId: string) {
+    const room = await this.findById(roomId);
+    if (room.ownerId !== actorId) {
+      throw new ForbiddenException('방장만 멤버를 내보낼 수 있습니다.');
+    }
+    if (targetUserId === actorId) {
+      throw new BadRequestException('자기 자신은 강퇴할 수 없습니다.');
+    }
+    if (targetUserId === room.ownerId) {
+      throw new BadRequestException(
+        '방장은 강퇴할 수 없습니다. 방장 넘기기를 사용하세요.',
+      );
+    }
+    const target = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId: targetUserId } },
+    });
+    if (!target) {
+      throw new NotFoundException('방에 속하지 않은 사용자 입니다.');
+    }
+    if (target.role === RoomMemberRole.owner) {
+      throw new BadRequestException('방장은 강퇴할 수 없습니다.');
+    }
+    await this.prisma.$transaction([
+      this.prisma.roomBan.upsert({
+        where: { roomId_userId: { roomId, userId: targetUserId } },
+        create: { roomId, userId: targetUserId, kickedBy: actorId },
+        update: { kickedBy: actorId },
+      }),
+      this.prisma.roomMember.delete({ where: { id: target.id } }),
+      this.prisma.room.update({
+        where: { id: roomId },
+        data: { memberCount: { decrement: 1 } },
+      }),
+    ]);
   }
 }

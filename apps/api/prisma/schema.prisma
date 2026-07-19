@@ -80,6 +80,9 @@ model User {
   ownedRooms Room[] @relation("RoomOwner")
   roomMembers RoomMember[]
   roomMessages RoomMessage[]
+
+  roomBans RoomBan[] @relation("RoomBanUser")
+  roomBansIssued RoomBan[] @relation("RoomBanKicker")
 }
 
 
@@ -208,6 +211,8 @@ model Room {
     members RoomMember[]
     messages RoomMessage[]
 
+    bans RoomBan[]
+
     @@index([status,visibility])
     @@index([ownerId])
 }   
@@ -242,4 +247,19 @@ model RoomMessage {
   @@index([senderId])
 }
 
+
+model RoomBan {
+    id String @id @default(uuid(7)) @db.Uuid
+    roomId String @db.Uuid
+    userId String @db.Uuid
+    kickedBy String @db.Uuid
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+    room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+    user User @relation("RoomBanUser", fields: [userId], references: [id], onDelete: Cascade)
+    kicker User @relation("RoomBanKicker", fields: [kickedBy], references: [id], onDelete: Cascade)
+
+    @@unique([roomId, userId])
+    @@index([userId])
+}
 
