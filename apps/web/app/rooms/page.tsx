@@ -14,6 +14,15 @@ function roomInitial(room: ApiRoom) {
 }
 
 function RoomRow({ room }: { room: ApiRoom }) {
+  const tags = room.topicTags.slice(0, 2).map((t) => `#${t.replace(/^#/, '')}`);
+  const tip = tags.length > 0 ? tags.join(' ') : room.description?.trim();
+  const meta = [
+    room.owner ? `@${room.owner.nickname}` : null,
+    `${room.memberCount}명`,
+    tip,
+  ]
+    .filter(Boolean)
+    .join(' · ');
   return (
     <li>
       <Link
@@ -25,7 +34,7 @@ function RoomRow({ room }: { room: ApiRoom }) {
           {roomInitial(room)}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="flex min-w-0 items-center gap-1 truncate text-[15px] font-semibold tracking-tight text-neutral-800">
+          <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold tracking-tight text-neutral-800">
             {room.visibility === 'private' ? (
               <LockIcon
                 className="size-3.5 shrink-0 text-neutral-400"
@@ -34,11 +43,8 @@ function RoomRow({ room }: { room: ApiRoom }) {
             ) : null}
             <span className="truncate">{room.name}</span>
           </p>
-          <p className="mt-0.5 truncate text-[13px] text-neutral-400">
-            {room.owner
-              ? `@${room.owner.nickname} · ${room.memberCount}명`
-              : `${room.memberCount}명`}
-            {room.description ? ` · ${room.description}` : ''}
+          <p className="mt-0.5 truncate text-[13px] leading-snug text-neutral-400">
+            {meta}
           </p>
         </div>
       </Link>
