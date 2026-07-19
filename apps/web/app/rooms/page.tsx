@@ -3,7 +3,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { authPageClassName } from '@/lib/form';
 import { brandPillBtn } from '@/lib/neobrutal';
 import { fetchMyRooms, fetchPublicRooms, type ApiRoom } from '@/lib/rooms';
-import { ChevronLeft, Loader2, LockIcon, Plus } from 'lucide-react';
+import { ChevronLeft, Loader2, LockIcon, Plus, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -73,6 +73,61 @@ function RoomSection({
       ) : (
         <ul className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(51,91,115,0.06)] divide-y divide-neutral-100/90">
           {rooms.map((room) => (
+            <RoomRow key={room.id} room={room} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function roomMatchedsQuery(room: ApiRoom, raw: string): boolean {
+  const q = raw.trim().replace(/^#/, '').toLowerCase();
+  if (!q) return true;
+  if (room.name.toLowerCase().includes(q)) return true;
+  return room.topicTags.some((t) =>
+    t.replace(/^#/, '').toLowerCase().includes(q),
+  );
+}
+
+function DiscoverSection({ rooms }: { rooms: ApiRoom[] }) {
+  const [query, setQuery] = useState('');
+  const filtered = rooms.filter((r) => roomMatchedsQuery(r, query));
+  const empty =
+    rooms.length === 0 ? '새 공개 방이 없어요' : '그런 방은 아직 없어요';
+  return (
+    <section className="flex w-full flex-col gap-2">
+      <h2 className="px-1 text-[12px] font-semibold tracking-wide text-neutral-400">
+        둘러보기
+      </h2>
+      {rooms.length > 0 ? (
+        <div className="flex h-10 items-center gap-2 rounded-full bg-white px-3.5 shadow-[0_1px_2px_rgba(51,91,115,0.06)] focus-within:ring-2 focus-within:ring-brand-primary-soft">
+          <Search className="size-3.5 shrink-0 text-neutral-300" aria-hidden />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="방 이름이나 #재즈…"
+            className="min-w-0 flex-1 bg-transparent text-[14px] text-neutral-800 outline-none placeholder:text-neutral-300"
+          />
+          {query ? (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="rounded-full p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+              aria-label="검색어 지우기">
+              <X className="size-4" strokeWidth={2} />
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+      {filtered.length === 0 ? (
+        <p className="rounded-2xl bg-white/70 px-4 py-8 text-center text-sm text-neutral-400">
+          {empty}
+        </p>
+      ) : (
+        <ul className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(51,91,115,0.06)] divide-y divide-neutral-100/90">
+          {filtered.map((room) => (
             <RoomRow key={room.id} room={room} />
           ))}
         </ul>
@@ -155,11 +210,7 @@ export default function RoomsPage() {
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <RoomSection title="내 방" rooms={mine} empty="아직 들어간 방이 없어요" />
-      <RoomSection
-        title="둘러보기"
-        rooms={discover}
-        empty="새 공개 방이 없어요"
-      />
+      <DiscoverSection rooms={discover} />
 
       {mine.length === 0 ? (
         <Link href="/rooms/new" className={`${brandPillBtn} mt-1 text-center`}>
