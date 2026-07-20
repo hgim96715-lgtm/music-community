@@ -199,7 +199,8 @@ export default function MyProfilePage() {
         </section>
       ) : (
         <section className={`${postCardShell} w-full`}>
-          <div className={`${postCard} flex flex-col items-center gap-3 px-6 py-8 text-center`}>
+          <div
+            className={`${postCard} flex flex-col items-center gap-3 px-6 py-8 text-center`}>
             <div
               className="flex size-16 items-center justify-center rounded-full border-2 border-brand-border bg-brand-primary-soft text-brand-primary shadow-[3px_3px_0_var(--color-brand-shadow-soft)]"
               aria-hidden>
@@ -260,6 +261,7 @@ export default function MyProfilePage() {
           loading={albumLoading}
           error={albumError}
           onSelectCard={setSelected}
+          onCardsChange={setSavedCards}
         />
       </section>
 

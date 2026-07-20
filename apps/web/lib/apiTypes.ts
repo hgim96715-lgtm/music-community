@@ -102,6 +102,7 @@ export type ApiSavedCard = {
   userId: string;
   recommendationId: string;
   customization: ApiSavedCardCustomization;
+  shelfRank: 1 | 2 | 3 | null;
   createdAt: string;
   updatedAt: string;
   recommendation: ApiSavedCardRecommendation;

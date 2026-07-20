@@ -128,6 +128,18 @@ export async function patchSavedCard(
     body: JSON.stringify({ customization }),
   });
 }
+/** PATCH /saved-cards/:id/shelf — Top 1~3 | null(책장) */
+export function patchSavedCardShelf(
+  id: string,
+  shelfRank: 1 | 2 | 3 | null,
+): Promise<ApiSavedCard> {
+  return authFetchApi<ApiSavedCard>(`/saved-cards/${id}/shelf`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ shelfRank }),
+  });
+}
+
 /** DELETE /saved-cards/:id — 204 */
 export function deleteSavedCard(id: string) {
   return authFetchApiVoid(`/saved-cards/${id}`, { method: 'DELETE' });
