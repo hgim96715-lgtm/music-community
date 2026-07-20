@@ -357,7 +357,7 @@ export class RoomsService {
   }
 
   async listMine(userId: string) {
-    return this.prisma.room.findMany({
+    const rooms = await this.prisma.room.findMany({
       where: {
         status: RoomStatus.active,
         members: { some: { userId } },
@@ -367,7 +367,22 @@ export class RoomsService {
         owner: {
           select: { id: true, nickname: true, image: true },
         },
+        messages: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { createdAt: true },
+        },
       },
+    });
+    return rooms.map((room) => {
+      const { messages, ...rest } = this.toClientRoom(room);
+      const at = messages[0]?.createdAt;
+      return {
+        ...rest,
+        lastMessageAt:
+          at instanceof Date ? at.toISOString() : at ? String(at) : null,
+      };
     });
   }
 

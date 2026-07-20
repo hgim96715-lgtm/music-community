@@ -23,6 +23,8 @@ export type ApiRoom = {
   createdAt: string;
   updatedAt: string;
   owner: ApiRoomOwner;
+  /** `/rooms/mine`만 · 최근 메시지 시각 */
+  lastMessageAt?: string | null;
 };
 
 export type ApiRoomMember = {
@@ -44,6 +46,14 @@ export function fetchRoomMembers(
   return authFetchApi<ApiRoomMemberWithUser[]>(`/rooms/${roomId}/members`);
 }
 
+export type ApiRoomRecommendation = {
+  id: string;
+  title: string;
+  artist: string;
+  embedUrl: string;
+  moods: string[];
+};
+
 export type ApiRoomMessage = {
   id: string;
   roomId: string;
@@ -54,6 +64,7 @@ export type ApiRoomMessage = {
   createdAt: string;
   deletedAt: string | null;
   sender: ApiRoomOwner;
+  recommendation: ApiRoomRecommendation | null;
 };
 
 /** 공백·쉼표 구분 · `#` 제거 · 최대 8개 */

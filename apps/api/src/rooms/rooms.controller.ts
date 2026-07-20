@@ -103,7 +103,17 @@ export class RoomsController {
     @Param('id', ParseUUIDPipe) roomId: string,
     @Body() dto: UpdateRoomDto,
   ) {
-    return await this.roomsService.update(roomId, userId, dto);
+    const updated = await this.roomsService.update(roomId, userId, dto);
+    this.roomsGateway.emitRoomUpdated(roomId, {
+      description: updated.description,
+      name: updated.name,
+      topicTags: updated.topicTags,
+      updatedAt:
+        updated.updatedAt instanceof Date
+          ? updated.updatedAt.toISOString()
+          : String(updated.updatedAt),
+    });
+    return updated;
   }
 
   @ApiOperation({ summary: '방 닫기(방장만)' })

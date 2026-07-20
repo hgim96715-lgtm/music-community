@@ -1,87 +1,18 @@
 'use client';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { RoomCoverCard } from '@/components/rooms/RoomCoverCard';
 import { authPageClassName } from '@/lib/form';
 import { brandPillBtn } from '@/lib/neobrutal';
+import { hasUnreadChat } from '@/lib/roomChatUnreadStorage';
 import { fetchMyRooms, fetchPublicRooms, type ApiRoom } from '@/lib/rooms';
-import { ChevronLeft, Loader2, LockIcon, Plus, Search, X } from 'lucide-react';
+import { ChevronLeft, Loader2, Plus, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-function roomInitial(room: ApiRoom) {
-  const raw = room.name.trim().charAt(0);
-  return raw || '♪';
-}
+type RoomsTab = 'mine' | 'discover';
 
-function RoomRow({ room }: { room: ApiRoom }) {
-  const tags = room.topicTags.slice(0, 2).map((t) => `#${t.replace(/^#/, '')}`);
-  const tip = tags.length > 0 ? tags.join(' ') : room.description?.trim();
-  const meta = [
-    room.owner ? `@${room.owner.nickname}` : null,
-    `${room.memberCount}명`,
-    tip,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  return (
-    <li>
-      <Link
-        href={`/rooms/${room.id}`}
-        className="flex items-center gap-3 px-3.5 py-3 transition-colors active:bg-[color:var(--color-lp-paper-mute)]">
-        <span
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-[15px] font-semibold text-brand-primary"
-          aria-hidden>
-          {roomInitial(room)}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold tracking-tight text-[color:var(--color-lp-ink)]">
-            {room.visibility === 'private' ? (
-              <LockIcon
-                className="size-3.5 shrink-0 text-[color:var(--color-lp-muted)]"
-                aria-label="비공개"
-              />
-            ) : null}
-            <span className="truncate">{room.name}</span>
-          </p>
-          <p className="mt-0.5 truncate text-[13px] leading-snug text-neutral-400">
-            {meta}
-          </p>
-        </div>
-      </Link>
-    </li>
-  );
-}
-
-function RoomSection({
-  title,
-  rooms,
-  empty,
-}: {
-  title: string;
-  rooms: ApiRoom[];
-  empty: string;
-}) {
-  return (
-    <section className="flex w-full flex-col gap-2">
-      <h2 className="px-1 text-[12px] font-semibold tracking-wide text-brand-primary/50">
-        {title}
-      </h2>
-      {rooms.length === 0 ? (
-        <p className="rounded-2xl bg-[color:var(--color-lp-paper)]/80 px-4 py-8 text-center text-sm text-[color:var(--color-lp-muted)]">
-          {empty}
-        </p>
-      ) : (
-        <ul className="overflow-hidden rounded-2xl bg-[color:var(--color-lp-paper)] shadow-[0_1px_2px_rgba(0,0,0,0.2)] divide-y divide-[rgb(42_34_28/0.08)]">
-          {rooms.map((room) => (
-            <RoomRow key={room.id} room={room} />
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-function roomMatchedsQuery(room: ApiRoom, raw: string): boolean {
+function roomMatchesQuery(room: ApiRoom, raw: string): boolean {
   const q = raw.trim().replace(/^#/, '').toLowerCase();
   if (!q) return true;
   if (room.name.toLowerCase().includes(q)) return true;
@@ -90,49 +21,38 @@ function roomMatchedsQuery(room: ApiRoom, raw: string): boolean {
   );
 }
 
-function DiscoverSection({ rooms }: { rooms: ApiRoom[] }) {
-  const [query, setQuery] = useState('');
-  const filtered = rooms.filter((r) => roomMatchedsQuery(r, query));
-  const empty =
-    rooms.length === 0 ? '새 방이 없어요' : '그런 방은 아직 없어요';
+function RoomGrid({
+  rooms,
+  empty,
+  userId,
+  showUnread = false,
+}: {
+  rooms: ApiRoom[];
+  empty: string;
+  userId?: string;
+  showUnread?: boolean;
+}) {
+  if (rooms.length === 0) {
+    return (
+      <p className="rounded-2xl bg-[color:var(--color-lp-paper)]/80 px-4 py-8 text-center text-sm text-[color:var(--color-lp-muted)]">
+        {empty}
+      </p>
+    );
+  }
   return (
-    <section className="flex w-full flex-col gap-2">
-      <h2 className="px-1 text-[12px] font-semibold tracking-wide text-brand-primary/50">
-        둘러보기
-      </h2>
-      {rooms.length > 0 ? (
-        <div className="flex h-10 items-center gap-2 rounded-full bg-[color:var(--color-lp-paper)] px-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.2)] focus-within:ring-2 focus-within:ring-brand-primary/30">
-          <Search className="size-3.5 shrink-0 text-[color:var(--color-lp-muted)]" aria-hidden />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="방 이름이나 #재즈…"
-            className="min-w-0 flex-1 bg-transparent text-[14px] text-[color:var(--color-lp-ink)] outline-none placeholder:text-[color:var(--color-lp-muted)]"
-          />
-          {query ? (
-            <button
-              type="button"
-              onClick={() => setQuery('')}
-              className="rounded-full p-1 text-[color:var(--color-lp-muted)] hover:bg-brand-primary-soft hover:text-brand-primary"
-              aria-label="검색어 지우기">
-              <X className="size-4" strokeWidth={2} />
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-      {filtered.length === 0 ? (
-        <p className="rounded-2xl bg-[color:var(--color-lp-paper)]/80 px-4 py-8 text-center text-sm text-[color:var(--color-lp-muted)]">
-          {empty}
-        </p>
-      ) : (
-        <ul className="overflow-hidden rounded-2xl bg-[color:var(--color-lp-paper)] shadow-[0_1px_2px_rgba(0,0,0,0.2)] divide-y divide-[rgb(42_34_28/0.08)]">
-          {filtered.map((room) => (
-            <RoomRow key={room.id} room={room} />
-          ))}
-        </ul>
-      )}
-    </section>
+    <ul className="grid grid-cols-3 gap-x-2 gap-y-5">
+      {rooms.map((room) => (
+        <RoomCoverCard
+          key={room.id}
+          room={room}
+          unread={
+            showUnread && userId
+              ? hasUnreadChat(userId, room.id, room.lastMessageAt ?? null)
+              : false
+          }
+        />
+      ))}
+    </ul>
   );
 }
 
@@ -143,6 +63,8 @@ export default function RoomsPage() {
   const [publicRooms, setPublicRooms] = useState<ApiRoom[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState<RoomsTab>('mine');
+  const [query, setQuery] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -172,6 +94,22 @@ export default function RoomsPage() {
     void load();
   }, [authLoading, user, router, load]);
 
+  const mineIds = useMemo(() => new Set(mine.map((r) => r.id)), [mine]);
+  const discover = useMemo(
+    () => publicRooms.filter((r) => !mineIds.has(r.id)),
+    [publicRooms, mineIds],
+  );
+  const filteredDiscover = useMemo(
+    () => discover.filter((r) => roomMatchesQuery(r, query)),
+    [discover, query],
+  );
+  const mineHasUnread = useMemo(() => {
+    if (!user) return false;
+    return mine.some((r) =>
+      hasUnreadChat(user.id, r.id, r.lastMessageAt ?? null),
+    );
+  }, [mine, user]);
+
   if (authLoading || !user || loading) {
     return (
       <main className={authPageClassName}>
@@ -179,9 +117,6 @@ export default function RoomsPage() {
       </main>
     );
   }
-
-  const mineIds = new Set(mine.map((r) => r.id));
-  const discover = publicRooms.filter((r) => !mineIds.has(r.id));
 
   return (
     <main className={`${authPageClassName} gap-5`}>
@@ -204,19 +139,101 @@ export default function RoomsPage() {
         <h1 className="text-[28px] font-semibold tracking-tight text-brand-primary">
           방
         </h1>
-        <p className="text-sm text-[color:var(--color-lp-muted)]">같이 듣는 공간</p>
+        <p className="text-sm text-[color:var(--color-lp-muted)]">
+          판을 골라 같이 들어요
+        </p>
       </div>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      <RoomSection title="내 방" rooms={mine} empty="아직 들어간 방이 없어요" />
-      <DiscoverSection rooms={discover} />
+      <div
+        role="tablist"
+        aria-label="방 목록"
+        className="flex rounded-full bg-[color:var(--color-lp-paper)]/12 p-1">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'mine'}
+          onClick={() => setTab('mine')}
+          className={`relative flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
+            tab === 'mine'
+              ? 'bg-[color:var(--color-lp-paper)] text-[color:var(--color-lp-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.2)]'
+              : 'text-[color:var(--color-lp-muted)] hover:text-brand-primary'
+          }`}>
+          내 방
+          {mineHasUnread ? (
+            <span
+              className="absolute right-3 top-2 size-1.5 rounded-full bg-brand-primary"
+              aria-hidden
+            />
+          ) : null}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'discover'}
+          onClick={() => setTab('discover')}
+          className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
+            tab === 'discover'
+              ? 'bg-[color:var(--color-lp-paper)] text-[color:var(--color-lp-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.2)]'
+              : 'text-[color:var(--color-lp-muted)] hover:text-brand-primary'
+          }`}>
+          둘러보기
+        </button>
+      </div>
 
-      {mine.length === 0 ? (
-        <Link href="/rooms/new" className={`${brandPillBtn} mt-1 text-center`}>
-          첫 방 만들기
-        </Link>
-      ) : null}
+      {tab === 'mine' ? (
+        <div role="tabpanel" className="flex flex-col gap-4">
+          <RoomGrid
+            rooms={mine}
+            empty="아직 들어간 방이 없어요"
+            userId={user.id}
+            showUnread
+          />
+          {mine.length === 0 ? (
+            <Link
+              href="/rooms/new"
+              className={`${brandPillBtn} text-center`}>
+              첫 방 만들기
+            </Link>
+          ) : null}
+        </div>
+      ) : (
+        <div role="tabpanel" className="flex flex-col gap-3">
+          {discover.length > 0 ? (
+            <div className="flex h-10 items-center gap-2 rounded-full bg-[color:var(--color-lp-paper)] px-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.2)] focus-within:ring-2 focus-within:ring-brand-primary/30">
+              <Search
+                className="size-3.5 shrink-0 text-[color:var(--color-lp-muted)]"
+                aria-hidden
+              />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="방 이름이나 #재즈…"
+                className="min-w-0 flex-1 bg-transparent text-[14px] text-[color:var(--color-lp-ink)] outline-none placeholder:text-[color:var(--color-lp-muted)]"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  className="rounded-full p-1 text-[color:var(--color-lp-muted)] hover:bg-brand-primary-soft hover:text-brand-primary"
+                  aria-label="검색어 지우기">
+                  <X className="size-4" strokeWidth={2} />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+          <RoomGrid
+            rooms={filteredDiscover}
+            empty={
+              discover.length === 0
+                ? '새 방이 없어요'
+                : '그런 방은 아직 없어요'
+            }
+          />
+        </div>
+      )}
     </main>
   );
 }

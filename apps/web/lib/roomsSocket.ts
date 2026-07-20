@@ -31,8 +31,22 @@ export function disconnectRoomSocket() {
 export function socketJoinRoom(roomId: string): Promise<{ ok: boolean }> {
   const s = getRoomSocket();
   return new Promise((resolve) => {
-    s.emit('join', { roomId }, (res: { ok: boolean }) => resolve(res));
+    const doJoin = () => {
+      s.emit('join', { roomId }, (res: { ok: boolean }) =>
+        resolve(res ?? { ok: false }),
+      );
+    };
+    if (s.connected) doJoin();
+    else s.once('connect', doJoin);
   });
+}
+
+export function onRoomSocketConnect(handler: () => void): () => void {
+  const s = getRoomSocket();
+  s.on('connect', handler);
+  return () => {
+    s.off('connect', handler);
+  };
 }
 
 export function socketLeaveRoom(roomId: string): Promise<{ ok: boolean }> {
@@ -67,5 +81,23 @@ export function onRoomKicked(
   s.on('room:kicked', handler);
   return () => {
     s.off('room:kicked', handler);
+  };
+}
+
+export type RoomUpdatedPayload = {
+  roomId: string;
+  description: string | null;
+  name: string;
+  topicTags: string[];
+  updatedAt: string;
+};
+
+export function onRoomUpdated(
+  handler: (payload: RoomUpdatedPayload) => void,
+): () => void {
+  const s = getRoomSocket();
+  s.on('room:updated', handler);
+  return () => {
+    s.off('room:updated', handler);
   };
 }

@@ -27,7 +27,7 @@ import { useEffect, useState } from 'react';
 
 export default function MyProfilePage() {
   const router = useRouter();
-  const { user, isLoading, setUser } = useAuth();
+  const { user, isLoading, setUser, clearSession } = useAuth();
   const [nickname, setNickname] = useState('');
   const [bio, setBio] = useState('');
   const [error, setError] = useState('');
@@ -251,6 +251,18 @@ export default function MyProfilePage() {
                   </li>
                 </ul>
               ) : null}
+            </div>
+
+            <div className="mt-1 w-full border-t border-neutral-200/80 pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  clearSession();
+                  router.push('/login');
+                }}
+                className="w-full py-1.5 text-sm text-neutral-400 transition-colors hover:text-red-500">
+                로그아웃
+              </button>
             </div>
           </div>
         </section>

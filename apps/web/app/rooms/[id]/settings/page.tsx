@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FeedDialog } from '@/components/recommendations/FeedDialog';
+import { markNoticeSeen } from '@/lib/roomNoticeStorage';
 
 export default function RoomSettingsPage() {
   const router = useRouter();
@@ -130,6 +131,9 @@ export default function RoomSettingsPage() {
           : { passwordHint: null }),
       });
       setRoom(updated);
+      if (user?.id) {
+        markNoticeSeen(user.id, updated.id, updated.description);
+      }
       setPassword('');
       router.replace(`/rooms/${roomId}`);
     } catch (error) {
@@ -238,12 +242,13 @@ export default function RoomSettingsPage() {
           required
         />
         <PillTextarea
-          label="설명 (선택)"
+          label="방 공지 · 설명 (선택)"
           name="description"
           value={description}
           onChange={setDescription}
           maxLength={200}
           rows={3}
+          hint="채팅 헤더 📣에 그대로 보여요 · 방장만 수정"
         />
         <PillInput
           label="태그 (선택)"

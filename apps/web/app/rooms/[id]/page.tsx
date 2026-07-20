@@ -5,6 +5,7 @@ import {
   formatMessageTimeDivider,
   shouldInsertMessageDivider,
 } from '@/lib/date';
+import { hasUnreadNotice, markNoticeSeen } from '@/lib/roomNoticeStorage';
 import {
   createRoomMessage,
   deleteRoomMessage,
@@ -13,6 +14,7 @@ import {
   joinRoom,
   kickRoomMember,
   leaveRoom,
+  updateRoom,
   type ApiRoom,
   type ApiRoomMessage,
 } from '@/lib/rooms';
@@ -20,6 +22,8 @@ import {
   onRoomKicked,
   onRoomMessage,
   onRoomMessageDeleted,
+  onRoomSocketConnect,
+  onRoomUpdated,
   socketJoinRoom,
   socketLeaveRoom,
 } from '@/lib/roomsSocket';
@@ -29,6 +33,7 @@ import {
   ImageIcon,
   Link2,
   Loader2,
+  Megaphone,
   Music2,
   Plus,
   Send,
@@ -43,25 +48,36 @@ import { CommentEmojiPicker } from '@/components/recommendations/CommentEmojiPic
 import { AvatarActionProvider } from '@/components/friends/AvatarActionContext';
 import { FriendIdsProvider } from '@/components/friends/FriendIdsContext';
 import { RoomMembersSheet } from '@/components/rooms/RoomMembersSheet';
+import {
+  RoomSongCard,
+  type RoomSongCardData,
+} from '@/components/rooms/RoomSongCard';
+import { RoomSongPlaySheet } from '@/components/rooms/RoomSongPlaySheet';
+import { RoomSongShareSheet } from '@/components/rooms/RoomSongShareSheet';
+import { RoomNoticeSheet } from '@/components/rooms/RoomNoticeSheet';
+import { markChatSeen } from '@/lib/roomChatUnreadStorage';
 
 const ATTACH_ITEMS = [
   {
     id: 'song',
     label: '곡 공유',
-    hint: '곧',
+    hint: '',
     icon: Music2,
+    enabled: true,
   },
   {
     id: 'link',
     label: '링크',
     hint: '곧',
     icon: Link2,
+    enabled: false,
   },
   {
     id: 'image',
     label: '이미지',
     hint: '곧',
     icon: ImageIcon,
+    enabled: false,
   },
 ] as const;
 
@@ -83,6 +99,11 @@ export default function RoomPage() {
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
+  const [songShareOpen, setSongShareOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const [noticeSaving, setNoticeSaving] = useState(false);
+  const [noticeUnread, setNoticeUnread] = useState(false);
+  const [playingSong, setPlayingSong] = useState<RoomSongCardData | null>(null);
 
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [joinPassword, setJoinPassword] = useState('');
@@ -189,6 +210,9 @@ export default function RoomPage() {
       );
       setRoom(roomData);
       setMessages(sorted);
+      if (user?.id) {
+        markChatSeen(user.id, roomId, sorted.at(-1)?.createdAt ?? '');
+      }
       await socketJoinRoom(roomId);
     } catch (error) {
       const message =
@@ -203,7 +227,7 @@ export default function RoomPage() {
     } finally {
       setLoading(false);
     }
-  }, [roomId]);
+  }, [roomId, user?.id]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -216,12 +240,21 @@ export default function RoomPage() {
 
   useEffect(() => {
     if (!roomId || !user?.id) return;
+    const userId = user.id;
+    const rejoin = () => {
+      void socketJoinRoom(roomId);
+    };
+    rejoin();
+    const offConnect = onRoomSocketConnect(rejoin);
+
     const offMessage = onRoomMessage((message) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === message.id)) return prev;
         return [...prev, message];
       });
+      markChatSeen(userId, roomId, message.createdAt);
     });
+
     const offDeleted = onRoomMessageDeleted(({ messageId }) => {
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
     });
@@ -230,11 +263,28 @@ export default function RoomPage() {
       void socketLeaveRoom(roomId);
       router.replace('/rooms');
     });
+    const offUpdated = onRoomUpdated((payload) => {
+      if (payload.roomId !== roomId) return;
+      setRoom((prev) =>
+        prev
+          ? {
+              ...prev,
+              description: payload.description,
+              name: payload.name,
+              topicTags: payload.topicTags,
+              updatedAt: payload.updatedAt,
+            }
+          : prev,
+      );
+      setNoticeUnread(hasUnreadNotice(userId, roomId, payload.description));
+    });
 
     return () => {
+      offConnect();
       offMessage();
       offDeleted();
       offKicked();
+      offUpdated();
       void socketLeaveRoom(roomId);
     };
   }, [roomId, user?.id, router]);
@@ -243,12 +293,30 @@ export default function RoomPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
+  useEffect(() => {
+    if (!room || !user?.id) return;
+    setNoticeUnread(hasUnreadNotice(user.id, room.id, room.description));
+  }, [room?.id, room?.description, user?.id]);
+
+  function openNotice() {
+    setNoticeOpen(true);
+  }
+
+  function closeNotice() {
+    if (noticeSaving || !room || !user?.id) return;
+    markNoticeSeen(user.id, room.id, room.description);
+    setNoticeUnread(false);
+    setNoticeOpen(false);
+  }
+
   async function onSend(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     const text = body.trim();
     if (!text || !roomId || sending) return;
     setSending(true);
     setError('');
+    setSongShareOpen(false);
+    setAttachOpen(false);
     try {
       const message = await createRoomMessage(roomId, {
         type: 'text',
@@ -258,6 +326,27 @@ export default function RoomPage() {
       setBody('');
     } catch (error) {
       setError(error instanceof Error ? error.message : '전송에 실패했습니다.');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function shareSong(recommendationId: string) {
+    if (!roomId || sending) return;
+    setSending(true);
+    setError('');
+    setSongShareOpen(false);
+    setAttachOpen(false);
+    try {
+      const message = await createRoomMessage(roomId, {
+        type: 'recommendation',
+        recommendationId,
+      });
+      appendMessage(message);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : '곡 공유에 실패했습니다.',
+      );
     } finally {
       setSending(false);
     }
@@ -312,6 +401,9 @@ export default function RoomPage() {
       );
       setRoom(pendingRoom);
       setMessages(sorted);
+      if (user?.id) {
+        markChatSeen(user.id, roomId, sorted.at(-1)?.createdAt ?? '');
+      }
       setPasswordOpen(false);
       setPendingRoom(null);
       setJoinPassword('');
@@ -479,6 +571,27 @@ export default function RoomPage() {
                 )}
               </p>
             </div>
+            {room.description?.trim() ||
+            room.ownerId === user.id ||
+            noticeUnread ? (
+              <button
+                type="button"
+                onClick={openNotice}
+                aria-label={noticeUnread ? '방 공지 (새 공지)' : '방 공지'}
+                className={`relative inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/70 hover:text-brand-primary ${
+                  room.description?.trim()
+                    ? 'text-neutral-400'
+                    : 'text-neutral-300'
+                }`}>
+                <Megaphone className="size-4" aria-hidden />
+                {noticeUnread ? (
+                  <span
+                    className="absolute right-1.5 top-1.5 size-2 rounded-full bg-brand-primary ring-2 ring-[color:var(--color-lp-paper-mute)]"
+                    aria-hidden
+                  />
+                ) : null}
+              </button>
+            ) : null}
             {room.ownerId !== user.id ? (
               <button
                 type="button"
@@ -542,68 +655,131 @@ export default function RoomPage() {
                         </span>
                       ) : null}
 
-                      <div
-                        role={canDelete ? 'button' : undefined}
-                        tabIndex={canDelete ? 0 : undefined}
-                        onPointerDown={
-                          canDelete
-                            ? () => {
-                                startLongPress(m.id);
-                              }
-                            : undefined
-                        }
-                        onPointerMove={
-                          canDelete
-                            ? (e) => {
-                                // 스크롤 중이면 롱프레스 취소
-                                if (
-                                  longPressTimerRef.current !== null &&
-                                  (Math.abs(e.movementX) > 6 ||
-                                    Math.abs(e.movementY) > 6)
-                                ) {
-                                  clearLongPress();
+                      {m.type === 'recommendation' && m.recommendation ? (
+                        <div
+                          className="max-w-[min(100%,20rem)] select-none touch-manipulation outline-none"
+                          onPointerDown={
+                            canDelete
+                              ? () => {
+                                  startLongPress(m.id);
                                 }
-                              }
-                            : undefined
-                        }
-                        onPointerUp={canDelete ? clearLongPress : undefined}
-                        onPointerLeave={canDelete ? clearLongPress : undefined}
-                        onPointerCancel={canDelete ? clearLongPress : undefined}
-                        onClick={
-                          canDelete
-                            ? (e) => {
-                                if (longPressFiredRef.current) {
-                                  e.preventDefault();
-                                  longPressFiredRef.current = false;
+                              : undefined
+                          }
+                          onPointerMove={
+                            canDelete
+                              ? (e) => {
+                                  if (
+                                    longPressTimerRef.current !== null &&
+                                    (Math.abs(e.movementX) > 6 ||
+                                      Math.abs(e.movementY) > 6)
+                                  ) {
+                                    clearLongPress();
+                                  }
                                 }
-                              }
-                            : undefined
-                        }
-                        onContextMenu={
-                          canDelete
-                            ? (e) => {
-                                e.preventDefault();
-                                openMessageActions(m.id);
-                              }
-                            : undefined
-                        }
-                        onKeyDown={
-                          canDelete
-                            ? (e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
+                              : undefined
+                          }
+                          onPointerUp={canDelete ? clearLongPress : undefined}
+                          onPointerLeave={
+                            canDelete ? clearLongPress : undefined
+                          }
+                          onPointerCancel={
+                            canDelete ? clearLongPress : undefined
+                          }
+                          onContextMenu={
+                            canDelete
+                              ? (e) => {
                                   e.preventDefault();
                                   openMessageActions(m.id);
                                 }
+                              : undefined
+                          }>
+                          <RoomSongCard
+                            song={{
+                              title: m.recommendation.title,
+                              artist: m.recommendation.artist,
+                              embedUrl: m.recommendation.embedUrl,
+                            }}
+                            onPlay={() => {
+                              if (longPressFiredRef.current) {
+                                longPressFiredRef.current = false;
+                                return;
                               }
-                            : undefined
-                        }
-                        className={`select-none px-3.5 py-2 text-[15px] leading-snug outline-none touch-manipulation ${
-                          mine
-                            ? 'rounded-[1.25rem] rounded-br-md bg-brand-primary text-[color:var(--color-lp-ink)]'
-                            : 'rounded-[1.25rem] rounded-bl-md bg-white text-neutral-800 shadow-[0_0.5px_1px_rgba(0,0,0,0.06)]'
-                        }`}>
-                        {m.type === 'text' ? m.body : '추천 곡'}
-                      </div>
+                              clearLongPress();
+                              setPlayingSong({
+                                title: m.recommendation!.title,
+                                artist: m.recommendation!.artist,
+                                embedUrl: m.recommendation!.embedUrl,
+                              });
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          role={canDelete ? 'button' : undefined}
+                          tabIndex={canDelete ? 0 : undefined}
+                          onPointerDown={
+                            canDelete
+                              ? () => {
+                                  startLongPress(m.id);
+                                }
+                              : undefined
+                          }
+                          onPointerMove={
+                            canDelete
+                              ? (e) => {
+                                  if (
+                                    longPressTimerRef.current !== null &&
+                                    (Math.abs(e.movementX) > 6 ||
+                                      Math.abs(e.movementY) > 6)
+                                  ) {
+                                    clearLongPress();
+                                  }
+                                }
+                              : undefined
+                          }
+                          onPointerUp={canDelete ? clearLongPress : undefined}
+                          onPointerLeave={
+                            canDelete ? clearLongPress : undefined
+                          }
+                          onPointerCancel={
+                            canDelete ? clearLongPress : undefined
+                          }
+                          onClick={
+                            canDelete
+                              ? (e) => {
+                                  if (longPressFiredRef.current) {
+                                    e.preventDefault();
+                                    longPressFiredRef.current = false;
+                                  }
+                                }
+                              : undefined
+                          }
+                          onContextMenu={
+                            canDelete
+                              ? (e) => {
+                                  e.preventDefault();
+                                  openMessageActions(m.id);
+                                }
+                              : undefined
+                          }
+                          onKeyDown={
+                            canDelete
+                              ? (e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    openMessageActions(m.id);
+                                  }
+                                }
+                              : undefined
+                          }
+                          className={`select-none px-3.5 py-2 text-[15px] leading-snug outline-none touch-manipulation ${
+                            mine
+                              ? 'rounded-[1.25rem] rounded-br-md bg-brand-primary text-[color:var(--color-lp-ink)]'
+                              : 'rounded-[1.25rem] rounded-bl-md bg-white text-neutral-800 shadow-[0_0.5px_1px_rgba(0,0,0,0.06)]'
+                          }`}>
+                          {m.body}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -644,15 +820,30 @@ export default function RoomPage() {
                         key={item.id}
                         type="button"
                         role="menuitem"
-                        disabled
-                        className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-neutral-400 disabled:cursor-not-allowed">
+                        disabled={!item.enabled || sending}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (item.id !== 'song') return;
+                          setAttachOpen(false);
+                          // 메뉴 언마운트 직후 같은 탭이 시트 backdrop에
+                          // 닿아 바로 닫히는 고스트 클릭 방지
+                          window.setTimeout(() => setSongShareOpen(true), 50);
+                        }}
+                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm ${
+                          item.enabled
+                            ? 'text-neutral-800 hover:bg-neutral-50'
+                            : 'cursor-not-allowed text-neutral-400'
+                        } disabled:opacity-40`}>
                         <Icon className="size-4 shrink-0" strokeWidth={1.75} />
                         <span className="min-w-0 flex-1 font-medium">
                           {item.label}
                         </span>
-                        <span className="text-[10px] text-neutral-300">
-                          {item.hint}
-                        </span>
+                        {item.hint ? (
+                          <span className="text-[10px] text-neutral-300">
+                            {item.hint}
+                          </span>
+                        ) : null}
                       </button>
                     );
                   })}
@@ -749,13 +940,36 @@ export default function RoomPage() {
             onClose={() => !leaving && setLeaveConfirmOpen(false)}
             onConfirm={() => void confirmLeave()}
           />
-
-          <RoomMembersSheet
-            open={membersOpen}
-            onClose={() => setMembersOpen(false)}
-            roomId={room.id}
-            roomName={room.name}
-            myUserId={user.id}
+          <RoomSongShareSheet
+            open={songShareOpen}
+            userId={user.id}
+            sending={sending}
+            onClose={() => setSongShareOpen(false)}
+            onPick={(id) => void shareSong(id)}
+          />
+          <RoomSongPlaySheet
+            song={playingSong}
+            onClose={() => setPlayingSong(null)}
+          />
+          <RoomNoticeSheet
+            open={noticeOpen}
+            body={room.description}
+            canEdit={room.ownerId === user.id}
+            saving={noticeSaving}
+            onClose={closeNotice}
+            onSave={async (text) => {
+              setNoticeSaving(true);
+              try {
+                const updated = await updateRoom(room.id, {
+                  description: text || null,
+                });
+                setRoom(updated);
+                markNoticeSeen(user.id, updated.id, updated.description);
+                setNoticeUnread(false);
+              } finally {
+                setNoticeSaving(false);
+              }
+            }}
           />
         </main>
       </AvatarActionProvider>

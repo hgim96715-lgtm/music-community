@@ -94,4 +94,17 @@ export class RoomsGateway implements OnGatewayConnection {
   emitMemberKicked(roomId: string, targetUserId: string) {
     this.server.to(`user:${targetUserId}`).emit('room:kicked', { roomId });
   }
+
+  /** 방 설정 변경 (공지 등) — 채팅 중인 멤버에 전파 */
+  emitRoomUpdated(
+    roomId: string,
+    patch: {
+      description: string | null;
+      name: string;
+      topicTags: string[];
+      updatedAt: string;
+    },
+  ) {
+    this.server.to(`room:${roomId}`).emit('room:updated', { roomId, ...patch });
+  }
 }
