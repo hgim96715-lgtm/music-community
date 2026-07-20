@@ -19,6 +19,21 @@ import * as bcrypt from 'bcrypt';
 
 const BCRYPT_SALT_ROUNDS = 12;
 
+const roomMessageInclude = {
+  sender: {
+    select: { id: true, nickname: true, image: true },
+  },
+  recommendation: {
+    select: {
+      id: true,
+      title: true,
+      artist: true,
+      embedUrl: true,
+      moods: true,
+    },
+  },
+} as const;
+
 @Injectable()
 export class RoomsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -72,18 +87,20 @@ export class RoomsService {
   }
 
   async listPublic() {
-    return this.prisma.room.findMany({
-      where: {
-        status: RoomStatus.active,
-        visibility: { in: [RoomVisibility.public, RoomVisibility.private] },
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        owner: {
-          select: { id: true, nickname: true, image: true },
+    return this.prisma.room
+      .findMany({
+        where: {
+          status: RoomStatus.active,
+          visibility: { in: [RoomVisibility.public, RoomVisibility.private] },
         },
-      },
-    }).then((rooms) => rooms.map((r) => this.toClientRoom(r)));
+        orderBy: { createdAt: 'desc' },
+        include: {
+          owner: {
+            select: { id: true, nickname: true, image: true },
+          },
+        },
+      })
+      .then((rooms) => rooms.map((r) => this.toClientRoom(r)));
   }
 
   /** DB 원본 (hash 포함) · join/update 검사용 */
@@ -220,11 +237,7 @@ export class RoomsService {
           type: RoomMessageType.text,
           body,
         },
-        include: {
-          sender: {
-            select: { id: true, nickname: true, image: true },
-          },
-        },
+        include: roomMessageInclude,
       });
     }
     if (!dto.recommendationId) {
@@ -244,11 +257,7 @@ export class RoomsService {
         type: RoomMessageType.recommendation,
         recommendationId: dto.recommendationId,
       },
-      include: {
-        sender: {
-          select: { id: true, nickname: true, image: true },
-        },
-      },
+      include: roomMessageInclude,
     });
   }
 
@@ -264,11 +273,7 @@ export class RoomsService {
     return this.prisma.roomMessage.findMany({
       where: { roomId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
-      include: {
-        sender: {
-          select: { id: true, nickname: true, image: true },
-        },
-      },
+      include: roomMessageInclude,
     });
   }
 

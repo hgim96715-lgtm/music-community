@@ -116,6 +116,7 @@ model Recommendation {
   savedCards SavedCard[]
   reactions Reaction[]
   comments Comment[]
+  roomMessages RoomMessage[]
 
   @@index([authorId])
 }
@@ -247,10 +248,13 @@ model RoomMessage {
   recommendationId String?         @db.Uuid
   createdAt        DateTime        @default(now()) @db.Timestamptz(3)
   deletedAt        DateTime?       @db.Timestamptz(3)
-  room   Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  room           Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender         User            @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  recommendation Recommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+
   @@index([roomId, createdAt])
   @@index([senderId])
+  @@index([recommendationId])
 }
 
 
