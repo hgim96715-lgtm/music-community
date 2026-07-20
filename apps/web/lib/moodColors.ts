@@ -1,7 +1,8 @@
 import type { Mood } from './moods';
 
 /**
- * ideas.md 후보 1 (저채도) + B안 (흰 카드 · 태그 타일만 색)
+ * ideas.md 후보 1 (저채도) · P0: 피드에서는 pill만 사용
+ * cardBack — 포토카드·나중용 (FeedCard 헤더/뒤판 ❌)
  */
 export type MoodColorSet = {
   pillBg: string;
@@ -22,7 +23,7 @@ const DEFAULT: MoodColorSet = {
   pillSelectedBg: 'bg-neutral-800',
   pillSelectedText: 'text-white',
   pickerHover: 'hover:bg-neutral-50',
-  cardBack: '#d8e5ee',
+  cardBack: '#5a4636',
 };
 
 export const MOOD_COLORS: Record<Mood, MoodColorSet> = {

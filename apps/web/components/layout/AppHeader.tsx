@@ -37,7 +37,7 @@ export default function AppHeader() {
         </Link>
         <nav className="flex min-w-0 shrink items-center gap-0.5 sm:gap-1.5">
           {loggedIn ? (
-            <span className="hidden max-w-[6rem] truncate text-sm text-neutral-500 md:inline">
+            <span className="hidden max-w-[6rem] truncate text-sm text-[color:var(--color-lp-muted)] md:inline">
               @{user?.nickname}
             </span>
           ) : null}

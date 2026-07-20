@@ -21,10 +21,10 @@ export const savedCardChip = 'saved-card-chip';
 export const albumBookWrap = 'album-book-wrap';
 export const albumBook = 'album-book';
 
-/** 태그 없을 때 헤더 — primary-soft */
+/** P0 피드 헤더·뒤판 — 종이·잉크 고정 (mood 색은 MoodPill만) */
 export const neoHeaderDefault = {
-  band: 'bg-[#e4eff5]',
-  text: 'text-[#335b73]',
-  muted: 'text-[#335b73]/70',
-  cardBack: '#d8e5ee',
+  band: 'bg-[#ebe3d8]',
+  text: 'text-[#1a1410]',
+  muted: 'text-[#3d342c]',
+  cardBack: 'var(--color-brand-card-back)',
 };

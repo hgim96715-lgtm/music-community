@@ -27,17 +27,17 @@ function RoomRow({ room }: { room: ApiRoom }) {
     <li>
       <Link
         href={`/rooms/${room.id}`}
-        className="flex items-center gap-3 px-3.5 py-3 transition-colors active:bg-neutral-50/80">
+        className="flex items-center gap-3 px-3.5 py-3 transition-colors active:bg-[color:var(--color-lp-paper-mute)]">
         <span
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#dce8ef] text-[15px] font-semibold text-[#335b73]"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-[15px] font-semibold text-brand-primary"
           aria-hidden>
           {roomInitial(room)}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold tracking-tight text-neutral-800">
+          <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold tracking-tight text-[color:var(--color-lp-ink)]">
             {room.visibility === 'private' ? (
               <LockIcon
-                className="size-3.5 shrink-0 text-neutral-400"
+                className="size-3.5 shrink-0 text-[color:var(--color-lp-muted)]"
                 aria-label="비공개"
               />
             ) : null}
@@ -63,15 +63,15 @@ function RoomSection({
 }) {
   return (
     <section className="flex w-full flex-col gap-2">
-      <h2 className="px-1 text-[12px] font-semibold tracking-wide text-neutral-400">
+      <h2 className="px-1 text-[12px] font-semibold tracking-wide text-brand-primary/50">
         {title}
       </h2>
       {rooms.length === 0 ? (
-        <p className="rounded-2xl bg-white/70 px-4 py-8 text-center text-sm text-neutral-400">
+        <p className="rounded-2xl bg-[color:var(--color-lp-paper)]/80 px-4 py-8 text-center text-sm text-[color:var(--color-lp-muted)]">
           {empty}
         </p>
       ) : (
-        <ul className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(51,91,115,0.06)] divide-y divide-neutral-100/90">
+        <ul className="overflow-hidden rounded-2xl bg-[color:var(--color-lp-paper)] shadow-[0_1px_2px_rgba(0,0,0,0.2)] divide-y divide-[rgb(42_34_28/0.08)]">
           {rooms.map((room) => (
             <RoomRow key={room.id} room={room} />
           ))}
@@ -97,24 +97,24 @@ function DiscoverSection({ rooms }: { rooms: ApiRoom[] }) {
     rooms.length === 0 ? '새 방이 없어요' : '그런 방은 아직 없어요';
   return (
     <section className="flex w-full flex-col gap-2">
-      <h2 className="px-1 text-[12px] font-semibold tracking-wide text-neutral-400">
+      <h2 className="px-1 text-[12px] font-semibold tracking-wide text-brand-primary/50">
         둘러보기
       </h2>
       {rooms.length > 0 ? (
-        <div className="flex h-10 items-center gap-2 rounded-full bg-white px-3.5 shadow-[0_1px_2px_rgba(51,91,115,0.06)] focus-within:ring-2 focus-within:ring-brand-primary-soft">
-          <Search className="size-3.5 shrink-0 text-neutral-300" aria-hidden />
+        <div className="flex h-10 items-center gap-2 rounded-full bg-[color:var(--color-lp-paper)] px-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.2)] focus-within:ring-2 focus-within:ring-brand-primary/30">
+          <Search className="size-3.5 shrink-0 text-[color:var(--color-lp-muted)]" aria-hidden />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="방 이름이나 #재즈…"
-            className="min-w-0 flex-1 bg-transparent text-[14px] text-neutral-800 outline-none placeholder:text-neutral-300"
+            className="min-w-0 flex-1 bg-transparent text-[14px] text-[color:var(--color-lp-ink)] outline-none placeholder:text-[color:var(--color-lp-muted)]"
           />
           {query ? (
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="rounded-full p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+              className="rounded-full p-1 text-[color:var(--color-lp-muted)] hover:bg-brand-primary-soft hover:text-brand-primary"
               aria-label="검색어 지우기">
               <X className="size-4" strokeWidth={2} />
             </button>
@@ -122,11 +122,11 @@ function DiscoverSection({ rooms }: { rooms: ApiRoom[] }) {
         </div>
       ) : null}
       {filtered.length === 0 ? (
-        <p className="rounded-2xl bg-white/70 px-4 py-8 text-center text-sm text-neutral-400">
+        <p className="rounded-2xl bg-[color:var(--color-lp-paper)]/80 px-4 py-8 text-center text-sm text-[color:var(--color-lp-muted)]">
           {empty}
         </p>
       ) : (
-        <ul className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(51,91,115,0.06)] divide-y divide-neutral-100/90">
+        <ul className="overflow-hidden rounded-2xl bg-[color:var(--color-lp-paper)] shadow-[0_1px_2px_rgba(0,0,0,0.2)] divide-y divide-[rgb(42_34_28/0.08)]">
           {filtered.map((room) => (
             <RoomRow key={room.id} room={room} />
           ))}
@@ -188,23 +188,23 @@ export default function RoomsPage() {
       <div className="flex items-center justify-between gap-3">
         <Link
           href="/recommendations"
-          className="inline-flex items-center gap-0.5 rounded-full px-1 py-1 text-sm font-medium text-neutral-500 transition-colors hover:text-brand-primary">
+          className="inline-flex items-center gap-0.5 rounded-full px-1 py-1 text-sm font-medium text-[color:var(--color-lp-muted)] transition-colors hover:text-brand-primary">
           <ChevronLeft className="size-4" aria-hidden />
           피드
         </Link>
         <Link
           href="/rooms/new"
-          className="inline-flex items-center gap-1 rounded-full bg-brand-primary-soft px-3 py-1.5 text-sm font-semibold text-brand-primary transition-colors hover:bg-[#c5d9e6]">
+          className="inline-flex items-center gap-1 rounded-full bg-brand-primary-soft px-3 py-1.5 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-primary/20">
           <Plus className="size-3.5" strokeWidth={2.25} aria-hidden />
           만들기
         </Link>
       </div>
 
       <div className="flex flex-col gap-1">
-        <h1 className="text-[28px] font-semibold tracking-tight text-neutral-800">
+        <h1 className="text-[28px] font-semibold tracking-tight text-brand-primary">
           방
         </h1>
-        <p className="text-sm text-neutral-400">같이 듣는 공간</p>
+        <p className="text-sm text-[color:var(--color-lp-muted)]">같이 듣는 공간</p>
       </div>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

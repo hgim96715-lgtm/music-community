@@ -179,7 +179,7 @@ function MusicStripSavedCardPreview({
   const playerBarColor = getSavedCardPlayerBarColor(customization);
   const titleColor = getSavedCardTextColor(customization, 'title');
   const artistColor = getSavedCardTextColor(customization, 'artist');
-  const middleBackground = customization.background ?? '#e4eff5';
+  const middleBackground = customization.background ?? '#ebe3d8';
 
   return (
     <div className={`${stripShellClass(size)} ${className}`}>

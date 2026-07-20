@@ -433,16 +433,16 @@ export default function RoomPage() {
     <FriendIdsProvider>
       <AvatarActionProvider>
         <main
-          className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col bg-[#eef2f5]"
+          className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col bg-[color:var(--color-lp-paper-mute)]"
           style={{
             // 키보드만큼 화면을 위로 — 메시지·composer가 가려지지 않게
             paddingBottom: keyboardInset,
             transition: 'padding-bottom 120ms ease-out',
           }}>
-          <header className="flex shrink-0 items-center gap-1 border-b border-black/[0.04] bg-[#eef2f5]/95 px-2 pb-2.5 pt-2 backdrop-blur-sm">
+          <header className="flex shrink-0 items-center gap-1 border-b border-[rgb(42_34_28/0.08)] bg-[color:var(--color-lp-paper-mute)]/95 px-2 pb-2.5 pt-2 backdrop-blur-sm">
             <Link
               href="/rooms"
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[#335b73] transition-colors hover:bg-white/70"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-brand-primary transition-colors hover:bg-white/70"
               aria-label="방 목록">
               <ChevronLeft className="size-5" aria-hidden />
             </Link>
@@ -490,7 +490,7 @@ export default function RoomPage() {
             ) : (
               <Link
                 href={`/rooms/${room.id}/settings`}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-white/70 hover:text-[#335b73]"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-white/70 hover:text-brand-primary"
                 aria-label="방 설정">
                 <Settings className="size-4" aria-hidden />
               </Link>
@@ -599,7 +599,7 @@ export default function RoomPage() {
                         }
                         className={`select-none px-3.5 py-2 text-[15px] leading-snug outline-none touch-manipulation ${
                           mine
-                            ? 'rounded-[1.25rem] rounded-br-md bg-[#335b73] text-white'
+                            ? 'rounded-[1.25rem] rounded-br-md bg-brand-primary text-[color:var(--color-lp-ink)]'
                             : 'rounded-[1.25rem] rounded-bl-md bg-white text-neutral-800 shadow-[0_0.5px_1px_rgba(0,0,0,0.06)]'
                         }`}>
                         {m.type === 'text' ? m.body : '추천 곡'}
@@ -678,12 +678,12 @@ export default function RoomPage() {
               }}
               maxLength={2000}
               placeholder="메시지"
-              className="min-w-0 flex-1 rounded-[1.25rem] border-0 bg-white px-3.5 py-2 text-[15px] text-neutral-800 outline-none placeholder:text-neutral-300 focus:ring-2 focus:ring-[#335b73]/15"
+              className="min-w-0 flex-1 rounded-[1.25rem] border-0 bg-white px-3.5 py-2 text-[15px] text-neutral-800 outline-none placeholder:text-neutral-300 focus:ring-2 focus:ring-brand-primary/20"
             />
             <button
               type="submit"
               disabled={sending || !body.trim()}
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[#335b73] text-white transition-transform active:scale-95 disabled:opacity-30"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-primary text-[color:var(--color-lp-ink)] transition-transform active:scale-95 disabled:opacity-30"
               aria-label="보내기">
               {sending ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -719,7 +719,7 @@ export default function RoomPage() {
                     <button
                       type="button"
                       onClick={() => setActionTargetId(null)}
-                      className="mt-2 w-full rounded-[14px] bg-white py-3.5 text-[17px] font-semibold text-[#335b73] shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-colors active:bg-neutral-50">
+                      className="mt-2 w-full rounded-[14px] bg-white py-3.5 text-[17px] font-semibold text-brand-primary shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-colors active:bg-neutral-50">
                       취소
                     </button>
                   </div>

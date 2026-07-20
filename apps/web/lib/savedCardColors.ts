@@ -18,7 +18,7 @@ export function getSavedCardTextColor(
   return customization.textColors?.[key] ?? DEFAULT_TEXT_COLORS[key];
 }
 
-const DEFAULT_PLAYER_BAR = '#335b73';
+const DEFAULT_PLAYER_BAR = '#c9a66b';
 
 /** music-strip 플레이어 바 반투명 오버레이 */
 export const PLAYER_BAR_ALPHA = 0.72;

@@ -7,14 +7,50 @@ export type EmbedPreview =
   | { platform: 'spotify'; thumbnailUrl: null; spotifyKind: SpotifyEmbedKind }
   | { platform: 'unknown'; thumbnailUrl: null };
 
+const SPOTIFY_EMBED_PATH =
+  /open\.spotify\.com\/embed\/(track|album|playlist|episode)\/([^/?#]+)/;
+
 export function parseSpotifyEmbedKind(
   urlString: string,
 ): SpotifyEmbedKind | null {
-  const match = urlString.match(
-    /open\.spotify\.com\/embed\/(track|album|playlist|episode)\//,
-  );
+  const match = urlString.match(SPOTIFY_EMBED_PATH);
   if (!match) return null;
   return match[1] as SpotifyEmbedKind;
+}
+
+/** embed URL → oEmbed용 open.spotify.com 리소스 URL */
+export function spotifyResourceUrlFromEmbed(embedUrl: string): string | null {
+  const match = embedUrl.match(SPOTIFY_EMBED_PATH);
+  if (!match) return null;
+  return `https://open.spotify.com/${match[1]}/${match[2]}`;
+}
+
+const spotifyThumbCache = new Map<string, Promise<string | null>>();
+
+/** Spotify oEmbed → thumbnail_url (브라우저 CORS OK) */
+export function fetchSpotifyThumbnailUrl(
+  embedUrl: string,
+): Promise<string | null> {
+  const cached = spotifyThumbCache.get(embedUrl);
+  if (cached) return cached;
+
+  const promise = (async () => {
+    const resourceUrl = spotifyResourceUrlFromEmbed(embedUrl);
+    if (!resourceUrl) return null;
+    try {
+      const res = await fetch(
+        `https://open.spotify.com/oembed?url=${encodeURIComponent(resourceUrl)}`,
+      );
+      if (!res.ok) return null;
+      const data = (await res.json()) as { thumbnail_url?: string };
+      return typeof data.thumbnail_url === 'string' ? data.thumbnail_url : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  spotifyThumbCache.set(embedUrl, promise);
+  return promise;
 }
 
 /** Spotify 공식 embed 권장 높이 — 트랙은 낮고, 앨범·플레이리스트는 높음 */

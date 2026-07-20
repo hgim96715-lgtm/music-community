@@ -3,14 +3,20 @@
 import { EmbedPlaybackFallback } from './EmbedPlaybackFallback';
 import { YouTubeFeedEmbed } from './YouTubeFeedEmbed';
 import {
+  fetchSpotifyThumbnailUrl,
   getEmbedPreview,
   parseYouTubeVideoId,
   spotifyEmbedHeight,
   youtubeWatchUrl,
 } from '@/lib/embedMedia';
-import { embedPlayerFooter, embedPlayerShell, playButton, trackCard } from '@/lib/neobrutal';
+import {
+  embedPlayerFooter,
+  embedPlayerShell,
+  playButton,
+  trackCard,
+} from '@/lib/neobrutal';
 import { ChevronUp, Music2, Play } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type FeedCardMediaProps = {
   embedUrl: string;
@@ -21,7 +27,22 @@ type FeedCardMediaProps = {
 export function FeedCardMedia({ embedUrl, title, artist }: FeedCardMediaProps) {
   const [playing, setPlaying] = useState(false);
   const [youtubeBlocked, setYoutubeBlocked] = useState(false);
+  const [spotifyThumb, setSpotifyThumb] = useState<string | null>(null);
   const preview = getEmbedPreview(embedUrl);
+
+  useEffect(() => {
+    if (preview.platform !== 'spotify') {
+      setSpotifyThumb(null);
+      return;
+    }
+    let cancelled = false;
+    fetchSpotifyThumbnailUrl(embedUrl).then((url) => {
+      if (!cancelled) setSpotifyThumb(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [embedUrl, preview.platform]);
 
   const handleClose = useCallback(() => {
     setPlaying(false);
@@ -31,6 +52,13 @@ export function FeedCardMedia({ embedUrl, title, artist }: FeedCardMediaProps) {
   const handleYoutubeBlocked = useCallback(() => {
     setYoutubeBlocked(true);
   }, []);
+
+  const thumbnailUrl =
+    preview.platform === 'youtube'
+      ? preview.thumbnailUrl
+      : preview.platform === 'spotify'
+        ? spotifyThumb
+        : null;
 
   if (playing) {
     const videoId =
@@ -89,32 +117,34 @@ export function FeedCardMedia({ embedUrl, title, artist }: FeedCardMediaProps) {
       </div>
     );
   }
+
   const platformLabel =
     preview.platform === 'spotify'
       ? 'Spotify'
       : preview.platform === 'youtube'
         ? 'YouTube'
         : '재생';
+
   return (
     <button
       type="button"
       onClick={() => setPlaying(true)}
       className={trackCard}>
-      {preview.thumbnailUrl ? (
-        <img
-          src={preview.thumbnailUrl}
-          alt=""
-          className="h-14 w-14 shrink-0 rounded-lg object-cover ring-1 ring-black/[0.05]"
-        />
+      {thumbnailUrl ? (
+        <span className="lp-disc" aria-hidden>
+          <img src={thumbnailUrl} alt="" />
+          <span className="lp-disc-label" />
+        </span>
       ) : (
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-neutral-200/50 text-neutral-500">
+        <span className="lp-disc lp-disc-fallback" aria-hidden>
           {preview.platform === 'spotify' ? (
-            <span className="font-sans text-[0.625rem] font-semibold tracking-wide">
+            <span className="relative z-[1] font-sans text-[0.5rem] font-semibold tracking-wide text-neutral-400">
               {platformLabel}
             </span>
           ) : (
-            <Music2 className="h-5 w-5" aria-hidden />
+            <Music2 className="relative z-[1] h-5 w-5" aria-hidden />
           )}
+          <span className="lp-disc-label" />
         </span>
       )}
       <span className="min-w-0 flex-1 overflow-hidden font-sans">

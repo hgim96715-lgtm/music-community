@@ -17,15 +17,15 @@ import {
 import { ImagePlus, Loader2, Palette } from 'lucide-react';
 import { useRef, useState } from 'react';
 
-const BG_PRESETS = ['#e4eff5', '#f0e6ff', '#fff4e6', '#f0fdf4', '#fce7f3'];
+const BG_PRESETS = ['#ebe3d8', '#f3ebe3', '#d4c4a8', '#3a322a', '#2a2218'];
 const PLAYER_BAR_PRESETS = [
-  '#335b73',
-  '#1e293b',
-  '#4c1d95',
-  '#7c2d12',
-  '#3d6a84',
+  '#c9a66b',
+  '#8a7048',
+  '#6b5428',
+  '#1a1410',
+  '#5a4636',
 ];
-const TEXT_PRESETS = ['#ffffff', '#f8fafc', '#171717', '#335b73', '#fce7f3'];
+const TEXT_PRESETS = ['#ffffff', '#ebe4da', '#171717', '#c9a66b', '#f3ebe3'];
 
 const DISPLAY_FIELDS = [
   { key: 'title' as const, label: '제목' },
@@ -252,7 +252,7 @@ export function SavedCardCustomizationForm({
             </p>
             <div className="mt-2">
               <ColorSwatches
-                value={customization.background ?? '#e4eff5'}
+                value={customization.background ?? '#ebe3d8'}
                 presets={BG_PRESETS}
                 onChange={(background) =>
                   setCustomization((prev) => ({ ...prev, background }))

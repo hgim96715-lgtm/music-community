@@ -51,7 +51,7 @@ export function FeedList() {
     return (
       <>
         <FeedHeader />
-        <p className="text-center text-neutral-500">불러오는 중입니다...</p>
+        <p className="text-center text-brand-primary/60">불러오는 중입니다...</p>
       </>
     );
   }
@@ -83,7 +83,7 @@ export function FeedList() {
           <p className="text-base font-medium text-brand-primary">
             아직 올라온 곡이 없어요
           </p>
-          <p className="text-sm leading-relaxed text-neutral-500">
+          <p className="text-sm leading-relaxed text-brand-primary/55">
             {user?.role === 'admin'
               ? '관리자는 글을 작성할 수 없습니다.'
               : user

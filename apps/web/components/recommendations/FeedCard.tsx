@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react';
 import { Recommendation } from '@/lib/types';
 import { formatFeedDate } from '@/lib/date';
-import { getMoodColors } from '@/lib/moodColors';
 import { neoHeaderDefault, postCard, postCardShell } from '@/lib/neobrutal';
 import { FeedAuthorNickname } from '@/components/friends/FeedAuthorNickname';
 import { FeedCardFooter } from './FeedCardFooter';
@@ -28,11 +27,8 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
     createdAt,
   } = recommendation;
 
-  const headerMood = moods[0] ? getMoodColors(moods[0]) : null;
-  const headerBand = headerMood?.pillBg ?? neoHeaderDefault.band;
-  const headerNicknameClass = headerMood?.pillText ?? neoHeaderDefault.text;
-  const headerDateClass = headerMood?.pillText ?? neoHeaderDefault.muted;
-  const cardBack = headerMood?.cardBack ?? neoHeaderDefault.cardBack;
+  /* P0: mood 색은 MoodPill만 — 헤더·cardBack은 종이·잉크 고정 */
+  const { band, text, muted, cardBack } = neoHeaderDefault;
 
   return (
     <div
@@ -40,16 +36,16 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
       style={{ '--card-back': cardBack } as CSSProperties}>
       <article className={postCard}>
         <header
-          className={`flex items-center justify-between gap-3 border-b border-[#353535]/15 px-4 py-3 ${headerBand}`}>
+          className={`flex items-center justify-between gap-3 border-b border-[rgb(42_34_28/0.12)] px-4 py-3 ${band}`}>
           <FeedAuthorNickname
             userId={author.id}
             nickname={author.nickname}
-            className={`text-sm leading-5 [font-family:ui-sans-serif,system-ui,sans-serif] ${headerNicknameClass}`}
+            className={`text-sm font-semibold leading-5 [font-family:ui-sans-serif,system-ui,sans-serif] ${text}`}
           />
 
           <div className="flex shrink-0 items-center gap-1">
             <time
-              className={`text-xs font-medium leading-5 opacity-80 ${headerDateClass}`}
+              className={`text-xs font-medium leading-5 opacity-80 ${muted}`}
               dateTime={createdAt}>
               {formatFeedDate(createdAt)}
             </time>
