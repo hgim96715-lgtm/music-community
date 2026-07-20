@@ -7,6 +7,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSavedCardDto } from './dto/create-saved-card.dto';
 import { UpdateSavedCardDto } from './dto/update-saved-card.dto';
+import { UpdateShelfDto } from './dto/update-shelf.dto';
 
 const savedCardInclude = {
   recommendation: {
@@ -61,11 +62,43 @@ export class SavedCardsService {
       include: savedCardInclude,
     });
   }
-  async update(
+
+  async updateShelf(
     userId: string,
     savedCardId: string,
-    dto: UpdateSavedCardDto,
+    shelfRank: 1 | 2 | 3 | null,
   ) {
+    const card = await this.prisma.savedCard.findUnique({
+      where: { id: savedCardId },
+      select: { id: true, userId: true },
+    });
+    if (!card) {
+      throw new NotFoundException('저장한 카드를 찾을 수 없어요.');
+    }
+    if (card.userId !== userId) {
+      throw new ForbiddenException('본인 카드만 수정할 수 있어요.');
+    }
+    return this.prisma.$transaction(async (tx) => {
+      if (shelfRank === null) {
+        return tx.savedCard.update({
+          where: { id: savedCardId },
+          data: { shelfRank: null },
+          include: savedCardInclude,
+        });
+      }
+      await tx.savedCard.updateMany({
+        where: { userId, shelfRank, NOT: { id: savedCardId } },
+        data: { shelfRank: null },
+      });
+      return tx.savedCard.update({
+        where: { id: savedCardId },
+        data: { shelfRank: shelfRank },
+        include: savedCardInclude,
+      });
+    });
+  }
+
+  async update(userId: string, savedCardId: string, dto: UpdateSavedCardDto) {
     const card = await this.prisma.savedCard.findUnique({
       where: { id: savedCardId },
       select: { id: true, userId: true },

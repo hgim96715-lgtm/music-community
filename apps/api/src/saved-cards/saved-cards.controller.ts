@@ -19,6 +19,7 @@ import { CreateSavedCardDto } from './dto/create-saved-card.dto';
 import { UpdateSavedCardDto } from './dto/update-saved-card.dto';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UpdateShelfDto } from './dto/update-shelf.dto';
 
 @ApiTags('SavedCards')
 @Controller('saved-cards')
@@ -48,6 +49,20 @@ export class SavedCardsController {
     @Body() dto: UpdateSavedCardDto,
   ) {
     return await this.savedCardsService.update(userId, savedCardId, dto);
+  }
+
+  @ApiOperation({ summary: 'Top 3 / 책장 자리 (shelfRank)' })
+  @Patch(':id/shelf')
+  async updateShelf(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) savedCardId: string,
+    @Body() dto: UpdateShelfDto,
+  ) {
+    return await this.savedCardsService.updateShelf(
+      userId,
+      savedCardId,
+      dto.shelfRank,
+    );
   }
 
   @ApiOperation({ summary: '포토카드 삭제 (저장한 본인만)' })

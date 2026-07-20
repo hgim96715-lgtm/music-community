@@ -141,6 +141,7 @@ model SavedCard{
   userId String @db.Uuid
   recommendationId String @db.Uuid
   customization Json /// [SavedCardCustomization]
+  shelfRank Int?
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
@@ -149,6 +150,7 @@ model SavedCard{
 
   @@unique([userId, recommendationId])
   @@index([userId])
+  @@index([userId,shelfRank])
 }
 
 model Comment {
