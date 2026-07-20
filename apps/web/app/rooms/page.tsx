@@ -94,7 +94,7 @@ function DiscoverSection({ rooms }: { rooms: ApiRoom[] }) {
   const [query, setQuery] = useState('');
   const filtered = rooms.filter((r) => roomMatchedsQuery(r, query));
   const empty =
-    rooms.length === 0 ? '새 공개 방이 없어요' : '그런 방은 아직 없어요';
+    rooms.length === 0 ? '새 방이 없어요' : '그런 방은 아직 없어요';
   return (
     <section className="flex w-full flex-col gap-2">
       <h2 className="px-1 text-[12px] font-semibold tracking-wide text-neutral-400">

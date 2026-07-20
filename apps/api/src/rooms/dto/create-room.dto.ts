@@ -29,4 +29,14 @@ export class CreateRoomDto {
   @IsOptional()
   @IsEnum(RoomVisibility)
   visibility?: RoomVisibility;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  password?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  passwordHint?: string;
 }

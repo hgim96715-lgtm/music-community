@@ -16,6 +16,7 @@ export type ApiRoom = {
   description: string | null;
   topicTags: string[];
   visibility: RoomVisibility;
+  passwordHint: string | null;
   status: RoomStatus;
   memberCount: number;
   ownerId: string;
@@ -69,6 +70,8 @@ export type CreateRoomBody = {
   description?: string;
   topicTags?: string[];
   visibility?: RoomVisibility;
+  password?: string;
+  passwordHint?: string | null;
 };
 
 export type UpdateRoomBody = {
@@ -76,6 +79,8 @@ export type UpdateRoomBody = {
   description?: string | null;
   topicTags?: string[];
   visibility?: RoomVisibility;
+  password?: string;
+  passwordHint?: string | null;
 };
 
 export type CreateRoomMessageBody =
@@ -119,9 +124,14 @@ export function updateRoom(
 }
 
 /** POST /rooms/:id/join */
-export function joinRoom(roomId: string): Promise<ApiRoomMember> {
+export function joinRoom(
+  roomId: string,
+  password?: string,
+): Promise<ApiRoomMember> {
   return authFetchApi<ApiRoomMember>(`/rooms/${roomId}/join`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(password ? { password } : {}),
   });
 }
 

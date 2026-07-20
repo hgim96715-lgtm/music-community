@@ -207,6 +207,10 @@ model Room {
     createdAt DateTime @default(now()) @db.Timestamptz(3)
     updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
+    passwordHash String?
+    passwordHint String?
+
+
     owner User @relation("RoomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
     members RoomMember[]
     messages RoomMessage[]

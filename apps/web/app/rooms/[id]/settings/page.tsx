@@ -20,7 +20,7 @@ import {
   type ApiRoom,
   type RoomVisibility,
 } from '@/lib/rooms';
-import { ChevronLeft, Hash, Loader2, Music2 } from 'lucide-react';
+import { ChevronLeft, Hash, KeyRound, Loader2, Music2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -55,6 +55,9 @@ export default function RoomSettingsPage() {
 
   const [topicTagsText, setTopicTagsText] = useState('');
 
+  const [password, setPassword] = useState('');
+  const [passwordHint, setPasswordHint] = useState('');
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -79,6 +82,7 @@ export default function RoomSettingsPage() {
         setDescription(room.description ?? '');
         setVisibility(room.visibility === 'private' ? 'private' : 'public');
         setTopicTagsText(room.topicTags.join(' '));
+        setPasswordHint(room.passwordHint ?? '');
         const list = await fetchRoomMembers(roomId);
         if (!cancelled) setMembers(list);
       })
@@ -107,13 +111,26 @@ export default function RoomSettingsPage() {
     setPending(true);
     setError('');
     try {
+      // hash는 API에 안 옴 · 이미 private면 비번 있다고 봄
+      const alreadyPrivate = room?.visibility === 'private';
+      if (visibility === 'private' && !password.trim() && !alreadyPrivate) {
+        setError('비공개 방은 비밀번호가 필요해요.');
+        return;
+      }
       const updated = await updateRoom(roomId, {
         name: trimmed,
         description: description.trim() || null,
         topicTags: parseTopicTags(topicTagsText),
         visibility,
+        ...(visibility === 'private' && password.trim()
+          ? { password: password.trim() }
+          : {}),
+        ...(visibility === 'private'
+          ? { passwordHint: passwordHint.trim() || null }
+          : { passwordHint: null }),
       });
       setRoom(updated);
+      setPassword('');
       router.replace(`/rooms/${roomId}`);
     } catch (error) {
       setError(
@@ -265,9 +282,32 @@ export default function RoomSettingsPage() {
             })}
           </div>
           {visibility === 'private' ? (
-            <p className="px-1 text-[12px] text-neutral-400">
-              비번·입장 제한은 곧 연결해요. 지금은 표시만 바뀝니다.
-            </p>
+            <div className="flex flex-col gap-3">
+              <PillInput
+                label="비밀번호"
+                name="password"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                icon={KeyRound}
+                maxLength={64}
+                showPasswordToggle
+                hint={
+                  room?.passwordHint != null || room?.visibility === 'private'
+                    ? '비워 두면 기존 비밀번호 유지'
+                    : '비공개 전환 시 필수'
+                }
+              />
+              <PillInput
+                label="힌트 (선택)"
+                name="passwordHint"
+                value={passwordHint}
+                onChange={setPasswordHint}
+                icon={Hash}
+                maxLength={40}
+                hint="입장 화면에 작게 보여요 · 비밀번호 그대로 쓰지 마세요"
+              />
+            </div>
           ) : null}
         </fieldset>
         {error ? <p className={fieldErrorClassName}>{error}</p> : null}

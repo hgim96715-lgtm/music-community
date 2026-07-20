@@ -83,6 +83,12 @@ export default function RoomPage() {
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
+
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [joinPassword, setJoinPassword] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [pendingRoom, setPendingRoom] = useState<ApiRoom | null>(null);
+
   /** OS 키보드가 가린 높이(px) — visualViewport */
   const [keyboardInset, setKeyboardInset] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -168,6 +174,12 @@ export default function RoomPage() {
       try {
         list = await fetchRoomMessages(roomId);
       } catch {
+        if (roomData.visibility === 'private') {
+          setPendingRoom(roomData);
+          setJoinPassword('');
+          setPasswordOpen(true);
+          return;
+        }
         await joinRoom(roomId);
         list = await fetchRoomMessages(roomId);
       }
@@ -282,6 +294,42 @@ export default function RoomPage() {
     }
   }
 
+  async function confirmJoinWithPassword() {
+    if (!roomId || !pendingRoom || joining) return;
+    const pw = joinPassword.trim();
+    if (!pw) {
+      setError('비밀번호를 입력해 주세요.');
+      return;
+    }
+    setJoining(true);
+    setError('');
+    try {
+      await joinRoom(roomId, pw);
+      const list = await fetchRoomMessages(roomId);
+      const sorted = [...list].sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+      setRoom(pendingRoom);
+      setMessages(sorted);
+      setPasswordOpen(false);
+      setPendingRoom(null);
+      setJoinPassword('');
+      await socketJoinRoom(roomId);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : '입장에 실패했습니다.';
+      if (message.includes('다시 들어갈 수 없')) {
+        setPasswordOpen(false);
+        setBlockedMessage(message);
+      } else {
+        setError(message);
+      }
+    } finally {
+      setJoining(false);
+    }
+  }
+
   if (authLoading || !user || loading) {
     return (
       <main className={authPageClassName}>
@@ -292,7 +340,67 @@ export default function RoomPage() {
   if (!room) {
     function goRooms() {
       setBlockedMessage(null);
+      setPasswordOpen(false);
+      setPendingRoom(null);
       router.replace('/rooms');
+    }
+    if (passwordOpen && pendingRoom) {
+      return (
+        <main className={`${authPageClassName} gap-4`}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-lg">
+              <p className="text-center text-2xl" aria-hidden>
+                🔒
+              </p>
+              <h2 className="mt-2 text-center text-lg font-semibold text-neutral-800">
+                비공개 방
+              </h2>
+              <p className="mt-1 truncate text-center text-sm text-neutral-500">
+                {pendingRoom.name}
+              </p>
+              <label className="mt-4 flex flex-col gap-1.5">
+                <span className="px-1 text-[12px] font-semibold text-neutral-400">
+                  비밀번호
+                </span>
+                <input
+                  type="password"
+                  value={joinPassword}
+                  onChange={(e) => setJoinPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void confirmJoinWithPassword();
+                  }}
+                  className="rounded-full border border-neutral-200 px-4 py-2.5 text-sm outline-none focus:border-brand-primary"
+                  autoFocus
+                />
+              </label>
+              {pendingRoom.passwordHint ? (
+                <p className="mt-2 px-1 text-[12px] text-neutral-400">
+                  힌트: {pendingRoom.passwordHint}
+                </p>
+              ) : null}
+              {error ? (
+                <p className="mt-2 text-center text-sm text-red-600">{error}</p>
+              ) : null}
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  disabled={joining}
+                  onClick={goRooms}
+                  className="flex-1 rounded-full border border-neutral-200 py-2.5 text-sm font-semibold text-neutral-600">
+                  닫기
+                </button>
+                <button
+                  type="button"
+                  disabled={joining}
+                  onClick={() => void confirmJoinWithPassword()}
+                  className="flex-1 rounded-full bg-brand-primary py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                  {joining ? '입장 중…' : '입장'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      );
     }
     return (
       <main className={`${authPageClassName} gap-4`}>
@@ -301,7 +409,9 @@ export default function RoomPage() {
             <p className={fieldErrorClassName}>
               {error || '방을 찾을 수 없습니다.'}
             </p>
-            <Link href="/rooms" className="text-sm text-brand-primary underline">
+            <Link
+              href="/rooms"
+              className="text-sm text-brand-primary underline">
               방 목록
             </Link>
           </>

@@ -15,16 +15,37 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { CreateRoomMessageDto } from './dto/create-room-message.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { Prisma } from 'src/generated/prisma/client';
+import * as bcrypt from 'bcrypt';
+
+const BCRYPT_SALT_ROUNDS = 12;
 
 @Injectable()
 export class RoomsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** API로 나갈 때 hash 제거 · hint는 두기  */
+  private toClientRoom<T extends { passwordHash?: string | null }>(room: T) {
+    const { passwordHash: _, ...rest } = room;
+    return rest;
+  }
+
   async create(ownerId: string, dto: CreateRoomDto) {
     const visibility = dto.visibility ?? RoomVisibility.public;
     const topicTags = dto.topicTags ?? [];
 
-    return this.prisma.room.create({
+    let passwordHash: string | null = null;
+    let passwordHint: string | null = null;
+
+    if (visibility === RoomVisibility.private) {
+      const plain = dto.password?.trim();
+      if (!plain) {
+        throw new BadRequestException('비공개 방은 비밀번호가 있어야 합니다.');
+      }
+      passwordHash = await bcrypt.hash(plain, BCRYPT_SALT_ROUNDS);
+      passwordHint = dto.passwordHint?.trim() || null;
+    }
+
+    const room = await this.prisma.room.create({
       data: {
         name: dto.name.trim(),
         description: dto.description?.trim() || null,
@@ -32,6 +53,8 @@ export class RoomsService {
         visibility,
         ownerId,
         memberCount: 1,
+        passwordHash,
+        passwordHint,
         members: {
           create: {
             userId: ownerId,
@@ -45,13 +68,14 @@ export class RoomsService {
         },
       },
     });
+    return this.toClientRoom(room);
   }
 
   async listPublic() {
     return this.prisma.room.findMany({
       where: {
         status: RoomStatus.active,
-        visibility: RoomVisibility.public,
+        visibility: { in: [RoomVisibility.public, RoomVisibility.private] },
       },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -59,10 +83,11 @@ export class RoomsService {
           select: { id: true, nickname: true, image: true },
         },
       },
-    });
+    }).then((rooms) => rooms.map((r) => this.toClientRoom(r)));
   }
 
-  async findById(roomId: string) {
+  /** DB 원본 (hash 포함) · join/update 검사용 */
+  private async findRoomOrThrow(roomId: string) {
     const room = await this.prisma.room.findFirst({
       where: {
         id: roomId,
@@ -78,13 +103,28 @@ export class RoomsService {
     return room;
   }
 
-  async join(roomId: string, userId: string) {
-    const room = await this.findById(roomId);
+  /** API 조회 · hash 제거 */
+  async findById(roomId: string) {
+    return this.toClientRoom(await this.findRoomOrThrow(roomId));
+  }
 
-    if (room.visibility !== RoomVisibility.public) {
-      throw new ForbiddenException(
-        '초대·비공개 방은 초대 없이 입장할 수 없습니다.',
-      );
+  async join(roomId: string, userId: string, password?: string) {
+    const room = await this.findRoomOrThrow(roomId);
+
+    if (room.visibility === RoomVisibility.invite) {
+      throw new ForbiddenException('초대 없이 입장할 수 없습니다.');
+    }
+    if (room.visibility === RoomVisibility.private) {
+      if (!room.passwordHash) {
+        throw new ForbiddenException('비공개 방 비밀번호가 없습니다.');
+      }
+      if (!password?.trim()) {
+        throw new BadRequestException('비밀번호를 입력해 주세요.');
+      }
+      const ok = await bcrypt.compare(password, room.passwordHash);
+      if (!ok) {
+        throw new ForbiddenException('비밀번호가 일치하지 않습니다.');
+      }
     }
 
     const banned = await this.prisma.roomBan.findUnique({
@@ -233,26 +273,56 @@ export class RoomsService {
   }
 
   async update(roomId: string, userId: string, dto: UpdateRoomDto) {
-    const room = await this.findById(roomId);
+    const room = await this.findRoomOrThrow(roomId);
     if (room.ownerId !== userId) {
       throw new ForbiddenException('방장만 방을 수정할 수 있습니다.');
     }
-    return this.prisma.room.update({
-      where: { id: roomId },
-      data: {
-        ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
-        ...(dto.description !== undefined
-          ? { description: dto.description?.trim() || null }
-          : {}),
-        ...(dto.topicTags !== undefined ? { topicTags: dto.topicTags } : {}),
-        ...(dto.visibility !== undefined ? { visibility: dto.visibility } : {}),
-      },
-      include: {
-        owner: {
-          select: { id: true, nickname: true, image: true },
+
+    const nextVisibility = dto.visibility ?? room.visibility;
+    let passwordHash: string | null | undefined;
+    let passwordHint: string | null | undefined;
+
+    if (dto.passwordHint !== undefined) {
+      passwordHint = dto.passwordHint?.trim() || null;
+    }
+    if (dto.password !== undefined) {
+      const plain = dto.password.trim();
+      if (plain) {
+        passwordHash = await bcrypt.hash(plain, BCRYPT_SALT_ROUNDS);
+      }
+    }
+
+    if (nextVisibility === RoomVisibility.public) {
+      passwordHash = null;
+      passwordHint = null;
+    } else if (nextVisibility === RoomVisibility.private) {
+      const willHave = passwordHash ?? room.passwordHash;
+      if (!willHave) {
+        throw new BadRequestException('비공개 방은 비밀번호가 있어야 합니다.');
+      }
+    }
+    return this.toClientRoom(
+      await this.prisma.room.update({
+        where: { id: roomId },
+        data: {
+          ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
+          ...(dto.description !== undefined
+            ? { description: dto.description?.trim() || null }
+            : {}),
+          ...(dto.topicTags !== undefined ? { topicTags: dto.topicTags } : {}),
+          ...(dto.visibility !== undefined
+            ? { visibility: dto.visibility }
+            : {}),
+          ...(passwordHash !== undefined ? { passwordHash } : {}),
+          ...(passwordHint !== undefined ? { passwordHint } : {}),
         },
-      },
-    });
+        include: {
+          owner: {
+            select: { id: true, nickname: true, image: true },
+          },
+        },
+      }),
+    );
   }
 
   async deleteMessage(roomId: string, messageId: string, userId: string) {

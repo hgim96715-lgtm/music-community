@@ -20,6 +20,7 @@ import { CreateRoomMessageDto } from './dto/create-room-message.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { RoomsGateway } from './rooms.gateway';
 import { TransfreRoomDto } from './dto/tansfer-room.dto';
+import { JoinRoomDto } from './dto/join-room.dto';
 
 @ApiTags('Rooms')
 @Controller('rooms')
@@ -69,8 +70,9 @@ export class RoomsController {
   async join(
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) roomId: string,
+    @Body() dto: JoinRoomDto,
   ) {
-    return await this.roomsService.join(roomId, userId);
+    return await this.roomsService.join(roomId, userId, dto.password);
   }
 
   @ApiOperation({ summary: '방 퇴장' })
