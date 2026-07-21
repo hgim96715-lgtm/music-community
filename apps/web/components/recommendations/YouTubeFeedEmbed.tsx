@@ -6,33 +6,12 @@ import {
 } from '@/lib/embedMedia';
 import { useEffect, useId, useRef } from 'react';
 
-// @types/youtube — 타입만. 실제 YT는 아래 스크립트 로드 후 생김
-// playerRef: unmount·접기 시 destroy() 하려고 인스턴스 보관
+// 타입: @types/youtube (+ types/youtube-iframe.d.ts)
+// 로컬 declare global { namespace YT } ❌ — Vercel에서 Player 중복
 
-/** bundler 해석에서 @types/youtube ambient가 안 잡힐 때용 */
-
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace -- YouTube IFrame API
-  namespace YT {
-    class Player {
-      constructor(
-        elementId: string,
-        options: {
-          videoId: string;
-          playerVars?: {
-            autoplay?: number;
-            rel?: number;
-            start?: number;
-          };
-          events?: {
-            onError?: (e: { data: number }) => void;
-          };
-        },
-      );
-      destroy(): void;
-    }
-  }
-}
+type YouTubeApi = {
+  Player: new (elementId: string, options?: YT.PlayerOptions) => YT.Player;
+};
 
 type YouTubeFeedEmbedProps = {
   embedUrl: string;
@@ -48,13 +27,9 @@ type YouTubePlayerVars = {
   start?: number;
 };
 
-// onYouTubeIframeAPIReady
-// 페이지에서 플레이어 API의 JavaScript 다운로드를 완료하면 API가 이 함수를 호출하여 페이지에서 API를 사용할 수 있게 됩니다.
-//  따라서 이 함수에서는 페이지 로드 시 표시할 플레이어 개체를 만들어야 합니다.
-
-function loadYoutubeIframeApi(): Promise<typeof YT> {
-  const win = window as typeof window & {
-    YT?: typeof YT;
+function loadYoutubeIframeApi(): Promise<YouTubeApi> {
+  const win = window as Window & {
+    YT?: YouTubeApi;
     onYouTubeIframeAPIReady?: () => void;
   };
   if (win.YT?.Player) return Promise.resolve(win.YT);
@@ -100,7 +75,6 @@ export function YouTubeFeedEmbed({
     loadYoutubeIframeApi()
       .then((YTApi) => {
         if (cancelled) return;
-        // satisfies: PlayerVars에 맞는지 검사 + 스프레드로 타입 안 넓히기
         const playerVars = (
           startSec != null && startSec > 0
             ? { autoplay: 1, rel: 0, start: startSec }
@@ -111,7 +85,7 @@ export function YouTubeFeedEmbed({
           videoId,
           playerVars,
           events: {
-            onError: (e) => {
+            onError: (e: YT.OnErrorEvent) => {
               if (isYouTubeEmbedBlockedError(e.data)) onEmbedBlocked();
             },
           },
@@ -130,7 +104,6 @@ export function YouTubeFeedEmbed({
 
   return (
     <div className="aspect-video w-full">
-      {/* YT.Player가 이 div를 찾아서 안에 플레이어 삽입!!!!! */}
       <div id={containerId} title={title} className="h-full w-full" />
     </div>
   );
