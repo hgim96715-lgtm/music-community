@@ -15,6 +15,7 @@ type RoomSongPlaySheetProps = {
   song: RoomSongCardData | null;
   onClose: () => void;
   startSec?: number;
+  onSaveLyric?: () => void;
 };
 
 /** 채팅 곡 카드 재생 — 피드와 같은 YouTube/Spotify embed */
@@ -22,6 +23,7 @@ export function RoomSongPlaySheet({
   song,
   onClose,
   startSec,
+  onSaveLyric,
 }: RoomSongPlaySheetProps) {
   const [mounted, setMounted] = useState(false);
   const [youtubeBlocked, setYoutubeBlocked] = useState(false);
@@ -114,12 +116,22 @@ export function RoomSongPlaySheet({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-full border-t border-[rgb(31_26_22/0.1)] py-3.5 text-[15px] font-semibold text-[#6b5428]">
-          닫기
-        </button>
+        <>
+          {onSaveLyric ? (
+            <button
+              type="button"
+              onClick={onSaveLyric}
+              className="w-full border-t border-[rgb(31_26_22/0.1)] py-3 text-[14px] font-semibold text-[#6b5428]">
+              이 가사 저장
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full border-t border-[rgb(31_26_22/0.1)] py-3.5 text-[15px] font-semibold text-[#6b5428]">
+            닫기
+          </button>
+        </>
       </div>
     </div>,
     document.body,

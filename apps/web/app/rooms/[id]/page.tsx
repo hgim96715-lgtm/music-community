@@ -65,6 +65,11 @@ import {
   RoomLyricShareSheet,
   type RoomLyricSharePayload,
 } from '@/components/rooms/RoomLyricShareSheet';
+import {
+  SavedLyricSaveSheet,
+  type SavedLyricPreset,
+} from '@/components/saved-cards/SavedLyricSaveSheet';
+import { createSavedLyric } from '@/lib/api';
 
 const ATTACH_ITEMS = [
   {
@@ -146,6 +151,28 @@ export default function RoomPage() {
   const [membersOpen, setMembersOpen] = useState(false);
   /** 강퇴(ban) 등으로 입장 불가 — 방 UI 없이 모달 */
   const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
+
+  const [playingRecId, setPlayingRecId] = useState<string | null>(null);
+  const [lyricSaveOpen, setLyricSaveOpen] = useState(false);
+  const [lyricSavePreset, setLyricSavePreset] =
+    useState<SavedLyricPreset | null>(null);
+  const [lyricSaving, setLyricSaving] = useState(false);
+
+  function clearPlaying() {
+    setPlayingSong(null);
+    setPlayingStartSec(null);
+    setPlayingRecId(null);
+  }
+
+  function openPlaying(
+    song: RoomSongCardData,
+    recommendationId: string,
+    startSec?: number | null,
+  ) {
+    setPlayingSong(song);
+    setPlayingRecId(recommendationId);
+    setPlayingStartSec(startSec ?? null);
+  }
 
   function clearLongPress() {
     if (longPressTimerRef.current !== null) {
@@ -411,8 +438,12 @@ export default function RoomPage() {
         type: 'lyric_quote',
         recommendationId: payload.recommendationId,
         body: payload.body,
-        lyricStartSec: payload.lyricStartSec,
-        lyricEndSec: payload.lyricEndSec,
+        ...(payload.lyricStartSec !== undefined
+          ? { lyricStartSec: payload.lyricStartSec }
+          : {}),
+        ...(payload.lyricEndSec !== undefined
+          ? { lyricEndSec: payload.lyricEndSec }
+          : {}),
       });
       appendMessage(message);
     } catch (error) {
@@ -777,11 +808,14 @@ export default function RoomPage() {
                                 return;
                               }
                               clearLongPress();
-                              setPlayingSong({
-                                title: m.recommendation!.title,
-                                artist: m.recommendation!.artist,
-                                embedUrl: m.recommendation!.embedUrl,
-                              });
+                              openPlaying(
+                                {
+                                  title: m.recommendation!.title,
+                                  artist: m.recommendation!.artist,
+                                  embedUrl: m.recommendation!.embedUrl,
+                                },
+                                m.recommendation!.id,
+                              );
                             }}
                           />
                         </div>
@@ -833,12 +867,14 @@ export default function RoomPage() {
                               }
                               clearLongPress();
                               const rec = m.savedCard!.recommendation;
-                              setPlayingStartSec(null);
-                              setPlayingSong({
-                                title: rec.title,
-                                artist: rec.artist,
-                                embedUrl: rec.embedUrl,
-                              });
+                              openPlaying(
+                                {
+                                  title: rec.title,
+                                  artist: rec.artist,
+                                  embedUrl: rec.embedUrl,
+                                },
+                                rec.id,
+                              );
                             }}>
                             <LpAlbumJacket
                               size="sm"
@@ -909,12 +945,15 @@ export default function RoomPage() {
                                 return;
                               }
                               clearLongPress();
-                              setPlayingStartSec(m.lyricStartSec);
-                              setPlayingSong({
-                                title: m.recommendation!.title,
-                                artist: m.recommendation!.artist,
-                                embedUrl: m.recommendation!.embedUrl,
-                              });
+                              openPlaying(
+                                {
+                                  title: m.recommendation!.title,
+                                  artist: m.recommendation!.artist,
+                                  embedUrl: m.recommendation!.embedUrl,
+                                },
+                                m.recommendation!.id,
+                                m.lyricStartSec,
+                              );
                             }}
                           />
                         </div>
@@ -1183,9 +1222,45 @@ export default function RoomPage() {
           <RoomSongPlaySheet
             song={playingSong}
             startSec={playingStartSec ?? undefined}
+            onSaveLyric={
+              playingSong && playingRecId
+                ? () => {
+                    setLyricSavePreset({
+                      recommendationId: playingRecId,
+                      title: playingSong.title,
+                      artist: playingSong.artist,
+                      embedUrl: playingSong.embedUrl,
+                      startSec: playingStartSec ?? undefined,
+                    });
+                    clearPlaying();
+                    setLyricSaveOpen(true);
+                  }
+                : undefined
+            }
+            onClose={clearPlaying}
+          />
+          <SavedLyricSaveSheet
+            open={lyricSaveOpen}
+            userId={user.id}
+            saving={lyricSaving}
+            preset={lyricSavePreset}
             onClose={() => {
-              setPlayingSong(null);
-              setPlayingStartSec(null);
+              setLyricSaveOpen(false);
+              setLyricSavePreset(null);
+            }}
+            onSubmit={(body) => {
+              void (async () => {
+                setLyricSaving(true);
+                try {
+                  await createSavedLyric(body);
+                  setLyricSaveOpen(false);
+                  setLyricSavePreset(null);
+                } catch (e) {
+                  alert(e instanceof Error ? e.message : '저장에 실패했어요');
+                } finally {
+                  setLyricSaving(false);
+                }
+              })();
             }}
           />
           <RoomNoticeSheet

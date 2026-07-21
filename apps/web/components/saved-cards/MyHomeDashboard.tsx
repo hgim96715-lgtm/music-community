@@ -10,6 +10,9 @@ type MyHomeDashboardProps = {
   nickname: string;
   bio: string | null;
   cards: ApiSavedCard[];
+  lyricCount?: number;
+  /** 가장 최근 소절 한 줄 미리보기 */
+  lyricPreview?: string | null;
   loading: boolean;
   requestCount?: number;
 };
@@ -49,6 +52,8 @@ export function MyHomeDashboard({
   nickname,
   bio,
   cards,
+  lyricCount = 0,
+  lyricPreview = null,
   loading,
   requestCount = 0,
 }: MyHomeDashboardProps) {
@@ -72,22 +77,15 @@ export function MyHomeDashboard({
       </header>
 
       <div className="my-home-body">
-        {/* Top 3 — 시그니처 슬롯 (컬렉션 문과 구분) */}
-        <section className="my-home-top3" aria-label="Top 3 시그니처">
-          <div className="mb-2.5 flex items-center justify-between gap-2">
-            <div>
-              <h2 className="text-[12px] font-bold tracking-wide text-[#3d342c]">
-                Top 3
-              </h2>
-              <p className="mt-0.5 text-[10px] text-[#8a8070]">
-                프로필에 꽂아 둔 애정곡
-              </p>
-            </div>
-            <Link
-              href="/users/me/album"
-              className="shrink-0 text-[11px] font-semibold text-[#8a7048] hover:underline">
-              앨범에서 꽂기
-            </Link>
+        {/* Top 3 — 꽂힌 LP만 (빈 자리·꽂기 CTA ❌ · 편집은 /album) */}
+        <section className="my-home-top3" aria-label="Top 3">
+          <div className="mb-2.5">
+            <h2 className="text-[12px] font-bold tracking-wide text-[#3d342c]">
+              Top 3
+            </h2>
+            <p className="mt-0.5 text-[10px] text-[#8a8070]">
+              프로필에 꽂아 둔 애정곡
+            </p>
           </div>
           {loading ? (
             <div className="flex justify-center gap-4 py-3">
@@ -107,38 +105,23 @@ export function MyHomeDashboard({
                 아직 Top LP가 없어요
               </span>
               <span className="text-[11px] text-[#6b5c4c]">
-                앨범에서 최대 3장 꽂을 수 있어요
+                내 앨범에서 최대 3장 꽂을 수 있어요
               </span>
             </Link>
           ) : (
             <ul className="my-home-top3-slots">
-              {([1, 2, 3] as const).map((rank) => {
-                const card = tops.find((c) => c.shelfRank === rank) ?? null;
-                return (
-                  <li key={rank} className="my-home-top3-slot">
-                    <span className="my-home-top3-rank">#{rank}</span>
-                    {card ? (
-                      <>
-                        <LpAlbumDisc
-                          embedUrl={card.recommendation.embedUrl}
-                          title={card.recommendation.title}
-                          size="md"
-                        />
-                        <span className="mt-1 max-w-[4.5rem] truncate text-[10px] font-medium text-[#6b5c4c]">
-                          {card.recommendation.title}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <LpAlbumDisc size="md" empty label={`#${rank}`} />
-                        <span className="mt-1 text-[10px] text-[#a89880]">
-                          빈 자리
-                        </span>
-                      </>
-                    )}
-                  </li>
-                );
-              })}
+              {tops.map((card) => (
+                <li key={card.id} className="my-home-top3-slot">
+                  <LpAlbumDisc
+                    embedUrl={card.recommendation.embedUrl}
+                    title={card.recommendation.title}
+                    size="md"
+                  />
+                  <span className="mt-1 max-w-[4.5rem] truncate text-[10px] font-medium text-[#6b5c4c]">
+                    {card.recommendation.title}
+                  </span>
+                </li>
+              ))}
             </ul>
           )}
         </section>
@@ -211,15 +194,29 @@ export function MyHomeDashboard({
                 />
               </span>
               <span className="flex flex-1 flex-col items-center justify-center gap-1 py-0.5">
-                <span className="grid size-9 place-items-center rounded-lg bg-[#4a3728] text-[#f7f1e8]">
-                  <Quote className="size-3.5" aria-hidden />
-                </span>
-                <span className="text-center text-[10px] leading-snug text-[#6b5c4c]">
-                  소절 모음
-                </span>
+                {loading ? (
+                  <span className="text-[11px] text-[#8a8070]">…</span>
+                ) : lyricPreview ? (
+                  <span className="line-clamp-3 px-0.5 text-center text-[11px] font-semibold leading-snug text-[#3d342c]">
+                    “{lyricPreview}”
+                  </span>
+                ) : (
+                  <>
+                    <span className="grid size-9 place-items-center rounded-lg bg-[#4a3728] text-[#f7f1e8]">
+                      <Quote className="size-3.5" aria-hidden />
+                    </span>
+                    <span className="text-center text-[10px] leading-snug text-[#6b5c4c]">
+                      소절 모음
+                    </span>
+                  </>
+                )}
               </span>
-              <span className="text-[11px] font-medium text-[#8a8070]">
-                곧 →
+              <span className="text-[11px] font-medium text-[#6b5428]">
+                {loading
+                  ? '…'
+                  : lyricCount > 0
+                    ? `${lyricCount}쪽 →`
+                    : '비어 있음 →'}
               </span>
             </Link>
           </div>

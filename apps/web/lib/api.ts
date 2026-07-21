@@ -8,7 +8,10 @@ import {
   ApiRecommendation,
   ApiSavedCard,
   ApiSavedCardCustomization,
+  ApiSavedLyric,
+  ApiSavedLyricBody,
   CreateSavedCardBody,
+  UpdateSavedLyricBody,
 } from './apiTypes';
 import { authFetchApi, authFetchApiVoid } from './authFetch';
 import { removeApiAccessToken, setApiAccessToken } from './authToken';
@@ -255,4 +258,32 @@ export function blockUser(userId: string): Promise<void> {
 /** DELETE /users/:id/block — 차단 해제 · 204 */
 export function unblockUser(userId: string): Promise<void> {
   return authFetchApiVoid(`/users/${userId}/block`, { method: 'DELETE' });
+}
+
+// saved-lyrics
+export function fetchSavedLyrics(): Promise<ApiSavedLyric[]> {
+  return authFetchApi<ApiSavedLyric[]>('/saved-lyrics');
+}
+
+export function createSavedLyric(
+  body: ApiSavedLyricBody,
+): Promise<ApiSavedLyric> {
+  return authFetchApi<ApiSavedLyric>('/saved-lyrics', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+export function patchSavedLyric(
+  id: string,
+  body: UpdateSavedLyricBody,
+): Promise<ApiSavedLyric> {
+  return authFetchApi<ApiSavedLyric>(`/saved-lyrics/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+export function deleteSavedLyric(id: string) {
+  return authFetchApiVoid(`/saved-lyrics/${id}`, { method: 'DELETE' });
 }

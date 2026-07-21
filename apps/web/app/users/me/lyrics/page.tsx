@@ -1,19 +1,38 @@
 'use client';
 
-import { MyHomeSubShell } from '@/components/saved-cards/MyHomeSubShell';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { fetchFriendRequests } from '@/lib/api';
+import { RoomSongPlaySheet } from '@/components/rooms/RoomSongPlaySheet';
+import { MyHomeSubShell } from '@/components/saved-cards/MyHomeSubShell';
+import {
+  SavedLyricPreset,
+  SavedLyricSaveSheet,
+} from '@/components/saved-cards/SavedLyricSaveSheet';
+import { SavedLyricSticky } from '@/components/saved-cards/SavedLyricSticky';
+import {
+  createSavedLyric,
+  deleteSavedLyric,
+  fetchFriendRequests,
+  fetchSavedLyrics,
+  patchSavedLyric,
+} from '@/lib/api';
+import type { ApiSavedLyric, ApiSavedLyricBody } from '@/lib/apiTypes';
 import { authPageClassName } from '@/lib/form';
-import { ChevronLeft, Loader2, Quote } from 'lucide-react';
+import { ChevronLeft, Loader2, Plus, Quote } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-/** 내 가사 모음 — 자리만 */
 export default function MyLyricsPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [requestCount, setRequestCount] = useState(0);
+  const [items, setItems] = useState<ApiSavedLyric[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [play, setPlay] = useState<ApiSavedLyric | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [savePreset, setSavePreset] = useState<SavedLyricPreset | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) router.replace('/login?next=/users/me/lyrics');
@@ -22,17 +41,55 @@ export default function MyLyricsPage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    fetchFriendRequests()
-      .then((requests) => {
+    setLoading(true);
+    fetchSavedLyrics()
+      .then((list) => {
+        if (!cancelled) setItems(list);
+      })
+      .catch((e) => {
         if (!cancelled) {
-          setRequestCount(requests.received.length + requests.sent.length);
+          setError(e instanceof Error ? e.message : '불러오지 못했어요');
         }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    fetchFriendRequests()
+      .then((r) => {
+        if (!cancelled) setRequestCount(r.received.length + r.sent.length);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [user]);
+
+  async function handleCreate(body: ApiSavedLyricBody) {
+    setSaving(true);
+    try {
+      const row = await createSavedLyric(body);
+      setItems((prev) => [row, ...prev]);
+      setSheetOpen(false);
+      setSavePreset(null);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '저장에 실패했어요');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function openSaveFromPlay() {
+    if (!play) return;
+    setSavePreset({
+      recommendationId: play.recommendationId,
+      title: play.recommendation.title,
+      artist: play.recommendation.artist,
+      embedUrl: play.recommendation.embedUrl,
+      startSec: play.startSec ?? undefined,
+    });
+    setPlay(null);
+    setSheetOpen(true);
+  }
 
   if (isLoading || !user) {
     return (
@@ -44,33 +101,100 @@ export default function MyLyricsPage() {
 
   return (
     <main className={`${authPageClassName} gap-5`}>
-      <div>
+      <div className="flex items-center justify-between gap-2">
         <Link
           href="/users/me"
           className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
           <ChevronLeft className="size-4" aria-hidden />
           마이 홈
         </Link>
+        <button
+          type="button"
+          onClick={() => {
+            setSavePreset(null);
+            setSheetOpen(true);
+          }}
+          className="inline-flex items-center gap-1 rounded-full bg-[#3d342c] px-3 py-1.5 text-[12px] font-semibold text-[#f7f1e8]">
+          <Plus className="size-3.5" aria-hidden />
+          새로 저장
+        </button>
       </div>
 
       <MyHomeSubShell
         nickname={user.nickname}
         title="내 가사 모음"
-        subtitle="좋아하는 소절을 모아 두는 자리"
+        subtitle="쪽지처럼 모으고 · 뒤집으면 메모"
         active={null}
         requestCount={requestCount}>
-        <div className="rounded-xl border border-dashed border-[rgb(31_26_22/0.2)] bg-[rgb(255_255_255/0.35)] px-4 py-12 text-center">
-          <span className="mx-auto grid size-12 place-items-center rounded-xl bg-[#4a3728] text-[#f7f1e8] shadow-[3px_3px_0_rgb(46_38_31/0.35)]">
-            <Quote className="size-5" aria-hidden />
-          </span>
-          <p className="mt-4 text-sm font-medium text-[#3d342c]">곧 열릴 예정</p>
-          <p className="mt-1.5 text-[12px] leading-relaxed text-[#6b5c4c]">
-            방에서 공유한 가사 카드를
-            <br />
-            여기에 담을 수 있게 만들 거예요
-          </p>
-        </div>
+        {loading ? (
+          <Loader2 className="mx-auto my-10 size-5 animate-spin text-[#8a7048]" />
+        ) : error ? (
+          <p className="py-8 text-center text-sm text-red-600">{error}</p>
+        ) : items.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-[rgb(31_26_22/0.2)] bg-[rgb(255_255_255/0.35)] px-4 py-12 text-center">
+            <span className="mx-auto grid size-12 place-items-center rounded-xl bg-[#4a3728] text-[#f7f1e8]">
+              <Quote className="size-5" aria-hidden />
+            </span>
+            <p className="mt-4 text-sm font-medium text-[#3d342c]">
+              아직 쪽지가 없어요
+            </p>
+            <p className="mt-1.5 text-[12px] text-[#6b5c4c]">
+              듣다가 꽂힌 소절을 여기에 붙여 두세요
+            </p>
+          </div>
+        ) : (
+          <ul className="lyric-sticky-grid">
+            {items.map((item, i) => (
+              <li key={item.id}>
+                <SavedLyricSticky
+                  item={item}
+                  tiltIndex={i}
+                  onPlay={() => setPlay(item)}
+                  onPatch={async (body) => {
+                    const row = await patchSavedLyric(item.id, body);
+                    setItems((prev) =>
+                      prev.map((x) => (x.id === row.id ? row : x)),
+                    );
+                  }}
+                  onDelete={() => {
+                    if (!confirm('이 쪽지를 삭제할까요?')) return;
+                    void deleteSavedLyric(item.id).then(() =>
+                      setItems((prev) => prev.filter((x) => x.id !== item.id)),
+                    );
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </MyHomeSubShell>
+
+      <SavedLyricSaveSheet
+        open={sheetOpen}
+        userId={user.id}
+        saving={saving}
+        preset={savePreset}
+        onClose={() => {
+          setSheetOpen(false);
+          setSavePreset(null);
+        }}
+        onSubmit={(body) => void handleCreate(body)}
+      />
+
+      <RoomSongPlaySheet
+        song={
+          play
+            ? {
+                title: play.recommendation.title,
+                artist: play.recommendation.artist,
+                embedUrl: play.recommendation.embedUrl,
+              }
+            : null
+        }
+        startSec={play?.startSec ?? undefined}
+        onSaveLyric={play ? openSaveFromPlay : undefined}
+        onClose={() => setPlay(null)}
+      />
     </main>
   );
 }

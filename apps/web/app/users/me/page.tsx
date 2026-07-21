@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import {
   fetchFriendRequests,
   fetchSavedCards,
+  fetchSavedLyrics,
 } from '@/lib/api';
 import type { ApiSavedCard } from '@/lib/apiTypes';
 import { authPageClassName } from '@/lib/form';
@@ -18,6 +19,8 @@ export default function MyHomePage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [savedCards, setSavedCards] = useState<ApiSavedCard[]>([]);
+  const [lyricCount, setLyricCount] = useState(0);
+  const [lyricPreview, setLyricPreview] = useState<string | null>(null);
   const [albumLoading, setAlbumLoading] = useState(true);
   const [requestCount, setRequestCount] = useState(0);
 
@@ -29,12 +32,18 @@ export default function MyHomePage() {
     if (!user) return;
     let cancelled = false;
     setAlbumLoading(true);
-    fetchSavedCards()
-      .then((cards) => {
-        if (!cancelled) setSavedCards(cards);
+    Promise.all([fetchSavedCards(), fetchSavedLyrics()])
+      .then(([cards, lyrics]) => {
+        if (cancelled) return;
+        setSavedCards(cards);
+        setLyricCount(lyrics.length);
+        setLyricPreview(lyrics[0]?.lyricsText.trim() || null);
       })
       .catch(() => {
-        if (!cancelled) setSavedCards([]);
+        if (cancelled) return;
+        setSavedCards([]);
+        setLyricCount(0);
+        setLyricPreview(null);
       })
       .finally(() => {
         if (!cancelled) setAlbumLoading(false);
@@ -82,6 +91,8 @@ export default function MyHomePage() {
         nickname={user.nickname}
         bio={user.bio ?? null}
         cards={savedCards}
+        lyricCount={lyricCount}
+        lyricPreview={lyricPreview}
         loading={albumLoading}
         requestCount={requestCount}
       />

@@ -657,11 +657,11 @@
   }
 
   .my-home-top3-slots {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.35rem;
-    align-items: end;
-    justify-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.85rem 1.15rem;
   }
 
   .my-home-top3-slot {
@@ -669,14 +669,6 @@
     flex-direction: column;
     align-items: center;
     min-width: 0;
-  }
-
-  .my-home-top3-rank {
-    margin-bottom: 0.25rem;
-    font-size: 0.5625rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: #8a7048;
   }
 
   .my-home-stats-slot {
@@ -963,7 +955,7 @@
   background: transparent;
 }
 
-/* —— 가사 공유 카드 (Spotify Share lyrics 톤 · LP 브랜드) —— */
+/* —— 가사 공유 카드 (Spotify Share lyrics · 자켓 틴트) —— */
 .lyric-share-card {
   display: flex;
   flex-direction: column;
@@ -971,9 +963,10 @@
   text-align: left;
   color: #f7f1e8;
   border-radius: 1.125rem;
-  border: 1.5px solid rgb(31 26 22 / 0.4);
-  box-shadow: 3px 3px 0 rgb(46 38 31 / 0.55);
+  border: 1.5px solid rgb(0 0 0 / 0.28);
+  box-shadow: 3px 3px 0 rgb(0 0 0 / 0.28);
   overflow: hidden;
+  transition: background-color 0.35s ease;
 }
 
 .lyric-share-card--chat {
@@ -987,7 +980,7 @@
   min-height: 14rem;
   gap: 1rem;
   padding: 1.1rem 1.15rem 0.9rem;
-  box-shadow: 4px 4px 0 rgb(46 38 31 / 0.5);
+  box-shadow: 4px 4px 0 rgb(0 0 0 / 0.26);
 }
 
 .lyric-share-card-meta {
@@ -1112,3 +1105,200 @@
 .lyric-share-card:not(:has(.lyric-share-card-range)) .lyric-share-card-play {
   margin-left: auto;
 }
+
+/* 내 가사 모음 — 종이 쪽지 + 뒤집기 (포스트잇 메타포 · LP Bar 톤) */
+.lyric-sticky-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 0.65rem;
+  padding: 0.15rem 0.1rem 0.35rem;
+}
+
+.lyric-sticky {
+  perspective: 900px;
+  transform: rotate(var(--lyric-sticky-rot, 0deg));
+}
+
+.lyric-sticky-inner {
+  position: relative;
+  width: 100%;
+  min-height: 9.75rem;
+  transform-style: preserve-3d;
+  transition: transform 0.45s ease;
+}
+
+.lyric-sticky-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.lyric-sticky-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.7rem 0.65rem 0.6rem;
+  border: 1px solid rgb(31 26 22 / 14%);
+  border-radius: 0.2rem 0.55rem 0.45rem 0.35rem;
+  box-shadow:
+    2px 3px 0 rgb(46 38 31 / 12%),
+    0 1px 0 rgb(255 255 255 / 45%) inset;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  text-align: left;
+}
+
+.lyric-sticky-front {
+  cursor: default;
+}
+
+.lyric-sticky-back {
+  transform: rotateY(180deg);
+}
+
+.lyric-sticky-back-main {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: left;
+}
+
+.lyric-sticky-track {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #8a7048;
+}
+
+.lyric-sticky-date {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: #7a6548;
+}
+
+.lyric-sticky-date.is-back {
+  margin-bottom: 0.15rem;
+  font-weight: 600;
+  color: #8a7048;
+}
+
+.lyric-sticky-quote {
+  display: -webkit-box;
+  flex: 1;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #2a221c;
+}
+
+.lyric-sticky-back-label {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a7048;
+}
+
+.lyric-sticky-note {
+  display: -webkit-box;
+  flex: 1;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  font-size: 0.75rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: #4a4036;
+}
+
+.lyric-sticky-note-input {
+  flex: 1;
+  width: 100%;
+  min-height: 4.5rem;
+  resize: none;
+  border: 1px solid rgb(31 26 22 / 18%);
+  border-radius: 0.35rem;
+  background: rgb(255 255 255 / 55%);
+  padding: 0.4rem 0.45rem;
+  font-size: 0.75rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: #4a4036;
+  outline: none;
+}
+
+.lyric-sticky-note-input:focus {
+  border-color: rgb(90 70 45 / 45%);
+  background: rgb(255 255 255 / 75%);
+}
+
+.lyric-sticky-note-input.is-lyrics {
+  font-style: normal;
+  font-weight: 600;
+  color: #2a221c;
+}
+
+.lyric-sticky-inner.is-editing {
+  min-height: 11.5rem;
+}
+
+.lyric-sticky-hint {
+  margin-top: auto;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  color: #a89880;
+}
+
+.lyric-sticky-actions {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.lyric-sticky-action {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(31 26 22 / 16%);
+  background: rgb(255 255 255 / 45%);
+  padding: 0.28rem 0.4rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #5c4a38;
+}
+
+.lyric-sticky-action:disabled {
+  opacity: 0.55;
+}
+
+.lyric-sticky-action.is-primary {
+  background: #3d342c;
+  border-color: #3d342c;
+  color: #f7f1e8;
+}
+
+.lyric-sticky-action.is-danger {
+  color: #8a5040;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyric-sticky-inner {
+    transition: none;
+  }
+}
+

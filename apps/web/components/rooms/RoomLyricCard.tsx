@@ -4,6 +4,7 @@ import {
   fetchSpotifyThumbnailUrl,
   getEmbedPreview,
 } from '@/lib/embedMedia';
+import { extractCoverTint } from '@/lib/coverColor';
 import { Music2, Play } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { RoomSongCardData } from './RoomSongCard';
@@ -12,7 +13,7 @@ export type RoomLyricCardData = RoomSongCardData & {
   lyrics: string;
   startSec?: number | null;
   endSec?: number | null;
-  /** 카드 배경 (꾸미기 확장용). 기본 웜 우드 */
+  /** 카드 배경. 없으면 자켓 틴트 → 기본 잉크 */
   background?: string;
 };
 
@@ -24,8 +25,8 @@ type RoomLyricCardProps = {
   className?: string;
 };
 
-/** Spotify 공유 카드 톤에 맞춘 기본 배경 (브랜드 우드) */
-export const LYRIC_CARD_DEFAULT_BG = '#4a3728';
+/** 자켓을 못 뽑을 때 — 채팅 크림·LP 톤과 맞는 잉크 */
+export const LYRIC_CARD_DEFAULT_BG = '#2a2420';
 
 function formatSec(sec: number) {
   const m = Math.floor(sec / 60);
@@ -71,6 +72,29 @@ function useEmbedThumb(embedUrl: string) {
   return thumb;
 }
 
+function useCoverBackground(
+  thumb: string | null,
+  override?: string,
+): string {
+  const [tint, setTint] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (override || !thumb) {
+      setTint(null);
+      return;
+    }
+    let cancelled = false;
+    extractCoverTint(thumb).then((color) => {
+      if (!cancelled) setTint(color);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [thumb, override]);
+
+  return override ?? tint ?? LYRIC_CARD_DEFAULT_BG;
+}
+
 /** 방 채팅 · Spotify형 가사 공유 카드 */
 export function RoomLyricCard({
   data,
@@ -80,7 +104,7 @@ export function RoomLyricCard({
 }: RoomLyricCardProps) {
   const thumb = useEmbedThumb(data.embedUrl);
   const range = rangeLabel(data.startSec, data.endSec);
-  const bg = data.background ?? LYRIC_CARD_DEFAULT_BG;
+  const bg = useCoverBackground(thumb, data.background);
   const trimmed = data.lyrics.trim();
   const isPlaceholder = !trimmed && size === 'compose';
   const lyricsText = trimmed || (isPlaceholder ? '가사를 입력하면\n여기에 보여요' : '');
@@ -91,7 +115,7 @@ export function RoomLyricCard({
         <span className="lyric-share-card-cover">
           {thumb ? (
             // eslint-disable-next-line @next/next/no-img-element -- oEmbed / YouTube CDN
-            <img src={thumb} alt="" />
+            <img src={thumb} alt="" crossOrigin="anonymous" />
           ) : (
             <Music2 className="size-4 opacity-70" aria-hidden />
           )}

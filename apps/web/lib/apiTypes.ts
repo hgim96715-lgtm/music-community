@@ -108,6 +108,33 @@ export type ApiSavedCard = {
   recommendation: ApiSavedCardRecommendation;
 };
 
+export type ApiSavedLyric = {
+  id: string;
+  userId: string;
+  recommendationId: string;
+  lyricsText: string;
+  note: string | null;
+  startSec: number | null;
+  endSec: number | null;
+  createdAt: string;
+  updatedAt: string;
+  recommendation: ApiSavedCardRecommendation;
+};
+
+export type ApiSavedLyricBody = {
+  recommendationId: string;
+  lyricsText: string;
+  note?: string;
+  startSec?: number;
+  endSec?: number;
+};
+export type UpdateSavedLyricBody = {
+  lyricsText?: string;
+  note?: string | null;
+  startSec?: number | null;
+  endSec?: number | null;
+};
+
 export type CreateSavedCardBody = {
   recommendationId: string;
   customization: ApiSavedCardCustomization;

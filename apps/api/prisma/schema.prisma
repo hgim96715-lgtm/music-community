@@ -78,6 +78,7 @@ model User {
   receivedFriendRequests Friendship[] @relation("FriendshipAddressee")
   blocksOutgoing         Block[]      @relation("BlockBlocker")
   blocksIncoming         Block[]      @relation("BlockBlocked")
+  savedLyrics SavedLyric[]
 
   ownedRooms Room[] @relation("RoomOwner")
   roomMembers RoomMember[]
@@ -119,6 +120,8 @@ model Recommendation {
   reactions Reaction[]
   comments Comment[]
   roomMessages RoomMessage[]
+
+  savedLyrics SavedLyric[]
 
   @@index([authorId])
 }
@@ -279,3 +282,20 @@ model RoomBan {
     @@index([userId])
 }
 
+model SavedLyric{
+    id String @id @default(uuid(7)) @db.Uuid
+    userId String @db.Uuid
+    recommendationId String @db.Uuid
+    lyricsText String
+    note String?
+    startSec Int?
+    endSec Int?
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+    updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([recommendationId])
+}

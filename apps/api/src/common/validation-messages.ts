@@ -46,6 +46,10 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   arrayMaxSize: '선택 개수가 초과되었습니다.',
   isIn: '허용되지 않은 값입니다.',
   matches: '형식이 올바르지 않습니다.',
+  isInt: '정수로 입력해주세요.',
+  isUUID: '올바른 ID 형식이 아닙니다.',
+  isEnum: '허용되지 않은 값입니다.',
+  min: '최소값보다 작습니다.',
   whitelistValidation: '허용되지 않은 필드가 포함되어 있습니다.',
 };
 

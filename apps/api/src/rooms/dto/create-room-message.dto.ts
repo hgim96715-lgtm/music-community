@@ -1,6 +1,7 @@
 import {
   IsEnum,
   IsInt,
+  IsOptional,
   IsString,
   IsUUID,
   MaxLength,
@@ -33,12 +34,15 @@ export class CreateRoomMessageDto {
   @IsUUID()
   savedCardId?: string;
 
+  /** 선택 — 비우면 검증 스킵 (ValidateIf만 쓰면 undefined에도 IsInt 적용됨) */
   @ValidateIf((o) => o.type === RoomMessageType.lyric_quote)
+  @IsOptional()
   @IsInt()
   @Min(0)
   lyricStartSec?: number;
 
   @ValidateIf((o) => o.type === RoomMessageType.lyric_quote)
+  @IsOptional()
   @IsInt()
   @Min(0)
   lyricEndSec?: number;
