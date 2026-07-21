@@ -4,11 +4,9 @@ import type { ApiSavedCardCustomization } from '@/lib/apiTypes';
 import { buildSavedCardCustomization } from '@/lib/savedCardDefaults';
 import {
   DEFAULT_TEXT_COLORS,
-  getSavedCardPlayerBarColor,
   type SavedCardTextColorKey,
 } from '@/lib/savedCardColors';
 import { fileToBackgroundDataUrl } from '@/lib/savedCardImage';
-import { resolveSavedCardLayout } from '@/lib/savedCardLayout';
 import {
   brandPillBtnGuest,
   savedCardChip,
@@ -18,13 +16,6 @@ import { ImagePlus, Loader2, Palette } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 const BG_PRESETS = ['#ebe3d8', '#f3ebe3', '#d4c4a8', '#3a322a', '#2a2218'];
-const PLAYER_BAR_PRESETS = [
-  '#c9a66b',
-  '#8a7048',
-  '#6b5428',
-  '#1a1410',
-  '#5a4636',
-];
 const TEXT_PRESETS = ['#ffffff', '#ebe4da', '#171717', '#c9a66b', '#f3ebe3'];
 
 const DISPLAY_FIELDS = [
@@ -133,8 +124,6 @@ export function SavedCardCustomizationForm({
   const visibleTextColorFields = TEXT_COLOR_FIELDS.filter(({ key }) =>
     isDisplayOn(customization.display, key),
   );
-  const isMusicStrip =
-    resolveSavedCardLayout(customization) === 'music-strip';
 
   function toggleDisplay(key: (typeof DISPLAY_FIELDS)[number]['key']) {
     setCustomization((prev) => ({
@@ -158,15 +147,15 @@ export function SavedCardCustomizationForm({
     onError?.('');
     try {
       const dataUrl = await fileToBackgroundDataUrl(file);
-      setCustomization((prev) => {
-        const next = {
-          ...prev,
-          backgroundImage: dataUrl,
-          backgroundImageOpacity: prev.backgroundImageOpacity ?? 1,
-        };
-        delete next.background;
-        return next;
-      });
+      setCustomization((prev) => ({
+        ...prev,
+        backgroundImage: dataUrl,
+        backgroundImageOpacity: prev.backgroundImageOpacity ?? 1,
+        background:
+          prev.background ??
+          defaultBackground ??
+          buildSavedCardCustomization().background,
+      }));
     } catch (err) {
       onError?.(
         err instanceof Error ? err.message : '이미지를 올리지 못했어요.',
@@ -195,7 +184,7 @@ export function SavedCardCustomizationForm({
       <section className={savedCardFormSection}>
         <h3 className="text-xs font-semibold text-brand-primary">표시할 내용</h3>
         <p className="mt-1 text-[11px] text-neutral-500">
-          켠 항목만 카드에 보여요
+          자켓에 보일 내용을 골라 주세요
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {DISPLAY_FIELDS.map(({ key, label }) => (
@@ -244,42 +233,26 @@ export function SavedCardCustomizationForm({
       ) : null}
 
       <section className={savedCardFormSection}>
-        <h3 className="text-xs font-semibold text-brand-primary">배경</h3>
-        {!customization.backgroundImage ? (
-          <div className="mt-3">
-            <p className="text-[11px] text-neutral-500">
-              {isMusicStrip ? '가운데 배경 색' : '배경 색'}
-            </p>
-            <div className="mt-2">
-              <ColorSwatches
-                value={customization.background ?? '#ebe3d8'}
-                presets={BG_PRESETS}
-                onChange={(background) =>
-                  setCustomization((prev) => ({ ...prev, background }))
-                }
-              />
-            </div>
+        <h3 className="text-xs font-semibold text-brand-primary">커버</h3>
+        <p className="mt-1 text-[11px] text-neutral-500">
+          이미지를 안 올리면 앨범 표지가 기본이에요
+        </p>
+        <div className="mt-3">
+          <p className="text-[11px] text-neutral-500">틴트 색 (표지 위)</p>
+          <div className="mt-2">
+            <ColorSwatches
+              value={customization.background ?? '#ebe3d8'}
+              presets={BG_PRESETS}
+              onChange={(background) =>
+                setCustomization((prev) => ({ ...prev, background }))
+              }
+            />
           </div>
-        ) : null}
+        </div>
 
-        {isMusicStrip ? (
-          <div className={customization.backgroundImage ? 'mt-3' : 'mt-4'}>
-            <p className="text-[11px] text-neutral-500">플레이어 바 색</p>
-            <div className="mt-2">
-              <ColorSwatches
-                value={getSavedCardPlayerBarColor(customization)}
-                presets={PLAYER_BAR_PRESETS}
-                onChange={(playerBar) =>
-                  setCustomization((prev) => ({ ...prev, playerBar }))
-                }
-              />
-            </div>
-          </div>
-        ) : null}
-
-        <div className={customization.backgroundImage ? '' : 'mt-4'}>
+        <div className="mt-4">
           <p className="text-[11px] text-neutral-500">
-            배경 이미지 · PNG·WebP 권장
+            커스텀 커버 · PNG·WebP 권장
           </p>
           <input
             ref={fileInputRef}

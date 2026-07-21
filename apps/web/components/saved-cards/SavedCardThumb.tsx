@@ -1,5 +1,5 @@
 import type { ApiSavedCard } from '@/lib/apiTypes';
-import { SavedCardPreview } from './SavedCardPreview';
+import { LpAlbumJacket } from './LpAlbumJacket';
 
 type SavedCardThumbProps = {
   card: ApiSavedCard;
@@ -9,16 +9,15 @@ export function SavedCardThumb({ card }: SavedCardThumbProps) {
   const { recommendation, customization } = card;
 
   return (
-    <SavedCardPreview
-      size="thumb"
-      data={{
-        title: recommendation.title,
-        artist: recommendation.artist,
-        reason: recommendation.reason,
-        moods: recommendation.moods,
-        postedAt: recommendation.createdAt,
-        savedAt: card.createdAt,
-      }}
+    <LpAlbumJacket
+      size="sm"
+      title={recommendation.title}
+      artist={recommendation.artist}
+      embedUrl={recommendation.embedUrl}
+      reason={recommendation.reason}
+      moods={recommendation.moods}
+      postedAt={recommendation.createdAt}
+      savedAt={card.createdAt}
       customization={customization}
     />
   );

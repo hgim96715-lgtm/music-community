@@ -240,6 +240,86 @@ export class RoomsService {
         include: roomMessageInclude,
       });
     }
+
+    if (dto.type === RoomMessageType.saved_card) {
+      if (!dto.savedCardId) {
+        throw new BadRequestException('공유할 포토카드가 필요합니다.');
+      }
+      const card = await this.prisma.savedCard.findFirst({
+        where: { id: dto.savedCardId, userId: senderId },
+        select: {
+          id: true,
+          customization: true,
+          createdAt: true,
+          recommendation: {
+            select: {
+              id: true,
+              title: true,
+              artist: true,
+              embedUrl: true,
+              moods: true,
+              reason: true,
+              createdAt: true,
+            },
+          },
+        },
+      });
+      if (!card) throw new NotFoundException('내 포토카드가 아니거나 없어요.');
+      const msg = await this.prisma.roomMessage.create({
+        data: {
+          roomId,
+          senderId,
+          type: RoomMessageType.saved_card,
+          savedCardId: card.id,
+          recommendationId: card.recommendation.id,
+        },
+        include: roomMessageInclude,
+      });
+      return {
+        ...msg,
+        savedCard: {
+          id: card.id,
+          createdAt: card.createdAt,
+          customization: card.customization,
+          recommendation: card.recommendation,
+        },
+      };
+    }
+
+    if (dto.type === RoomMessageType.lyric_quote) {
+      const body = dto.body?.trim();
+      if (!body) {
+        throw new BadRequestException('가사 내용을 입력해 주세요.');
+      }
+      if (!dto.recommendationId) {
+        throw new BadRequestException('가사를 붙일 곡이 필요합니다.');
+      }
+      const start = dto.lyricStartSec;
+      const end = dto.lyricEndSec;
+      if (start !== undefined && end !== undefined && end < start) {
+        throw new BadRequestException('끝 시각은 시작 시각 이후여야 해요.');
+      }
+      const recommendation = await this.prisma.recommendation.findFirst({
+        where: { id: dto.recommendationId, hidden: false },
+        select: { id: true },
+      });
+      if (!recommendation) {
+        throw new NotFoundException('존재하지 않는 추천 글입니다.');
+      }
+      return this.prisma.roomMessage.create({
+        data: {
+          roomId,
+          senderId,
+          type: RoomMessageType.lyric_quote,
+          body,
+          recommendationId: dto.recommendationId,
+          lyricStartSec: start,
+          lyricEndSec: end,
+        },
+        include: roomMessageInclude,
+      });
+    }
+
     if (!dto.recommendationId) {
       throw new BadRequestException('공유할 추천 글이 필요합니다.');
     }
@@ -270,10 +350,57 @@ export class RoomsService {
     if (!member) {
       throw new ForbiddenException('방 멤버만 메시지를 조회할 수 있습니다.');
     }
-    return this.prisma.roomMessage.findMany({
+    const messages = await this.prisma.roomMessage.findMany({
       where: { roomId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       include: roomMessageInclude,
+    });
+    const cardIds = [
+      ...new Set(
+        messages
+          .filter((m) => m.type === RoomMessageType.saved_card && m.savedCardId)
+          .map((m) => m.savedCardId!),
+      ),
+    ];
+    if (cardIds.length === 0) {
+      return messages.map((m) => ({ ...m, savedCard: null }));
+    }
+    const cards = await this.prisma.savedCard.findMany({
+      where: { id: { in: cardIds } },
+      select: {
+        id: true,
+        customization: true,
+        createdAt: true,
+        recommendation: {
+          select: {
+            id: true,
+            title: true,
+            artist: true,
+            embedUrl: true,
+            moods: true,
+            reason: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+    const byId = new Map(cards.map((c) => [c.id, c]));
+
+    return messages.map((m) => {
+      if (m.type !== RoomMessageType.saved_card || !m.savedCardId) {
+        return { ...m, savedCard: null };
+      }
+      const card = byId.get(m.savedCardId);
+      if (!card) return { ...m, savedCard: null };
+      return {
+        ...m,
+        savedCard: {
+          id: card.id,
+          createdAt: card.createdAt,
+          customization: card.customization,
+          recommendation: card.recommendation,
+        },
+      };
     });
   }
 

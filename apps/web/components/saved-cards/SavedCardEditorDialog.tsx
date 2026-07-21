@@ -10,17 +10,19 @@ import { brandPillBtn, dialogBack, dialogPanel } from '@/lib/neobrutal';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { LpAlbumJacket } from './LpAlbumJacket';
 import { SavedCardCustomizationForm } from './SavedCardCustomizationForm';
-import {
-  SavedCardPreview,
-  type SavedCardPreviewData,
-} from './SavedCardPreview';
 
 type SavedCardEditorDialogProps = {
   open: boolean;
   onClose: () => void;
   recommendationId: string;
-  preview: SavedCardPreviewData;
+  title: string;
+  artist: string;
+  embedUrl: string;
+  reason: string;
+  moods: string[];
+  postedAt: string;
   defaultBackground?: string;
   onSaved?: () => void;
 };
@@ -29,7 +31,12 @@ export function SavedCardEditorDialog({
   open,
   onClose,
   recommendationId,
-  preview,
+  title,
+  artist,
+  embedUrl,
+  reason,
+  moods,
+  postedAt,
   defaultBackground,
   onSaved,
 }: SavedCardEditorDialogProps) {
@@ -91,10 +98,10 @@ export function SavedCardEditorDialog({
             <h2
               id="saved-card-editor-title"
               className="text-lg font-semibold text-brand-primary">
-              포토카드 꾸미기
+              자켓 꾸미기
             </h2>
             <p className="mt-1 text-sm text-neutral-500">
-              앨범에 보일 내용을 골라 주세요
+              앨범 표지 위에 꾸밀 내용을 골라 주세요
             </p>
           </div>
 
@@ -104,10 +111,16 @@ export function SavedCardEditorDialog({
                 <p className="mb-3 text-sm font-medium text-neutral-500">
                   미리보기
                 </p>
-                <SavedCardPreview
-                  data={preview}
+                <LpAlbumJacket
+                  size="lg"
+                  title={title}
+                  artist={artist}
+                  embedUrl={embedUrl}
+                  reason={reason}
+                  moods={moods}
+                  postedAt={postedAt}
                   customization={customization}
-                  size="editor"
+                  className="shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
                 />
               </div>
 

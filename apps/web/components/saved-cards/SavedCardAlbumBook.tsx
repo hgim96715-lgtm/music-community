@@ -18,6 +18,8 @@ type SavedCardAlbumBookProps = {
   onCardsChange: (cards: ApiSavedCard[]) => void;
   /** 본인 앨범만 Top 꽂기 · 기본 true */
   editable?: boolean;
+  /** 마이 홈 셸 안 — 바깥 lp-album-shell 생략 */
+  embedded?: boolean;
 };
 
 const SHELF_PER_ROW = 6;
@@ -46,6 +48,7 @@ export function SavedCardAlbumBook({
   onSelectCard,
   onCardsChange,
   editable = true,
+  embedded = false,
 }: SavedCardAlbumBookProps) {
   const [pulledId, setPulledId] = useState<string | null>(null);
   const [replaceMode, setReplaceMode] = useState(false);
@@ -166,6 +169,182 @@ export function SavedCardAlbumBook({
 
   const pulledCard = pulledId ? cardById.get(pulledId) : null;
 
+  const body = (
+    <>
+      {embedded && !loading && cards.length > 0 ? (
+        <p className="mb-3 text-right text-[11px] font-bold text-[#6b5428]">
+          {cards.length}장
+        </p>
+      ) : null}
+      {loading ? (
+        <AlbumSkeleton />
+      ) : error ? (
+        <p className="text-sm text-red-600">{error}</p>
+      ) : cards.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-[rgb(31_26_22/0.2)] bg-[rgb(255_255_255/0.35)] px-3 py-12 text-center">
+          <p className="text-sm font-medium text-[#3d342c]">
+            아직 꽂은 LP가 없어요
+          </p>
+          <p className="mt-1 text-xs text-[#6b5c4c]">
+            피드에서 내 글의 저장 버튼을 눌러 보세요
+          </p>
+        </div>
+      ) : (
+        <>
+          <div
+            className={`lp-album-top ${replaceMode ? 'is-replace' : ''}`}
+            aria-label="Top 3">
+            <p className="mb-2 text-[11px] font-semibold tracking-wide text-[#6b5c4c]">
+              TOP 3
+              {replaceMode ? (
+                <span className="ml-2 font-medium text-[#8a7048]">
+                  · 바꿀 자리 선택
+                </span>
+              ) : null}
+            </p>
+            <ul className="flex items-end justify-center gap-4 sm:gap-6">
+              {([1, 2, 3] as const).map((rank, index) => {
+                const card = topSlots[index];
+                return (
+                  <li key={rank} className="flex flex-col items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTopClick(rank, card)}
+                      onContextMenu={
+                        editable && card
+                          ? (e) => {
+                              e.preventDefault();
+                              void demoteFromTop(card.id);
+                            }
+                          : undefined
+                      }
+                      disabled={shelfBusy}
+                      className={`lp-album-top-slot ${replaceMode ? 'is-pickable' : ''}`}
+                      aria-label={
+                        card
+                          ? replaceMode
+                            ? `Top ${rank}와 바꾸기 · ${card.recommendation.title}`
+                            : `${card.recommendation.title} 보기`
+                          : `Top ${rank} 비어 있음`
+                      }>
+                      {card ? (
+                        <LpAlbumDisc
+                          embedUrl={card.recommendation.embedUrl}
+                          title={card.recommendation.title}
+                          size="lg"
+                        />
+                      ) : (
+                        <LpAlbumDisc size="lg" empty label={`#${rank}`} />
+                      )}
+                    </button>
+                    <span className="max-w-[5.5rem] truncate text-center text-[10px] font-medium text-[#5c4a38]">
+                      {card ? card.recommendation.title : `빈 자리`}
+                    </span>
+                    {editable && card && !replaceMode ? (
+                      <button
+                        type="button"
+                        disabled={shelfBusy}
+                        onClick={() => void demoteFromTop(card.id)}
+                        className="text-[10px] text-[#8a7048] underline-offset-2 hover:underline disabled:opacity-50">
+                        책장으로
+                      </button>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div className="lp-album-shelf-block" aria-label="LP 책장">
+            <p className="mb-2 text-[11px] font-semibold tracking-wide text-[#6b5c4c]">
+              책장
+              {editable ? (
+                <span className="ml-2 font-normal text-[#8a8070]">
+                  · 눌러서 뽑기
+                </span>
+              ) : null}
+            </p>
+
+            {shelfCards.length === 0 ? (
+              <div className="lp-album-shelf lp-album-shelf-empty">
+                <p className="py-6 text-center text-xs text-[#8a8070]">
+                  Top에 다 꽂혀 있거나, 책장에 남은 LP가 없어요
+                </p>
+              </div>
+            ) : (
+              shelfRows.map((row, rowIndex) => (
+                <div key={rowIndex} className="lp-album-shelf">
+                  <ul className="lp-album-shelf-row">
+                    {row.map((card) => {
+                      const pulled = pulledId === card.id;
+                      return (
+                        <li key={card.id} className="lp-album-shelf-item">
+                          <button
+                            type="button"
+                            disabled={shelfBusy}
+                            onClick={() => handleShelfClick(card)}
+                            className={`lp-album-shelf-btn ${pulled ? 'is-pulled' : ''}`}
+                            aria-pressed={pulled}
+                            aria-label={
+                              pulled
+                                ? `${card.recommendation.title} · 다시 누르면 Top`
+                                : `${card.recommendation.title} 뽑기`
+                            }>
+                            <LpAlbumDisc
+                              embedUrl={card.recommendation.embedUrl}
+                              title={card.recommendation.title}
+                              size="md"
+                              pulled={pulled}
+                              dimmed={Boolean(pulledId && !pulled)}
+                            />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <div className="lp-album-shelf-plank" aria-hidden />
+                </div>
+              ))
+            )}
+          </div>
+
+          {pulledCard && editable ? (
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => onSelectCard(pulledCard)}
+                className="rounded-full border border-[rgb(31_26_22/0.18)] bg-[#f7f1e8] px-3 py-1.5 text-xs font-semibold text-[#3d342c]">
+                자세히 · 꾸미기
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPulledId(null);
+                  setReplaceMode(false);
+                  setHint('');
+                }}
+                className="rounded-full px-3 py-1.5 text-xs font-medium text-[#6b5c4c]">
+                다시 꽂기
+              </button>
+            </div>
+          ) : null}
+
+          {hint ? (
+            <p
+              className="mt-2 text-center text-[11px] text-[#8a7048]"
+              role="status">
+              {hint}
+            </p>
+          ) : null}
+        </>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return <section className="w-full">{body}</section>;
+  }
+
   return (
     <section className="w-full">
       <div className="lp-album-shell">
@@ -184,169 +363,7 @@ export function SavedCardAlbumBook({
             </span>
           ) : null}
         </div>
-
-        <div className="lp-album-body">
-          {loading ? (
-            <AlbumSkeleton />
-          ) : error ? (
-            <p className="text-sm text-red-600">{error}</p>
-          ) : cards.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[rgb(31_26_22/0.2)] bg-[rgb(255_255_255/0.35)] px-3 py-12 text-center">
-              <p className="text-sm font-medium text-[#3d342c]">
-                아직 꽂은 LP가 없어요
-              </p>
-              <p className="mt-1 text-xs text-[#6b5c4c]">
-                피드에서 내 글의 저장 버튼을 눌러 보세요
-              </p>
-            </div>
-          ) : (
-            <>
-              <div
-                className={`lp-album-top ${replaceMode ? 'is-replace' : ''}`}
-                aria-label="Top 3">
-                <p className="mb-2 text-[11px] font-semibold tracking-wide text-[#6b5c4c]">
-                  TOP 3
-                  {replaceMode ? (
-                    <span className="ml-2 font-medium text-[#8a7048]">
-                      · 바꿀 자리 선택
-                    </span>
-                  ) : null}
-                </p>
-                <ul className="flex items-end justify-center gap-4 sm:gap-6">
-                  {([1, 2, 3] as const).map((rank, index) => {
-                    const card = topSlots[index];
-                    return (
-                      <li key={rank} className="flex flex-col items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleTopClick(rank, card)}
-                          onContextMenu={
-                            editable && card
-                              ? (e) => {
-                                  e.preventDefault();
-                                  void demoteFromTop(card.id);
-                                }
-                              : undefined
-                          }
-                          disabled={shelfBusy}
-                          className={`lp-album-top-slot ${replaceMode ? 'is-pickable' : ''}`}
-                          aria-label={
-                            card
-                              ? replaceMode
-                                ? `Top ${rank}와 바꾸기 · ${card.recommendation.title}`
-                                : `${card.recommendation.title} 보기`
-                              : `Top ${rank} 비어 있음`
-                          }>
-                          {card ? (
-                            <LpAlbumDisc
-                              embedUrl={card.recommendation.embedUrl}
-                              title={card.recommendation.title}
-                              size="lg"
-                            />
-                          ) : (
-                            <LpAlbumDisc size="lg" empty label={`#${rank}`} />
-                          )}
-                        </button>
-                        <span className="max-w-[5.5rem] truncate text-center text-[10px] font-medium text-[#5c4a38]">
-                          {card ? card.recommendation.title : `빈 자리`}
-                        </span>
-                        {editable && card && !replaceMode ? (
-                          <button
-                            type="button"
-                            disabled={shelfBusy}
-                            onClick={() => void demoteFromTop(card.id)}
-                            className="text-[10px] text-[#8a7048] underline-offset-2 hover:underline disabled:opacity-50">
-                            책장으로
-                          </button>
-                        ) : null}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              <div className="lp-album-shelf-block" aria-label="LP 책장">
-                <p className="mb-2 text-[11px] font-semibold tracking-wide text-[#6b5c4c]">
-                  책장
-                  {editable ? (
-                    <span className="ml-2 font-normal text-[#8a8070]">
-                      · 눌러서 뽑기
-                    </span>
-                  ) : null}
-                </p>
-
-                {shelfCards.length === 0 ? (
-                  <div className="lp-album-shelf lp-album-shelf-empty">
-                    <p className="py-6 text-center text-xs text-[#8a8070]">
-                      Top에 다 꽂혀 있거나, 책장에 남은 LP가 없어요
-                    </p>
-                  </div>
-                ) : (
-                  shelfRows.map((row, rowIndex) => (
-                    <div key={rowIndex} className="lp-album-shelf">
-                      <ul className="lp-album-shelf-row">
-                        {row.map((card) => {
-                          const pulled = pulledId === card.id;
-                          return (
-                            <li key={card.id} className="lp-album-shelf-item">
-                              <button
-                                type="button"
-                                disabled={shelfBusy}
-                                onClick={() => handleShelfClick(card)}
-                                className={`lp-album-shelf-btn ${pulled ? 'is-pulled' : ''}`}
-                                aria-pressed={pulled}
-                                aria-label={
-                                  pulled
-                                    ? `${card.recommendation.title} · 다시 누르면 Top`
-                                    : `${card.recommendation.title} 뽑기`
-                                }>
-                                <LpAlbumDisc
-                                  embedUrl={card.recommendation.embedUrl}
-                                  title={card.recommendation.title}
-                                  size="md"
-                                  pulled={pulled}
-                                  dimmed={Boolean(pulledId && !pulled)}
-                                />
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                      <div className="lp-album-shelf-plank" aria-hidden />
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {pulledCard && editable ? (
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onSelectCard(pulledCard)}
-                    className="rounded-full border border-[rgb(31_26_22/0.18)] bg-[#f7f1e8] px-3 py-1.5 text-xs font-semibold text-[#3d342c]">
-                    자세히 · 꾸미기
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPulledId(null);
-                      setReplaceMode(false);
-                      setHint('');
-                    }}
-                    className="rounded-full px-3 py-1.5 text-xs font-medium text-[#6b5c4c]">
-                    다시 꽂기
-                  </button>
-                </div>
-              ) : null}
-
-              {hint ? (
-                <p className="mt-2 text-center text-[11px] text-[#8a7048]" role="status">
-                  {hint}
-                </p>
-              ) : null}
-            </>
-          )}
-        </div>
+        <div className="lp-album-body">{body}</div>
       </div>
     </section>
   );

@@ -1,11 +1,10 @@
 'use client';
 
-import { MyHomeDashboard } from '@/components/saved-cards/MyHomeDashboard';
+import { SavedCardAlbumBook } from '@/components/saved-cards/SavedCardAlbumBook';
+import { SavedCardAlbumModal } from '@/components/saved-cards/SavedCardAlbumModal';
+import { MyHomeSubShell } from '@/components/saved-cards/MyHomeSubShell';
 import { useAuth } from '@/components/auth/AuthProvider';
-import {
-  fetchFriendRequests,
-  fetchSavedCards,
-} from '@/lib/api';
+import { fetchFriendRequests, fetchSavedCards } from '@/lib/api';
 import type { ApiSavedCard } from '@/lib/apiTypes';
 import { authPageClassName } from '@/lib/form';
 import { ChevronLeft, Loader2 } from 'lucide-react';
@@ -13,28 +12,35 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-/** 마이 홈 — 대시보드 (친구·설정은 nav 탭) */
-export default function MyHomePage() {
+/** 내 앨범 — Top3 + 책장 */
+export default function MyAlbumPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [savedCards, setSavedCards] = useState<ApiSavedCard[]>([]);
   const [albumLoading, setAlbumLoading] = useState(true);
+  const [albumError, setAlbumError] = useState('');
+  const [selected, setSelected] = useState<ApiSavedCard | null>(null);
   const [requestCount, setRequestCount] = useState(0);
 
   useEffect(() => {
-    if (!isLoading && !user) router.replace('/login?next=/users/me');
+    if (!isLoading && !user) router.replace('/login?next=/users/me/album');
   }, [isLoading, user, router]);
 
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
     setAlbumLoading(true);
+    setAlbumError('');
     fetchSavedCards()
       .then((cards) => {
         if (!cancelled) setSavedCards(cards);
       })
-      .catch(() => {
-        if (!cancelled) setSavedCards([]);
+      .catch((err) => {
+        if (!cancelled) {
+          setAlbumError(
+            err instanceof Error ? err.message : '앨범을 불러오지 못했어요.',
+          );
+        }
       })
       .finally(() => {
         if (!cancelled) setAlbumLoading(false);
@@ -71,19 +77,46 @@ export default function MyHomePage() {
     <main className={`${authPageClassName} gap-5`}>
       <div>
         <Link
-          href="/recommendations"
+          href="/users/me"
           className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
           <ChevronLeft className="size-4" aria-hidden />
-          피드
+          마이 홈
         </Link>
       </div>
 
-      <MyHomeDashboard
+      <MyHomeSubShell
         nickname={user.nickname}
-        bio={user.bio ?? null}
-        cards={savedCards}
-        loading={albumLoading}
-        requestCount={requestCount}
+        title="내 앨범"
+        subtitle="LP Top 3 · 책장"
+        active={null}
+        requestCount={requestCount}>
+        {/* 책장 — embedded */}
+        <div className="-mx-1">
+          <SavedCardAlbumBook
+            embedded
+            cards={savedCards}
+            loading={albumLoading}
+            error={albumError}
+            onSelectCard={setSelected}
+            onCardsChange={setSavedCards}
+          />
+        </div>
+      </MyHomeSubShell>
+
+      <SavedCardAlbumModal
+        card={selected}
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        onDeleted={(id) => {
+          setSavedCards((prev) => prev.filter((c) => c.id !== id));
+          setSelected(null);
+        }}
+        onUpdated={(updated) => {
+          setSavedCards((prev) =>
+            prev.map((c) => (c.id === updated.id ? updated : c)),
+          );
+          setSelected(updated);
+        }}
       />
     </main>
   );

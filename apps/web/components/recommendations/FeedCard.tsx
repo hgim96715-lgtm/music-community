@@ -71,6 +71,7 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
             cardBackground={cardBack}
             title={title}
             artist={artist}
+            embedUrl={embedUrl}
             reason={reason}
             moods={moods}
             postedAt={createdAt}

@@ -9,10 +9,43 @@ import { useEffect, useId, useRef } from 'react';
 // @types/youtube — 타입만. 실제 YT는 아래 스크립트 로드 후 생김
 // playerRef: unmount·접기 시 destroy() 하려고 인스턴스 보관
 
+/** bundler 해석에서 @types/youtube ambient가 안 잡힐 때용 */
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace -- YouTube IFrame API
+  namespace YT {
+    class Player {
+      constructor(
+        elementId: string,
+        options: {
+          videoId: string;
+          playerVars?: {
+            autoplay?: number;
+            rel?: number;
+            start?: number;
+          };
+          events?: {
+            onError?: (e: { data: number }) => void;
+          };
+        },
+      );
+      destroy(): void;
+    }
+  }
+}
+
 type YouTubeFeedEmbedProps = {
   embedUrl: string;
   title: string;
   onEmbedBlocked: () => void;
+  startSec?: number;
+};
+
+/** `satisfies`용 — 강제 검사 + 리터럴 추론 유지 */
+type YouTubePlayerVars = {
+  autoplay?: number;
+  rel?: number;
+  start?: number;
 };
 
 // onYouTubeIframeAPIReady
@@ -52,6 +85,7 @@ export function YouTubeFeedEmbed({
   embedUrl,
   title,
   onEmbedBlocked,
+  startSec,
 }: YouTubeFeedEmbedProps) {
   const playerRef = useRef<YT.Player | null>(null);
   const containerId = `yt-${useId().replace(/:/g, '')}`;
@@ -64,11 +98,18 @@ export function YouTubeFeedEmbed({
     }
     let cancelled = false;
     loadYoutubeIframeApi()
-      .then((YT) => {
+      .then((YTApi) => {
         if (cancelled) return;
-        playerRef.current = new YT.Player(containerId, {
+        // satisfies: PlayerVars에 맞는지 검사 + 스프레드로 타입 안 넓히기
+        const playerVars = (
+          startSec != null && startSec > 0
+            ? { autoplay: 1, rel: 0, start: startSec }
+            : { autoplay: 1, rel: 0 }
+        ) satisfies YouTubePlayerVars;
+
+        playerRef.current = new YTApi.Player(containerId, {
           videoId,
-          playerVars: { autoplay: 1, rel: 0 },
+          playerVars,
           events: {
             onError: (e) => {
               if (isYouTubeEmbedBlockedError(e.data)) onEmbedBlocked();
@@ -85,7 +126,7 @@ export function YouTubeFeedEmbed({
       playerRef.current?.destroy();
       playerRef.current = null;
     };
-  }, [containerId, embedUrl, onEmbedBlocked]);
+  }, [containerId, embedUrl, onEmbedBlocked, startSec]);
 
   return (
     <div className="aspect-video w-full">

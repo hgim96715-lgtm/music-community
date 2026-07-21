@@ -1,8 +1,13 @@
+import { ApiSavedCard, ApiSavedCardCustomization } from './apiTypes';
 import { authFetchApi, authFetchApiVoid } from './authFetch';
 
 export type RoomVisibility = 'public' | 'private' | 'invite';
 export type RoomStatus = 'active' | 'closed' | 'archived';
-export type RoomMessageType = 'text' | 'recommendation';
+export type RoomMessageType =
+  | 'text'
+  | 'recommendation'
+  | 'saved_card'
+  | 'lyric_quote';
 
 export type ApiRoomOwner = {
   id: string;
@@ -52,6 +57,15 @@ export type ApiRoomRecommendation = {
   artist: string;
   embedUrl: string;
   moods: string[];
+  reason: string;
+  createdAt: string;
+};
+
+export type ApiRoomSavedCard = {
+  id: string;
+  customization: ApiSavedCardCustomization;
+  createdAt: string;
+  recommendation: ApiRoomRecommendation;
 };
 
 export type ApiRoomMessage = {
@@ -65,6 +79,9 @@ export type ApiRoomMessage = {
   deletedAt: string | null;
   sender: ApiRoomOwner;
   recommendation: ApiRoomRecommendation | null;
+  savedCard: ApiRoomSavedCard | null;
+  lyricStartSec: number | null;
+  lyricEndSec: number | null;
 };
 
 /** 공백·쉼표 구분 · `#` 제거 · 최대 8개 */
@@ -96,7 +113,15 @@ export type UpdateRoomBody = {
 
 export type CreateRoomMessageBody =
   | { type: 'text'; body: string }
-  | { type: 'recommendation'; recommendationId: string };
+  | { type: 'recommendation'; recommendationId: string }
+  | { type: 'saved_card'; savedCardId: string }
+  | {
+      type: 'lyric_quote';
+      body: string;
+      recommendationId: string;
+      lyricStartSec?: number;
+      lyricEndSec?: number;
+    };
 
 /** GET /rooms */
 export function fetchPublicRooms(): Promise<ApiRoom[]> {

@@ -1,48 +1,23 @@
 'use client';
 
-import { MyHomeDashboard } from '@/components/saved-cards/MyHomeDashboard';
+import { MyHomeSubShell } from '@/components/saved-cards/MyHomeSubShell';
 import { useAuth } from '@/components/auth/AuthProvider';
-import {
-  fetchFriendRequests,
-  fetchSavedCards,
-} from '@/lib/api';
-import type { ApiSavedCard } from '@/lib/apiTypes';
+import { fetchFriendRequests } from '@/lib/api';
 import { authPageClassName } from '@/lib/form';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Quote } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-/** 마이 홈 — 대시보드 (친구·설정은 nav 탭) */
-export default function MyHomePage() {
+/** 내 가사 모음 — 자리만 */
+export default function MyLyricsPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const [savedCards, setSavedCards] = useState<ApiSavedCard[]>([]);
-  const [albumLoading, setAlbumLoading] = useState(true);
   const [requestCount, setRequestCount] = useState(0);
 
   useEffect(() => {
-    if (!isLoading && !user) router.replace('/login?next=/users/me');
+    if (!isLoading && !user) router.replace('/login?next=/users/me/lyrics');
   }, [isLoading, user, router]);
-
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    setAlbumLoading(true);
-    fetchSavedCards()
-      .then((cards) => {
-        if (!cancelled) setSavedCards(cards);
-      })
-      .catch(() => {
-        if (!cancelled) setSavedCards([]);
-      })
-      .finally(() => {
-        if (!cancelled) setAlbumLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -71,20 +46,31 @@ export default function MyHomePage() {
     <main className={`${authPageClassName} gap-5`}>
       <div>
         <Link
-          href="/recommendations"
+          href="/users/me"
           className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
           <ChevronLeft className="size-4" aria-hidden />
-          피드
+          마이 홈
         </Link>
       </div>
 
-      <MyHomeDashboard
+      <MyHomeSubShell
         nickname={user.nickname}
-        bio={user.bio ?? null}
-        cards={savedCards}
-        loading={albumLoading}
-        requestCount={requestCount}
-      />
+        title="내 가사 모음"
+        subtitle="좋아하는 소절을 모아 두는 자리"
+        active={null}
+        requestCount={requestCount}>
+        <div className="rounded-xl border border-dashed border-[rgb(31_26_22/0.2)] bg-[rgb(255_255_255/0.35)] px-4 py-12 text-center">
+          <span className="mx-auto grid size-12 place-items-center rounded-xl bg-[#4a3728] text-[#f7f1e8] shadow-[3px_3px_0_rgb(46_38_31/0.35)]">
+            <Quote className="size-5" aria-hidden />
+          </span>
+          <p className="mt-4 text-sm font-medium text-[#3d342c]">곧 열릴 예정</p>
+          <p className="mt-1.5 text-[12px] leading-relaxed text-[#6b5c4c]">
+            방에서 공유한 가사 카드를
+            <br />
+            여기에 담을 수 있게 만들 거예요
+          </p>
+        </div>
+      </MyHomeSubShell>
     </main>
   );
 }

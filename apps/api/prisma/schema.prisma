@@ -52,6 +52,8 @@ enum RoomMemberRole {
 enum RoomMessageType {
     text
     recommendation
+    saved_card
+    lyric_quote
 }
 
 model User {
@@ -246,6 +248,9 @@ model RoomMessage {
   type             RoomMessageType @default(text)
   body             String?
   recommendationId String?         @db.Uuid
+  savedCardId      String?         @db.Uuid
+  lyricStartSec Int?
+  lyricEndSec  Int?
   createdAt        DateTime        @default(now()) @db.Timestamptz(3)
   deletedAt        DateTime?       @db.Timestamptz(3)
   room           Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
@@ -255,6 +260,7 @@ model RoomMessage {
   @@index([roomId, createdAt])
   @@index([senderId])
   @@index([recommendationId])
+  @@index([savedCardId])
 }
 
 

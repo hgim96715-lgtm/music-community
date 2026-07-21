@@ -1,7 +1,7 @@
 import type { ApiSavedCardCustomization } from './apiTypes';
 import { DEFAULT_TEXT_COLORS } from './savedCardColors';
 
-/** 기본 포토카드 커스터마이징 — music-strip · 브랜드 소프트 톤 */
+/** 기본 포토카드 커스터마이징 — LP 자켓 · 브랜드 웜 톤 */
 
 export { DEFAULT_TEXT_COLORS };
 
@@ -9,22 +9,21 @@ export const DEFAULT_SAVED_CARD_CUSTOMIZATION: ApiSavedCardCustomization = {
   display: {
     title: true,
     artist: true,
-    reason: false,
+    reason: true,
     moods: true,
     postedAt: false,
     savedAt: false,
   },
   background: '#ebe3d8',
-  playerBar: '#c9a66b',
   textColors: {
     title: '#ffffff',
     artist: '#e8dfd4',
-    reason: '#3d342c',
-    moods: '#6b5428',
+    reason: '#ebe4da',
+    moods: '#c9a66b',
     postedAt: '#a89880',
     savedAt: '#a89880',
   },
-  layout: 'music-strip',
+  layout: 'lp-jacket',
   frame: 'neobrutal',
   stickers: [],
 };
@@ -38,11 +37,17 @@ export function buildSavedCardCustomization(
   };
 }
 
-/** 이미지 배경이 있으면 단색 `background` 제거 */
+/**
+ * 자켓: background = 틴트 → 이미지 있어도 유지
+ * music-strip/poster: 이미지 있으면 단색 background 제거
+ */
 export function prepareSavedCardCustomization(
   customization: ApiSavedCardCustomization,
 ): ApiSavedCardCustomization {
-  if (!customization.backgroundImage) return customization;
+  const layout = customization.layout ?? 'lp-jacket';
+  if (!customization.backgroundImage || layout === 'lp-jacket') {
+    return customization;
+  }
   const { background: _, ...rest } = customization;
   return rest;
 }

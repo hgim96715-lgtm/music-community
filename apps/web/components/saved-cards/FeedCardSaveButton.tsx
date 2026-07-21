@@ -5,13 +5,17 @@ import { Bookmark } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { SavedCardEditorDialog } from './SavedCardEditorDialog';
-import type { SavedCardPreviewData } from './SavedCardPreview';
 import { useSavedCardsFeed } from './SavedCardsFeedContext';
 
 type FeedCardSaveButtonProps = {
   recommendationId: string;
   authorId: string;
-  preview: SavedCardPreviewData;
+  title: string;
+  artist: string;
+  embedUrl: string;
+  reason: string;
+  moods: string[];
+  postedAt: string;
   background?: string;
   onHint?: (message: string) => void;
 };
@@ -19,7 +23,12 @@ type FeedCardSaveButtonProps = {
 export function FeedCardSaveButton({
   recommendationId,
   authorId,
-  preview,
+  title,
+  artist,
+  embedUrl,
+  reason,
+  moods,
+  postedAt,
   background,
   onHint,
 }: FeedCardSaveButtonProps) {
@@ -62,7 +71,12 @@ export function FeedCardSaveButton({
         open={editorOpen}
         onClose={() => setEditorOpen(false)}
         recommendationId={recommendationId}
-        preview={preview}
+        title={title}
+        artist={artist}
+        embedUrl={embedUrl}
+        reason={reason}
+        moods={moods}
+        postedAt={postedAt}
         defaultBackground={background}
         onSaved={() => {
           markSaved(recommendationId);

@@ -572,6 +572,126 @@
     background: rgb(255 255 255 / 45%);
   }
 
+  /* —— 마이 홈 대시보드 —— */
+  .my-home-shell {
+    overflow: hidden;
+    border: 1px solid rgb(31 26 22 / 18%);
+    border-radius: 1.25rem;
+    background: linear-gradient(165deg, #2a221c 0%, #1a1612 55%, #14110e 100%);
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 20%),
+      0 8px 24px rgb(0 0 0 / 25%);
+  }
+
+  .my-home-hero {
+    border-bottom: 1px solid rgb(201 166 107 / 18%);
+    background: linear-gradient(90deg, #3a322a 0%, #2e261f 100%);
+    padding: 1rem 1.05rem 1.1rem;
+  }
+
+  .my-home-body {
+    background: linear-gradient(180deg, #f3ebe3 0%, #ebe3d8 100%);
+    padding: 1.1rem 1rem 1.15rem;
+  }
+
+  .my-home-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+  }
+
+  .my-home-nav-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 9999px;
+    border: 1px solid rgb(201 166 107 / 28%);
+    background: rgb(243 235 227 / 8%);
+    padding: 0.35rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #cbbba0;
+    transition:
+      background-color 140ms ease,
+      color 140ms ease,
+      border-color 140ms ease;
+  }
+
+  .my-home-nav-item:hover {
+    background: rgb(243 235 227 / 14%);
+    color: #ebe3d8;
+  }
+
+  .my-home-nav-item.is-active {
+    border-color: transparent;
+    background: #ebe3d8;
+    color: #1a1410;
+    box-shadow: 2px 2px 0 rgb(46 38 31 / 0.35);
+  }
+
+  .my-home-nav-badge {
+    display: grid;
+    place-items: center;
+    min-width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 9999px;
+    background: var(--color-brand-primary);
+    padding: 0 0.25rem;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    color: var(--color-lp-ink);
+  }
+
+  .my-home-nav-item.is-active .my-home-nav-badge {
+    background: #6b5428;
+    color: #f7f1e8;
+  }
+
+  .my-home-top3 {
+    border-radius: 0.875rem;
+    border: 1.5px solid rgb(31 26 22 / 12%);
+    background: rgb(255 255 255 / 42%);
+    padding: 0.75rem 0.7rem 0.85rem;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 55%);
+  }
+
+  .my-home-top3-slots {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    align-items: end;
+    justify-items: center;
+  }
+
+  .my-home-top3-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .my-home-top3-rank {
+    margin-bottom: 0.25rem;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #8a7048;
+  }
+
+  .my-home-stats-slot {
+    display: grid;
+    place-items: center;
+    margin-top: 0.75rem;
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    border: 1.5px dashed rgb(31 26 22 / 14%);
+    background: rgb(255 255 255 / 28%);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #a89880;
+  }
+
   /* —— LP 책장 앨범 —— */
   .lp-album-shell {
     overflow: hidden;
@@ -685,6 +805,17 @@
     box-shadow:
       0 0 0 1px rgb(0 0 0 / 35%),
       0 2px 6px rgb(0 0 0 / 20%);
+  }
+
+  /* LP 자켓 — 사각 앨범 커버 (방 공유·채팅) */
+  .lp-album-jacket {
+    box-shadow:
+      0 0 0 1px rgb(201 166 107 / 22%),
+      0 3px 10px rgb(0 0 0 / 28%);
+  }
+
+  .lp-album-jacket img {
+    user-select: none;
   }
 
   .lp-album-disc img {
@@ -830,4 +961,154 @@
 
 .lp-bar-main {
   background: transparent;
+}
+
+/* —— 가사 공유 카드 (Spotify Share lyrics 톤 · LP 브랜드) —— */
+.lyric-share-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  color: #f7f1e8;
+  border-radius: 1.125rem;
+  border: 1.5px solid rgb(31 26 22 / 0.4);
+  box-shadow: 3px 3px 0 rgb(46 38 31 / 0.55);
+  overflow: hidden;
+}
+
+.lyric-share-card--chat {
+  max-width: 17.5rem;
+  min-height: 11.5rem;
+  gap: 0.85rem;
+  padding: 0.9rem 0.95rem 0.75rem;
+}
+
+.lyric-share-card--compose {
+  min-height: 14rem;
+  gap: 1rem;
+  padding: 1.1rem 1.15rem 0.9rem;
+  box-shadow: 4px 4px 0 rgb(46 38 31 / 0.5);
+}
+
+.lyric-share-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.lyric-share-card-cover {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 0.4rem;
+  background: rgb(247 241 232 / 12%);
+}
+
+.lyric-share-card--compose .lyric-share-card-cover {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.lyric-share-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lyric-share-card-titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.lyric-share-card-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.lyric-share-card-artist {
+  display: block;
+  margin-top: 0.1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.25;
+  opacity: 0.68;
+}
+
+.lyric-share-card-lyrics {
+  flex: 1;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.025em;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+}
+
+.lyric-share-card--compose .lyric-share-card-lyrics {
+  font-size: 1.55rem;
+  line-height: 1.3;
+}
+
+.lyric-share-card-lyrics.is-placeholder {
+  font-weight: 600;
+  opacity: 0.42;
+}
+
+.lyric-share-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  min-width: 0;
+}
+
+.lyric-share-card-brand {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.lyric-share-card-range {
+  margin-left: auto;
+  font-size: 0.625rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.55;
+}
+
+.lyric-share-card-play {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  margin-left: 0.15rem;
+  border-radius: 9999px;
+  background: rgb(247 241 232 / 18%);
+  color: #f7f1e8;
+}
+
+.lyric-share-card-range + .lyric-share-card-play {
+  margin-left: 0;
+}
+
+.lyric-share-card:not(:has(.lyric-share-card-range)) .lyric-share-card-play {
+  margin-left: auto;
 }

@@ -30,12 +30,14 @@ import {
 import {
   ChevronLeft,
   Crown,
+  IdCard,
   ImageIcon,
   Link2,
   Loader2,
   Megaphone,
   Music2,
   Plus,
+  Quote,
   Send,
   Settings,
 } from 'lucide-react';
@@ -55,7 +57,14 @@ import {
 import { RoomSongPlaySheet } from '@/components/rooms/RoomSongPlaySheet';
 import { RoomSongShareSheet } from '@/components/rooms/RoomSongShareSheet';
 import { RoomNoticeSheet } from '@/components/rooms/RoomNoticeSheet';
+import { LpAlbumJacket } from '@/components/saved-cards/LpAlbumJacket';
 import { markChatSeen } from '@/lib/roomChatUnreadStorage';
+import { RoomPhotocardShareSheet } from '@/components/rooms/RoomPhotocardShareSheet';
+import { RoomLyricCard } from '@/components/rooms/RoomLyricCard';
+import {
+  RoomLyricShareSheet,
+  type RoomLyricSharePayload,
+} from '@/components/rooms/RoomLyricShareSheet';
 
 const ATTACH_ITEMS = [
   {
@@ -63,6 +72,20 @@ const ATTACH_ITEMS = [
     label: '곡 공유',
     hint: '',
     icon: Music2,
+    enabled: true,
+  },
+  {
+    id: 'photocard',
+    label: '자켓',
+    hint: '',
+    icon: IdCard,
+    enabled: true,
+  },
+  {
+    id: 'lyric',
+    label: '가사',
+    hint: '',
+    icon: Quote,
     enabled: true,
   },
   {
@@ -104,6 +127,9 @@ export default function RoomPage() {
   const [noticeSaving, setNoticeSaving] = useState(false);
   const [noticeUnread, setNoticeUnread] = useState(false);
   const [playingSong, setPlayingSong] = useState<RoomSongCardData | null>(null);
+  const [photocardShareOpen, setPhotocardShareOpen] = useState(false);
+  const [lyricShareOpen, setLyricShareOpen] = useState(false);
+  const [playingStartSec, setPlayingStartSec] = useState<number | null>(null);
 
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [joinPassword, setJoinPassword] = useState('');
@@ -346,6 +372,52 @@ export default function RoomPage() {
     } catch (error) {
       setError(
         error instanceof Error ? error.message : '곡 공유에 실패했습니다.',
+      );
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function sharePhotocard(savedCardId: string) {
+    if (!roomId || sending) return;
+    setSending(true);
+    setError('');
+    setPhotocardShareOpen(false);
+    setPhotocardShareOpen(false);
+    setAttachOpen(false);
+    try {
+      const message = await createRoomMessage(roomId, {
+        type: 'saved_card',
+        savedCardId,
+      });
+      appendMessage(message);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : '자켓 공유에 실패했습니다.',
+      );
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function shareLyric(payload: RoomLyricSharePayload) {
+    if (!roomId || sending) return;
+    setSending(true);
+    setError('');
+    setLyricShareOpen(false);
+    setAttachOpen(false);
+    try {
+      const message = await createRoomMessage(roomId, {
+        type: 'lyric_quote',
+        recommendationId: payload.recommendationId,
+        body: payload.body,
+        lyricStartSec: payload.lyricStartSec,
+        lyricEndSec: payload.lyricEndSec,
+      });
+      appendMessage(message);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : '가사 공유에 실패했습니다.',
       );
     } finally {
       setSending(false);
@@ -713,6 +785,139 @@ export default function RoomPage() {
                             }}
                           />
                         </div>
+                      ) : m.type === 'saved_card' && m.savedCard ? (
+                        <div
+                          className="max-w-[7.5rem] select-none touch-manipulation outline-none"
+                          onPointerDown={
+                            canDelete
+                              ? () => {
+                                  startLongPress(m.id);
+                                }
+                              : undefined
+                          }
+                          onPointerMove={
+                            canDelete
+                              ? (e) => {
+                                  if (
+                                    longPressTimerRef.current !== null &&
+                                    (Math.abs(e.movementX) > 6 ||
+                                      Math.abs(e.movementY) > 6)
+                                  ) {
+                                    clearLongPress();
+                                  }
+                                }
+                              : undefined
+                          }
+                          onPointerUp={canDelete ? clearLongPress : undefined}
+                          onPointerLeave={
+                            canDelete ? clearLongPress : undefined
+                          }
+                          onPointerCancel={
+                            canDelete ? clearLongPress : undefined
+                          }
+                          onContextMenu={
+                            canDelete
+                              ? (e) => {
+                                  e.preventDefault();
+                                  openMessageActions(m.id);
+                                }
+                              : undefined
+                          }>
+                          <button
+                            type="button"
+                            className="w-full text-left"
+                            onClick={() => {
+                              if (longPressFiredRef.current) {
+                                longPressFiredRef.current = false;
+                                return;
+                              }
+                              clearLongPress();
+                              const rec = m.savedCard!.recommendation;
+                              setPlayingStartSec(null);
+                              setPlayingSong({
+                                title: rec.title,
+                                artist: rec.artist,
+                                embedUrl: rec.embedUrl,
+                              });
+                            }}>
+                            <LpAlbumJacket
+                              size="sm"
+                              title={m.savedCard.recommendation.title}
+                              artist={m.savedCard.recommendation.artist}
+                              embedUrl={m.savedCard.recommendation.embedUrl}
+                              reason={m.savedCard.recommendation.reason}
+                              moods={m.savedCard.recommendation.moods}
+                              postedAt={m.savedCard.recommendation.createdAt}
+                              savedAt={m.savedCard.createdAt}
+                              customization={m.savedCard.customization}
+                              className="shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
+                            />
+                          </button>
+                        </div>
+                      ) : m.type === 'lyric_quote' &&
+                        m.recommendation &&
+                        m.body ? (
+                        <div
+                          className="max-w-[min(100%,17.5rem)] select-none touch-manipulation outline-none"
+                          onPointerDown={
+                            canDelete
+                              ? () => {
+                                  startLongPress(m.id);
+                                }
+                              : undefined
+                          }
+                          onPointerMove={
+                            canDelete
+                              ? (e) => {
+                                  if (
+                                    longPressTimerRef.current !== null &&
+                                    (Math.abs(e.movementX) > 6 ||
+                                      Math.abs(e.movementY) > 6)
+                                  ) {
+                                    clearLongPress();
+                                  }
+                                }
+                              : undefined
+                          }
+                          onPointerUp={canDelete ? clearLongPress : undefined}
+                          onPointerLeave={
+                            canDelete ? clearLongPress : undefined
+                          }
+                          onPointerCancel={
+                            canDelete ? clearLongPress : undefined
+                          }
+                          onContextMenu={
+                            canDelete
+                              ? (e) => {
+                                  e.preventDefault();
+                                  openMessageActions(m.id);
+                                }
+                              : undefined
+                          }>
+                          <RoomLyricCard
+                            data={{
+                              title: m.recommendation.title,
+                              artist: m.recommendation.artist,
+                              embedUrl: m.recommendation.embedUrl,
+                              lyrics: m.body,
+                              startSec: m.lyricStartSec,
+                              endSec: m.lyricEndSec,
+                            }}
+                            onPlay={() => {
+                              if (longPressFiredRef.current) {
+                                longPressFiredRef.current = false;
+                                return;
+                              }
+                              clearLongPress();
+                              setPlayingStartSec(m.lyricStartSec);
+                              setPlayingSong({
+                                title: m.recommendation!.title,
+                                artist: m.recommendation!.artist,
+                                embedUrl: m.recommendation!.embedUrl,
+                              });
+                            }}
+                          />
+                        </div>
                       ) : (
                         <div
                           role={canDelete ? 'button' : undefined}
@@ -824,11 +1029,26 @@ export default function RoomPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          if (item.id !== 'song') return;
-                          setAttachOpen(false);
-                          // 메뉴 언마운트 직후 같은 탭이 시트 backdrop에
-                          // 닿아 바로 닫히는 고스트 클릭 방지
-                          window.setTimeout(() => setSongShareOpen(true), 50);
+                          if (item.id === 'song') {
+                            setAttachOpen(false);
+                            window.setTimeout(() => setSongShareOpen(true), 50);
+                            return;
+                          }
+                          if (item.id === 'photocard') {
+                            setAttachOpen(false);
+                            window.setTimeout(
+                              () => setPhotocardShareOpen(true),
+                              50,
+                            );
+                            return;
+                          }
+                          if (item.id === 'lyric') {
+                            setAttachOpen(false);
+                            window.setTimeout(
+                              () => setLyricShareOpen(true),
+                              50,
+                            );
+                          }
                         }}
                         className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm ${
                           item.enabled
@@ -947,9 +1167,26 @@ export default function RoomPage() {
             onClose={() => setSongShareOpen(false)}
             onPick={(id) => void shareSong(id)}
           />
+          <RoomPhotocardShareSheet
+            open={photocardShareOpen}
+            sending={sending}
+            onClose={() => setPhotocardShareOpen(false)}
+            onPick={(id) => void sharePhotocard(id)}
+          />
+          <RoomLyricShareSheet
+            open={lyricShareOpen}
+            userId={user.id}
+            sending={sending}
+            onClose={() => setLyricShareOpen(false)}
+            onSubmit={(payload) => void shareLyric(payload)}
+          />
           <RoomSongPlaySheet
             song={playingSong}
-            onClose={() => setPlayingSong(null)}
+            startSec={playingStartSec ?? undefined}
+            onClose={() => {
+              setPlayingSong(null);
+              setPlayingStartSec(null);
+            }}
           />
           <RoomNoticeSheet
             open={noticeOpen}

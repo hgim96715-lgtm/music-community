@@ -14,10 +14,15 @@ import type { RoomSongCardData } from './RoomSongCard';
 type RoomSongPlaySheetProps = {
   song: RoomSongCardData | null;
   onClose: () => void;
+  startSec?: number;
 };
 
 /** 채팅 곡 카드 재생 — 피드와 같은 YouTube/Spotify embed */
-export function RoomSongPlaySheet({ song, onClose }: RoomSongPlaySheetProps) {
+export function RoomSongPlaySheet({
+  song,
+  onClose,
+  startSec,
+}: RoomSongPlaySheetProps) {
   const [mounted, setMounted] = useState(false);
   const [youtubeBlocked, setYoutubeBlocked] = useState(false);
 
@@ -42,9 +47,7 @@ export function RoomSongPlaySheet({ song, onClose }: RoomSongPlaySheetProps) {
 
   const preview = getEmbedPreview(song.embedUrl);
   const videoId =
-    preview.platform === 'youtube'
-      ? parseYouTubeVideoId(song.embedUrl)
-      : null;
+    preview.platform === 'youtube' ? parseYouTubeVideoId(song.embedUrl) : null;
 
   const iframeAllow =
     preview.platform === 'youtube'
@@ -75,7 +78,11 @@ export function RoomSongPlaySheet({ song, onClose }: RoomSongPlaySheetProps) {
             <EmbedPlaybackFallback
               thumbnailUrl={preview.thumbnailUrl}
               message="앱 안에서는 재생할 수 없어요"
-              externalHref={youtubeWatchUrl(videoId)}
+              externalHref={
+                startSec != null && startSec > 0
+                  ? `${youtubeWatchUrl(videoId)}&t=${startSec}`
+                  : youtubeWatchUrl(videoId)
+              }
               externalLabel="YouTube로 열기"
               onClose={onClose}
             />
@@ -83,6 +90,7 @@ export function RoomSongPlaySheet({ song, onClose }: RoomSongPlaySheetProps) {
             <YouTubeFeedEmbed
               embedUrl={song.embedUrl}
               title={song.title}
+              startSec={startSec ?? undefined}
               onEmbedBlocked={() => setYoutubeBlocked(true)}
             />
           ) : preview.platform === 'spotify' ? (

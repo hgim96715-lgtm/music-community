@@ -27,6 +27,7 @@ type FeedCardFooterProps = {
   cardBackground?: string;
   title: string;
   artist: string;
+  embedUrl: string;
   reason: string;
   moods: string[];
   postedAt: string;
@@ -75,6 +76,7 @@ export function FeedCardFooter({
   cardBackground,
   title,
   artist,
+  embedUrl,
   reason,
   moods,
   postedAt,
@@ -237,8 +239,13 @@ export function FeedCardFooter({
           <FeedCardSaveButton
             recommendationId={recommendationId}
             authorId={authorId}
+            title={title}
+            artist={artist}
+            embedUrl={embedUrl}
+            reason={reason}
+            moods={moods}
+            postedAt={postedAt}
             background={cardBackground}
-            preview={{ title, artist, reason, moods, postedAt }}
             onHint={showHint}
           />
           <button

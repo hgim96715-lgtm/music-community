@@ -1,4 +1,5 @@
 'use client';
+
 import { deleteSavedCard, patchSavedCard } from '@/lib/api';
 import type { ApiSavedCard, ApiSavedCardCustomization } from '@/lib/apiTypes';
 import { prepareSavedCardCustomization } from '@/lib/savedCardDefaults';
@@ -7,7 +8,7 @@ import { FeedDialog } from '@/components/recommendations/FeedDialog';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import { createPortal } from 'react-dom';
-import { SavedCardPreview } from './SavedCardPreview';
+import { LpAlbumJacket } from './LpAlbumJacket';
 import { SavedCardCustomizationForm } from './SavedCardCustomizationForm';
 
 type SavedCardAlbumModalProps = {
@@ -17,6 +18,15 @@ type SavedCardAlbumModalProps = {
   onDeleted: (savedCardId: string) => void;
   onUpdated: (card: ApiSavedCard) => void;
 };
+
+function asJacketCustomization(
+  customization: ApiSavedCardCustomization,
+): ApiSavedCardCustomization {
+  return {
+    ...customization,
+    layout: 'lp-jacket',
+  };
+}
 
 export function SavedCardAlbumModal({
   card,
@@ -41,7 +51,7 @@ export function SavedCardAlbumModal({
   useEffect(() => {
     if (!open || !card) return;
     setMode('view');
-    setCustomization(structuredClone(card.customization));
+    setCustomization(asJacketCustomization(structuredClone(card.customization)));
   }, [open, card]);
 
   if (!open || !mounted || !card || !customization) return null;
@@ -51,17 +61,9 @@ export function SavedCardAlbumModal({
   > = (value) => {
     setCustomization((prev) => {
       const base = prev ?? card.customization;
-      return typeof value === 'function' ? value(base) : value;
+      const next = typeof value === 'function' ? value(base) : value;
+      return asJacketCustomization(next);
     });
-  };
-
-  const preview = {
-    title: card.recommendation.title,
-    artist: card.recommendation.artist,
-    reason: card.recommendation.reason,
-    moods: card.recommendation.moods,
-    postedAt: card.recommendation.createdAt,
-    savedAt: card.createdAt,
   };
 
   async function handleSaveEdit() {
@@ -71,16 +73,17 @@ export function SavedCardAlbumModal({
       if (!card) return;
       const updated = await patchSavedCard(
         card.id,
-        prepareSavedCardCustomization(customization!),
+        prepareSavedCardCustomization(asJacketCustomization(customization!)),
       );
       onUpdated(updated);
       setMode('view');
-    } catch (error) {
-      setError(error instanceof Error ? error.message : '수정에 실패했어요.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '수정에 실패했어요.');
     } finally {
       setSaving(false);
     }
   }
+
   async function handleDelete() {
     setDeleting(true);
     try {
@@ -88,13 +91,14 @@ export function SavedCardAlbumModal({
       await deleteSavedCard(card.id);
       onDeleted(card.id);
       onClose();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : '삭제에 실패했어요.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '삭제에 실패했어요.');
     } finally {
       setDeleting(false);
       setConfirmDelete(false);
     }
   }
+
   return createPortal(
     <>
       <div
@@ -107,21 +111,29 @@ export function SavedCardAlbumModal({
           className="relative w-full max-w-lg"
           onClick={(e) => e.stopPropagation()}>
           <div className={dialogBack} aria-hidden />
-          <div className={`${dialogPanel} flex max-h-[92vh] flex-col overflow-hidden`}>
+          <div
+            className={`${dialogPanel} flex max-h-[92vh] flex-col overflow-hidden`}>
             <div className="shrink-0 border-b border-neutral-100 px-6 pb-4 pt-6 text-center">
               <h2
                 id="saved-card-album-title"
                 className="text-lg font-semibold text-brand-primary">
-                {mode === 'view' ? '내 포토카드' : '포토카드 수정'}
+                {mode === 'view' ? '내 자켓' : '자켓 수정'}
               </h2>
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-              <div className="mx-auto w-full max-w-[15rem]">
-                <SavedCardPreview
-                  data={preview}
+              <div className="flex flex-col items-center px-1">
+                <LpAlbumJacket
+                  size="lg"
+                  title={card.recommendation.title}
+                  artist={card.recommendation.artist}
+                  embedUrl={card.recommendation.embedUrl}
+                  reason={card.recommendation.reason}
+                  moods={card.recommendation.moods}
+                  postedAt={card.recommendation.createdAt}
+                  savedAt={card.createdAt}
                   customization={customization}
-                  size="editor"
+                  className="shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
                 />
               </div>
               {mode === 'edit' ? (
@@ -176,7 +188,11 @@ export function SavedCardAlbumModal({
                   <button
                     type="button"
                     onClick={() => {
-                      setCustomization(structuredClone(card.customization));
+                      setCustomization(
+                        asJacketCustomization(
+                          structuredClone(card.customization),
+                        ),
+                      );
                       setMode('view');
                     }}
                     disabled={saving}
@@ -195,7 +211,7 @@ export function SavedCardAlbumModal({
         onConfirm={handleDelete}
         isPending={deleting}
         title="앨범에서 삭제할까요?"
-        description="포토카드만 지워지고 피드 글은 남아요."
+        description="자켓만 지워지고 피드 글은 남아요."
         comfirmLabel="삭제"
       />
     </>,
