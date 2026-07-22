@@ -6,7 +6,8 @@ const FIELD_MESSAGES: Record<string, Partial<Record<string, string>>> = {
   },
   password: {
     minLength: '비밀번호는 8자 이상이어야 합니다.',
-    matches: '비밀번호는 8자 이상, 영문, 특수문자(!@#$%^&* 등)를 포함해야 합니다.',
+    matches:
+      '비밀번호는 8자 이상, 영문, 특수문자(!@#$%^&* 등)를 포함해야 합니다.',
   },
   nickname: {
     isNotEmpty: '닉네임을 입력해주세요.',
@@ -29,6 +30,19 @@ const FIELD_MESSAGES: Record<string, Partial<Record<string, string>>> = {
     arrayMinSize: '분위기를 1개 이상 선택해주세요.',
     arrayMaxSize: '분위기는 최대 3개까지 선택할 수 있어요.',
     isIn: '올바른 분위기를 선택해주세요.',
+  },
+  fromEmail: {
+    isEmail: '올바른 회신 이메일을 입력해주세요.',
+  },
+  subject: {
+    isNotEmpty: '제목을 입력해주세요.',
+    minLength: '제목을 입력해주세요.',
+    maxLength: '제목은 120자 이하여야 합니다.',
+  },
+  body: {
+    isNotEmpty: '문의 내용을 입력해주세요.',
+    minLength: '문의 내용을 입력해주세요.',
+    maxLength: '문의 내용은 2000자 이하여야 합니다.',
   },
 };
 

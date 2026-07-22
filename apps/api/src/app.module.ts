@@ -11,6 +11,7 @@ import { AdminModule } from './admin/admin.module';
 import { FriendsModule } from './friends/friends.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { SavedLyricsModule } from './saved-lyrics/saved-lyrics.module';
+import { SupportModule } from './support/support.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { SavedLyricsModule } from './saved-lyrics/saved-lyrics.module';
     FriendsModule,
     RoomsModule,
     SavedLyricsModule,
+    SupportModule,
   ],
   controllers: [HealthController],
 })

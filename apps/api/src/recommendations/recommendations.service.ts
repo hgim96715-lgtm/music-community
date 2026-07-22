@@ -85,7 +85,10 @@ export class RecommendationsService {
   }
 
   async addLike(recommendationId: string, userId: string) {
-    await this.assertVisibleRecommendation(recommendationId);
+    const recommendation = await this.assertVisibleRecommendation(recommendationId);
+    if (recommendation.authorId === userId) {
+      throw new BadRequestException('본인 추천에는 좋아요를 남길 수 없어요.');
+    }
     const existing = await this.prisma.reaction.findUnique({
       where: { recommendationId_userId: { recommendationId, userId } },
     });

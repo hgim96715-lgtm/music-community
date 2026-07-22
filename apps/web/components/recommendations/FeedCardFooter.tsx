@@ -228,6 +228,7 @@ export function FeedCardFooter({
             recommendationId={recommendationId}
             likedByMe={likedByMe}
             likeCount={likeCount}
+            authorId={authorId}
           />
           <ActionCount
             icon={MessageCircle}

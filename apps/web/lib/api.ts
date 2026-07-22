@@ -287,3 +287,18 @@ export function patchSavedLyric(
 export function deleteSavedLyric(id: string) {
   return authFetchApiVoid(`/saved-lyrics/${id}`, { method: 'DELETE' });
 }
+
+/** POST /support/contact — 비로그인 OK */
+
+export async function createSupportContact(body: {
+  fromEmail: string;
+  nickname?: string;
+  subject: string;
+  body: string;
+}): Promise<{ ok: true }> {
+  return fetchApi<{ ok: true }>('/support/contact', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}

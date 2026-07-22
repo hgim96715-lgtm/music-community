@@ -11,14 +11,17 @@ type HeartButtonProps = {
   recommendationId: string;
   likedByMe?: boolean;
   likeCount: number;
+  authorId?: string;
 };
 
 export function HeartButton({
   recommendationId,
   likedByMe,
   likeCount: initialLikeCount,
+  authorId,
 }: HeartButtonProps) {
   const { user } = useAuth();
+  const isOwn = Boolean(user && authorId && user.id === authorId);
   const [liked, setLiked] = useState(likedByMe ?? false);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [isPending, setIsPending] = useState(false);
@@ -69,6 +72,18 @@ export function HeartButton({
       {user?.role === 'admin' ? (
         <div
           className={`${ACTION_BTN} pointer-events-none text-neutral-400`}
+          aria-label={`좋아요 ${likeCount}개`}>
+          <Heart
+            className={`${ACTION_ICON} text-neutral-300`}
+            strokeWidth={1.75}
+            aria-hidden
+          />
+          <span className={`${COUNT_SLOT} text-neutral-500`}>{likeCount}</span>
+        </div>
+      ) : isOwn ? (
+        <div
+          className={`${ACTION_BTN} pointer-events-none text-neutral-400`}
+          title="내 추천에는 좋아요를 남길 수 없어요"
           aria-label={`좋아요 ${likeCount}개`}>
           <Heart
             className={`${ACTION_ICON} text-neutral-300`}

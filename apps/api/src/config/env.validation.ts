@@ -20,4 +20,12 @@ export const envValidationSchema = Joi.object({
   [EnvKeys.GOOGLE_CALLBACK_URL]: Joi.string().uri().required(),
   [EnvKeys.NAVER_CALLBACK_URL]: Joi.string().uri().required(),
   [EnvKeys.KAKAO_CALLBACK_URL]: Joi.string().uri().required(),
+  [EnvKeys.MAIL_PROVIDER]: Joi.string().valid('gmail', 'icloud').required(),
+  [EnvKeys.SMTP_HOST]: Joi.string().optional(),
+  [EnvKeys.SMTP_PORT]: Joi.number().port().optional(),
+  [EnvKeys.SMTP_USER]: Joi.string().required(),
+  [EnvKeys.SMTP_PASS]: Joi.string().required(),
+  // `Music Community <user@domain>` 형식 허용
+  [EnvKeys.MAIL_FROM]: Joi.string().required(),
+  [EnvKeys.MAIL_SUPPORT_TO]: Joi.string().email().required(),
 });
