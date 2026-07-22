@@ -1,30 +1,26 @@
+import { fetchPublishedNotice } from '@/lib/api';
+import { formatDisplayDate } from '@/lib/date';
 import { authPageClassName, authTitleClassName } from '@/lib/form';
 import { ChevronLeft, Megaphone } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-const notices = [
-  {
-    id: 'notice-1',
-    title: '서비스 안내',
-    updatedAt: '2026-07-21',
-    body: `공지사항은 admin이 관리합니다.
-
-이 페이지는 사용자 열람용으로, 목록에서 선택한 공지의 본문을 보여줍니다.`,
-  },
-] as const;
-
 type NoticeDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-/** 공지사항 상세 (사용자 열람) */
+/** 공지사항 상세 (사용자 열람) — GET /support/notices/:id */
 export default async function SupportNoticeDetailPage({
   params,
 }: NoticeDetailPageProps) {
   const { id } = await params;
-  const notice = notices.find((n) => n.id === id);
-  if (!notice) notFound();
+
+  let notice: Awaited<ReturnType<typeof fetchPublishedNotice>>;
+  try {
+    notice = await fetchPublishedNotice(id);
+  } catch {
+    notFound();
+  }
 
   return (
     <main className={authPageClassName}>
@@ -45,7 +41,11 @@ export default async function SupportNoticeDetailPage({
             </span>
             <div className="min-w-0 flex-1">
               <h1 className={`${authTitleClassName} text-xl`}>{notice.title}</h1>
-              <p className="mt-1 text-xs text-neutral-500">{notice.updatedAt}</p>
+              {notice.publishedAt ? (
+                <p className="mt-1 text-xs text-neutral-500">
+                  {formatDisplayDate(notice.publishedAt)}
+                </p>
+              ) : null}
             </div>
           </div>
         </header>

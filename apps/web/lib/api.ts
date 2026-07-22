@@ -10,6 +10,7 @@ import {
   ApiSavedCardCustomization,
   ApiSavedLyric,
   ApiSavedLyricBody,
+  ApiPublicNotice,
   CreateSavedCardBody,
   UpdateSavedLyricBody,
 } from './apiTypes';
@@ -300,6 +301,18 @@ export async function createSupportContact(body: {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+  });
+}
+
+/** GET /support/notices — 게시된 공지만 */
+export function fetchPublishedNotices(): Promise<ApiPublicNotice[]> {
+  return fetchApi<ApiPublicNotice[]>('/support/notices', { cache: 'no-store' });
+}
+
+/** GET /support/notices/:id */
+export function fetchPublishedNotice(id: string): Promise<ApiPublicNotice> {
+  return fetchApi<ApiPublicNotice>(`/support/notices/${id}`, {
+    cache: 'no-store',
   });
 }
 

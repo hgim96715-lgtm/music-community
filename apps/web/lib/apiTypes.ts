@@ -194,6 +194,24 @@ export type ApiAdminUser = {
   };
 };
 
+export type ApiPublicNotice = {
+  id: string;
+  title: string;
+  body: string;
+  publishedAt: string | null;
+};
+
+export type ApiAdminNotice = {
+  id: string;
+  title: string;
+  body: string;
+  published: boolean;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  author: { id: string; nickname: string };
+};
+
 export type ApiComment = {
   id: string;
   recommendationId: string;

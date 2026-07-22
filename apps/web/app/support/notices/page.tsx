@@ -1,21 +1,34 @@
+import { fetchPublishedNotices } from '@/lib/api';
+import { formatDisplayDate } from '@/lib/date';
 import { authPageClassName, authTitleClassName } from '@/lib/form';
-import { ChevronRight, Megaphone } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Megaphone } from 'lucide-react';
 import Link from 'next/link';
 
-/** 공지사항 목록 (사용자 열람) — 본문은 /support/notices/[id] */
-export default function SupportNoticesPage() {
-  const notices = [
-    {
-      id: 'notice-1',
-      title: '서비스 안내',
-      updatedAt: '2026-07-21',
-      summary:
-        '공지사항은 admin이 관리합니다. 이 페이지는 사용자 열람용입니다.',
-    },
-  ];
+function noticeSummary(body: string, max = 80) {
+  const flat = body.replace(/\s+/g, ' ').trim();
+  if (flat.length <= max) return flat;
+  return `${flat.slice(0, max)}…`;
+}
+
+/** 공지사항 목록 (사용자 열람) — GET /support/notices */
+export default async function SupportNoticesPage() {
+  let notices: Awaited<ReturnType<typeof fetchPublishedNotices>> = [];
+  let loadError = '';
+
+  try {
+    notices = await fetchPublishedNotices();
+  } catch {
+    loadError = '공지사항을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
+  }
 
   return (
     <main className={authPageClassName}>
+      <Link
+        href="/support"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
+        <ChevronLeft className="size-4" aria-hidden />
+        고객지원
+      </Link>
       <div className="mb-6">
         <h1 className={`${authTitleClassName} flex items-center gap-2`}>
           <Megaphone
@@ -30,7 +43,11 @@ export default function SupportNoticesPage() {
       </div>
 
       <section>
-        {notices.length === 0 ? (
+        {loadError ? (
+          <p className="text-sm text-red-500" role="alert">
+            {loadError}
+          </p>
+        ) : notices.length === 0 ? (
           <p className="text-sm text-neutral-500">아직 공지사항이 없어요.</p>
         ) : (
           <ul className="border-t-2 border-[rgb(201_166_107/0.45)]">
@@ -49,11 +66,13 @@ export default function SupportNoticesPage() {
                       {n.title}
                     </p>
                     <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-500">
-                      {n.summary}
+                      {noticeSummary(n.body)}
                     </p>
-                    <p className="mt-1.5 text-[11px] text-neutral-500">
-                      {n.updatedAt}
-                    </p>
+                    {n.publishedAt ? (
+                      <p className="mt-1.5 text-[11px] text-neutral-500">
+                        {formatDisplayDate(n.publishedAt)}
+                      </p>
+                    ) : null}
                   </div>
                   <ChevronRight
                     className="mt-1 size-4 shrink-0 text-neutral-500"
@@ -65,10 +84,6 @@ export default function SupportNoticesPage() {
           </ul>
         )}
       </section>
-
-      <p className="mt-8 text-xs text-neutral-500">
-        공지 작성/수정/게시/숨김은 admin 권한에서 처리됩니다.
-      </p>
     </main>
   );
 }
