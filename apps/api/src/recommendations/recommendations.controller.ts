@@ -20,6 +20,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ActiveAccountGuard } from 'src/auth/active-account.guard';
+import { UpdateRecommendationDto } from './dto/update-recommendation.dto';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
@@ -91,6 +92,23 @@ export class RecommendationsController {
       recommendationId,
       commentId,
       userId,
+    );
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '추천 수정 (본인 · 당일 KST만)' })
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
+  @Roles('user')
+  async update(
+    @Param('id', ParseUUIDPipe) recommendationId: string,
+    @UserId() userId: string,
+    @Body() dto: UpdateRecommendationDto,
+  ) {
+    return await this.recommendationsService.update(
+      recommendationId,
+      userId,
+      dto,
     );
   }
 

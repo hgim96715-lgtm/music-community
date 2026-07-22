@@ -84,6 +84,24 @@ export async function checkNicknameAvailable(
   return data.available;
 }
 
+/** PATCH /recommendations/:id — 본인 · 당일(KST)만 */
+export function updateRecommendation(
+  id: string,
+  body: {
+    title?: string;
+    artist?: string;
+    embedUrl?: string;
+    reason?: string;
+    moods?: string[];
+  },
+): Promise<ApiRecommendation> {
+  return authFetchApi<ApiRecommendation>(`/recommendations/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
 /** DELETE /recommendations/:id — 본인 글만 삭제 */
 export function deleteRecommendation(id: string) {
   return authFetchApiVoid(`/recommendations/${id}`, { method: 'DELETE' });

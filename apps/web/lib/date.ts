@@ -79,3 +79,7 @@ export function shouldInsertMessageDivider(
   return Math.abs(next.getTime() - prev.getTime()) >= 45 * 60 * 1000;
 }
 
+/** 오늘(KST) 올린 추천만 수정 — API `toKstDateKey`와 동일 */
+export function canEditRecommendationToday(createdAtIso: string): boolean {
+  return kstDateKey(new Date(createdAtIso)) === kstDateKey(new Date());
+}

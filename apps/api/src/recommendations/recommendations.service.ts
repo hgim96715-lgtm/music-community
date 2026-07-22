@@ -7,6 +7,8 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
 import { normalizeEmbedUrl } from './normalize-embed-url';
+import { toKstDateKey } from 'src/common/kst-date';
+import { UpdateRecommendationDto } from './dto/update-recommendation.dto';
 
 @Injectable()
 export class RecommendationsService {
@@ -84,8 +86,40 @@ export class RecommendationsService {
     });
   }
 
+  async update(
+    recommendationId: string,
+    userId: string,
+    dto: UpdateRecommendationDto,
+  ) {
+    const row = await this.prisma.recommendation.findFirst({
+      where: { id: recommendationId, hidden: false },
+      select: { id: true, authorId: true, createdAt: true },
+    });
+    if (!row) throw new NotFoundException('추천을 찾을 수 없어요.');
+    if (row.authorId !== userId) {
+      throw new ForbiddenException('본인 글만 수정할 수 있습니다.');
+    }
+    if (toKstDateKey(row.createdAt) !== toKstDateKey(new Date())) {
+      throw new ForbiddenException('오늘 올린 추천만 수정할 수 있어요.');
+    }
+    const embedUrl =
+      dto.embedUrl !== undefined ? normalizeEmbedUrl(dto.embedUrl) : undefined;
+    return this.prisma.recommendation.update({
+      where: { id: recommendationId },
+      data: {
+        ...(dto.title !== undefined && { title: dto.title }),
+        ...(dto.artist !== undefined && { artist: dto.artist }),
+        ...(embedUrl !== undefined && { embedUrl }),
+        ...(dto.reason !== undefined && { reason: dto.reason }),
+        ...(dto.moods !== undefined && { moods: dto.moods }),
+      },
+      include: { reactions: true, author: true },
+    });
+  }
+
   async addLike(recommendationId: string, userId: string) {
-    const recommendation = await this.assertVisibleRecommendation(recommendationId);
+    const recommendation =
+      await this.assertVisibleRecommendation(recommendationId);
     if (recommendation.authorId === userId) {
       throw new BadRequestException('본인 추천에는 좋아요를 남길 수 없어요.');
     }

@@ -51,6 +51,7 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
             </time>
             <FeedCardMenu
               recommendationId={id}
+              createdAt={createdAt}
               authorId={author.id}
               variant="neo"
               onDeleted={onDeleted}
@@ -61,7 +62,7 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
         <div className="p-4">
           <FeedCardMedia embedUrl={embedUrl} title={title} artist={artist} />
 
-          <p className="mt-3.5 break-words font-sans text-[0.9375rem] font-normal leading-[1.65] text-neutral-700 [overflow-wrap:anywhere]">
+          <p className="mt-3.5 break-words whitespace-pre-line font-sans text-[0.9375rem] font-normal leading-[1.65] text-neutral-700 [overflow-wrap:anywhere]">
             {reason}
           </p>
 

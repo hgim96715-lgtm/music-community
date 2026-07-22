@@ -5,15 +5,19 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { deleteRecommendation } from '@/lib/api';
 import { FeedDialog } from './FeedDialog';
+import { canEditRecommendationToday } from '@/lib/date';
+import Link from 'next/link';
 
 type FeedCardMenuProps = {
   recommendationId: string;
+  createdAt: string;
   variant?: 'default' | 'neo';
   authorId: string;
   onDeleted?: (id: string) => void;
 };
 export function FeedCardMenu({
   recommendationId,
+  createdAt,
   variant = 'default',
   onDeleted,
   authorId,
@@ -23,8 +27,8 @@ export function FeedCardMenu({
   const rootRef = useRef<HTMLDivElement>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
   const isOwn = user?.id === authorId;
+  const canEdit = isOwn && canEditRecommendationToday(createdAt);
 
   function openConfirm() {
     if (!isOwn || isDeleting) return;
@@ -91,6 +95,15 @@ export function FeedCardMenu({
             className="block w-full px-3 py-2 text-left text-neutral-400">
             신고 (준비 중)
           </button>
+          {canEdit ? (
+            <Link
+              href={`/recommendations/${recommendationId}/edit`}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="block w-full px-3 py-2 text-left text-brand-primary hover:bg-neutral-50">
+              수정
+            </Link>
+          ) : null}
           {isOwn ? (
             <button
               type="button"
