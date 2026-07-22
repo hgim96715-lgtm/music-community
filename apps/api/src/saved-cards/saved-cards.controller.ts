@@ -20,16 +20,21 @@ import { UpdateSavedCardDto } from './dto/update-saved-card.dto';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UpdateShelfDto } from './dto/update-shelf.dto';
+import {
+  ActiveAccountGuard,
+  AllowWithdrawing,
+} from 'src/auth/active-account.guard';
 
 @ApiTags('SavedCards')
 @Controller('saved-cards')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
 @Roles('user')
 export class SavedCardsController {
   constructor(private readonly savedCardsService: SavedCardsService) {}
 
   @ApiOperation({ summary: '내 앨범 목록' })
+  @AllowWithdrawing()
   @Get()
   async findMine(@UserId() userId: string) {
     return await this.savedCardsService.findMine(userId);

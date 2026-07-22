@@ -1,5 +1,6 @@
 'use client';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { displayAuthorNickname } from '@/lib/displayAuthor';
 import { authPageClassName, fieldErrorClassName } from '@/lib/form';
 import {
   formatMessageTimeDivider,
@@ -754,7 +755,7 @@ export default function RoomPage() {
                               aria-label="방장"
                             />
                           ) : null}
-                          @{m.sender.nickname}
+                          @{displayAuthorNickname(m.sender.nickname)}
                         </span>
                       ) : null}
 

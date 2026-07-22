@@ -70,7 +70,7 @@ export function FeedDialog({
             className="text-center text-lg font-semibold text-brand-primary">
             {title}
           </h2>
-          <p className="mt-2 text-center text-sm leading-relaxed text-neutral-600">
+          <p className="mt-2 whitespace-pre-line text-center text-sm leading-relaxed text-neutral-600">
             {description}
           </p>
           <div className="mt-6 flex flex-col items-stretch gap-2">

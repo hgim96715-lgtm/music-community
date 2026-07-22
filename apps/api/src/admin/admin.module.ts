@@ -6,9 +6,10 @@ import { AdminRecommendationsService } from './admin-recommendations.service';
 import { AdminRecommendationsController } from './admin-recommendations.controller';
 import { AdminUsersService } from './admin-users.service';
 import { AdminUsersController } from './admin-users.controller';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, UsersModule],
   controllers: [
     AdminStatsController,
     AdminRecommendationsController,

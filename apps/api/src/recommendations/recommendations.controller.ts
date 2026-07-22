@@ -19,6 +19,7 @@ import { UserId } from 'src/auth/decorators/user-id.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { ActiveAccountGuard } from 'src/auth/active-account.guard';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
@@ -42,7 +43,7 @@ export class RecommendationsController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '댓글 작성(로그인 필요)' })
   @Post(':id/comments')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')
   async createComment(
     @Param('id', ParseUUIDPipe) recommendationId: string,
@@ -59,7 +60,7 @@ export class RecommendationsController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '댓글 수정 (사용자만)' })
   @Patch(':id/comments/:commentId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')
   async updateComment(
     @Param('id', ParseUUIDPipe) recommendationId: string,
@@ -79,7 +80,7 @@ export class RecommendationsController {
   @ApiOperation({ summary: '댓글 삭제 (사용자만)' })
   @Delete(':id/comments/:commentId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user', 'admin')
   async removeComment(
     @Param('id', ParseUUIDPipe) recommendationId: string,
@@ -97,7 +98,7 @@ export class RecommendationsController {
   @ApiOperation({ summary: '추천 삭제 (사용자만)' })
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   async remove(
     @Param('id', ParseUUIDPipe) recommendationId: string,
     @UserId() userId: string,
@@ -108,7 +109,7 @@ export class RecommendationsController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 등록 (로그인 필요)' })
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')
   async create(
     @Body() dto: CreateRecommendationDto,
@@ -120,7 +121,7 @@ export class RecommendationsController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 좋아요 (로그인 필요)' })
   @Post(':id/reactions')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')
   async addLike(
     @Param('id', ParseUUIDPipe) recommendationId: string,
@@ -133,7 +134,7 @@ export class RecommendationsController {
   @ApiOperation({ summary: '추천 좋아요 취소 (로그인 필요)' })
   @Delete(':id/reactions')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')
   async removeLike(
     @Param('id', ParseUUIDPipe) recommendationId: string,

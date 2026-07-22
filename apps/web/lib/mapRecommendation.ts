@@ -1,4 +1,5 @@
 import { ApiRecommendation } from './apiTypes';
+import { displayAuthorNickname } from './displayAuthor';
 import { Recommendation } from './types';
 
 const ANONYMOUS_AUTHOR = {
@@ -33,7 +34,10 @@ export function mapRecommendation(
     likedByMe,
     commentCount: api._count?.comments ?? 0,
     author: api.author
-      ? { id: api.author.id, nickname: api.author.nickname }
+      ? {
+          id: api.author.id,
+          nickname: displayAuthorNickname(api.author.nickname),
+        }
       : ANONYMOUS_AUTHOR,
     createdAt: api.createdAt,
   };

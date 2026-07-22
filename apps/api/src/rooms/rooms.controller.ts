@@ -21,11 +21,15 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { RoomsGateway } from './rooms.gateway';
 import { TransfreRoomDto } from './dto/tansfer-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
+import {
+  ActiveAccountGuard,
+  AllowWithdrawing,
+} from 'src/auth/active-account.guard';
 
 @ApiTags('Rooms')
 @Controller('rooms')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ActiveAccountGuard)
 export class RoomsController {
   constructor(
     private readonly roomsService: RoomsService,
@@ -33,18 +37,21 @@ export class RoomsController {
   ) {}
 
   @ApiOperation({ summary: '공개 방 목록 조회' })
+  @AllowWithdrawing()
   @Get()
   async listPublic() {
     return await this.roomsService.listPublic();
   }
 
   @ApiOperation({ summary: '내 방 목록(멤버인 방)' })
+  @AllowWithdrawing()
   @Get('mine')
   async listMine(@UserId() userId: string) {
     return await this.roomsService.listMine(userId);
   }
 
   @ApiOperation({ summary: '방 메시지 목록 조회' })
+  @AllowWithdrawing()
   @Get(':id/messages')
   async listMessages(
     @UserId() userId: string,
@@ -54,6 +61,7 @@ export class RoomsController {
   }
 
   @ApiOperation({ summary: '방 상세 조회' })
+  @AllowWithdrawing()
   @Get(':id')
   async findById(@Param('id', ParseUUIDPipe) roomId: string) {
     return await this.roomsService.findById(roomId);
@@ -148,6 +156,7 @@ export class RoomsController {
   }
 
   @ApiOperation({ summary: '방 멤버 목록(멤버만)' })
+  @AllowWithdrawing()
   @Get(':id/members')
   async listMembers(
     @UserId() userId: string,

@@ -67,14 +67,33 @@ export class AuthService {
     });
   }
 
-  private async buildAuthResponse(user: AuthUserDto): Promise<AuthResponseDto> {
+  private async buildAuthResponse(user: {
+    id: string;
+    email: string;
+    nickname: string;
+    role: 'user' | 'admin';
+    bio?: string | null;
+    deletedAt?: Date | string | null;
+    withdrawScheduledAt?: Date | string | null;
+  }): Promise<AuthResponseDto> {
     const payload: JwtPayload = { sub: user.id, role: user.role };
     const accessToken = await this.jwtService.signAsync(payload);
+    const deletedAt =
+      user.deletedAt instanceof Date
+        ? user.deletedAt.toISOString()
+        : (user.deletedAt ?? null);
+    const withdrawScheduledAt =
+      user.withdrawScheduledAt instanceof Date
+        ? user.withdrawScheduledAt.toISOString()
+        : (user.withdrawScheduledAt ?? null);
     const authUser: AuthUserDto = {
       id: user.id,
       email: user.email,
       nickname: user.nickname,
       role: user.role,
+      bio: user.bio ?? null,
+      deletedAt,
+      withdrawScheduledAt,
     };
     return { accessToken, user: authUser };
   }
@@ -85,7 +104,14 @@ export class AuthService {
     | 'email_not_verified'
     | 'email_missing'
     | 'provider_error'
-    | 'account_link_failed' {
+    | 'account_link_failed'
+    | 'account_withdrawn' {
+    if (
+      error instanceof UnauthorizedException &&
+      error.message === '탈퇴가 완료된 계정입니다.'
+    ) {
+      return 'account_withdrawn';
+    }
     if (
       error instanceof Error &&
       [
@@ -93,13 +119,15 @@ export class AuthService {
         'email_missing',
         'provider_error',
         'account_link_failed',
+        'account_withdrawn',
       ].includes(error.message)
     ) {
       return error.message as
         | 'email_not_verified'
         | 'email_missing'
         | 'provider_error'
-        | 'account_link_failed';
+        | 'account_link_failed'
+        | 'account_withdrawn';
     }
     return 'provider_error';
   }
@@ -124,7 +152,8 @@ export class AuthService {
       | 'email_not_verified'
       | 'email_missing'
       | 'provider_error'
-      | 'account_link_failed',
+      | 'account_link_failed'
+      | 'account_withdrawn',
     next: string,
   ): string {
     const url = new URL(
@@ -195,6 +224,9 @@ export class AuthService {
         '이메일 또는 비밀번호가 올바르지 않습니다.',
       );
     }
+    if (user.deletedAt && !user.withdrawScheduledAt) {
+      throw new UnauthorizedException('탈퇴가 완료된 계정입니다.');
+    }
     const ok = await bcrypt.compare(dto.password, user.passwordHash);
     if (!ok) {
       throw new UnauthorizedException(
@@ -208,13 +240,30 @@ export class AuthService {
   async getMe(userId: string): Promise<AuthUserDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, nickname: true, role: true, bio: true },
+      select: {
+        id: true,
+        email: true,
+        nickname: true,
+        role: true,
+        bio: true,
+        deletedAt: true,
+        withdrawScheduledAt: true,
+      },
     });
     if (!user) {
       throw new UnauthorizedException('유저를 찾을 수 없습니다.');
     }
+    // 확정 tombstone만 — 유예(deletedAt+스케줄)는 /me 허용
+    if (user.deletedAt && !user.withdrawScheduledAt) {
+      throw new UnauthorizedException('탈퇴가 완료된 계정입니다.');
+    }
+
     await this.touchLastActiveAt(userId, user.role, { force: true });
-    return user;
+    return {
+      ...user,
+      deletedAt: user.deletedAt?.toISOString() ?? null,
+      withdrawScheduledAt: user.withdrawScheduledAt?.toISOString() ?? null,
+    };
   }
 
   async loginWithOAuth(profile: OAuthProfile): Promise<AuthResponseDto> {
@@ -235,17 +284,20 @@ export class AuthService {
         include: { user: true },
       });
       if (existingAccount) {
-        await this.touchLastActiveAt(
-          existingAccount.user.id,
-          existingAccount.user.role,
-          { force: true },
-        );
-        return this.buildAuthResponse(existingAccount.user);
+        const user = existingAccount.user;
+        if (user.deletedAt && !user.withdrawScheduledAt) {
+          throw new UnauthorizedException('탈퇴가 완료된 계정입니다.');
+        }
+        await this.touchLastActiveAt(user.id, user.role, { force: true });
+        return this.buildAuthResponse(user);
       }
       const existingUser = await this.prisma.user.findUnique({
         where: { email },
       });
       if (existingUser) {
+        if (existingUser.deletedAt && !existingUser.withdrawScheduledAt) {
+          throw new UnauthorizedException('탈퇴가 완료된 계정입니다.');
+        }
         await this.prisma.oAuthAccount.create({
           data: { provider, providerAccountId, userId: existingUser.id },
         });
@@ -264,6 +316,9 @@ export class AuthService {
       await this.touchLastActiveAt(user.id, user.role, { force: true });
       return this.buildAuthResponse(user);
     } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
       if (error instanceof Error && error.message.startsWith('email_')) {
         throw error;
       }

@@ -40,6 +40,9 @@ export type ApiAuthUser = {
   image: string | null;
   role: 'user' | 'admin';
   bio?: string | null;
+  /** 탈퇴 예약 — 있으면 유예 중 */
+  deletedAt?: string | null;
+  withdrawScheduledAt?: string | null;
 };
 
 export type ApiAuthResponse = {

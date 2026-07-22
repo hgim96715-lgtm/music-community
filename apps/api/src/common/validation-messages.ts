@@ -44,6 +44,12 @@ const FIELD_MESSAGES: Record<string, Partial<Record<string, string>>> = {
     minLength: '문의 내용을 입력해주세요.',
     maxLength: '문의 내용은 2000자 이하여야 합니다.',
   },
+  /** POST /users/me/withdraw — 닉/이메일 타이핑 확인 */
+  confirm: {
+    isString: '확인 문구를 입력해주세요.',
+    minLength: '확인 문구를 입력해주세요.',
+    isNotEmpty: '확인 문구를 입력해주세요.',
+  },
 };
 
 /** 필드 공통 fallback */

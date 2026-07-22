@@ -67,6 +67,8 @@ model User {
   bio          String?
   lastActiveAt DateTime? @db.Timestamptz(3)
   image String?
+  deletedAt DateTime? @db.Timestamptz(3)
+  withdrawScheduledAt DateTime? @db.Timestamptz(3)
 
   recommendations Recommendation[]
   reactions      Reaction[]
@@ -86,6 +88,9 @@ model User {
 
   roomBans RoomBan[] @relation("RoomBanUser")
   roomBansIssued RoomBan[] @relation("RoomBanKicker")
+
+  @@index([deletedAt])
+  @@index([withdrawScheduledAt])
 }
 
 

@@ -2,6 +2,10 @@
 
 import { useAvatarAction } from '@/components/friends/AvatarActionContext';
 import { useIsFriend } from '@/components/friends/FriendIdsContext';
+import {
+  displayAuthorNickname,
+  isWithdrawnAuthorNickname,
+} from '@/lib/displayAuthor';
 import { feedNicknameLinkClassName } from '@/lib/form';
 
 type FeedAuthorNicknameProps = {
@@ -20,14 +24,25 @@ export function FeedAuthorNickname({
 }: FeedAuthorNicknameProps) {
   const isFriend = useIsFriend(userId);
   const { openSheet } = useAvatarAction();
+  const label = displayAuthorNickname(nickname);
+  const withdrawn = isWithdrawnAuthorNickname(nickname);
+
+  if (withdrawn) {
+    return (
+      <span
+        className={`${feedNicknameLinkClassName} ${className} cursor-default text-neutral-500`}>
+        @{label}
+      </span>
+    );
+  }
 
   return (
     <span className="inline-flex min-w-0 max-w-full items-center gap-1">
       <button
         type="button"
-        onClick={() => openSheet({ id: userId, nickname })}
+        onClick={() => openSheet({ id: userId, nickname: label })}
         className={`${feedNicknameLinkClassName} ${className} text-left`}>
-        @{nickname}
+        @{label}
       </button>
       {showFriendChip && isFriend ? (
         <span

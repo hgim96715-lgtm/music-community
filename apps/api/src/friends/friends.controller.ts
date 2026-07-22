@@ -12,6 +12,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ActiveAccountGuard,
+  AllowWithdrawing,
+} from 'src/auth/active-account.guard';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
 import { CreateFriendRequestDto } from './dto/create-friend-request.dto';
@@ -21,17 +25,19 @@ import { FriendsService } from './friends.service';
 @ApiTags('Friends')
 @Controller('friends')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ActiveAccountGuard)
 export class FriendsController {
   constructor(private readonly friendsService: FriendsService) {}
 
   @ApiOperation({ summary: '내 친구 목록 (accepted)' })
+  @AllowWithdrawing()
   @Get()
   async listFriends(@UserId() userId: string) {
     return await this.friendsService.listFriends(userId);
   }
 
   @ApiOperation({ summary: '받은·보낸 친구 요청 (pending)' })
+  @AllowWithdrawing()
   @Get('requests')
   async listRequest(@UserId() userId: string) {
     return await this.friendsService.listRequest(userId);

@@ -16,6 +16,10 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
+import {
+  ActiveAccountGuard,
+  AllowWithdrawing,
+} from 'src/auth/active-account.guard';
 import { SavedLyricsService } from './saved-lyrics.service';
 import { CreateSavedLyricDto } from './dto/create-saved-lyric.dto';
 import { UpdateSavedLyricDto } from './dto/update-saved-lyric.dto';
@@ -23,12 +27,13 @@ import { UpdateSavedLyricDto } from './dto/update-saved-lyric.dto';
 @ApiTags('SavedLyrics')
 @Controller('saved-lyrics')
 @ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
 @Roles('user')
 export class SavedLyricsController {
   constructor(private readonly savedLyricsService: SavedLyricsService) {}
 
   @ApiOperation({ summary: '내 가사 목록 조회' })
+  @AllowWithdrawing()
   @Get()
   async findMine(@UserId() userId: string) {
     return this.savedLyricsService.findMine(userId);

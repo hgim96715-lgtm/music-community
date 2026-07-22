@@ -12,6 +12,7 @@ import { FriendsModule } from './friends/friends.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { SavedLyricsModule } from './saved-lyrics/saved-lyrics.module';
 import { SupportModule } from './support/support.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { SupportModule } from './support/support.module';
       validationSchema: envValidationSchema,
       validationOptions: { convert: true },
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     RecommendationsModule,
     AuthModule,

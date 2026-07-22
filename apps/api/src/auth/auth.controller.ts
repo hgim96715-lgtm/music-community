@@ -11,6 +11,10 @@ import {
 import { AuthResponseDto, AuthUserDto } from './dto/auth-response.dto';
 import { UserId } from './decorators/user-id.decorator';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import {
+  ActiveAccountGuard,
+  AllowWithdrawing,
+} from './active-account.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -21,7 +25,8 @@ export class AuthController {
   @ApiOperation({ summary: '현재 로그인 사용자 (Bearer)' })
   @ApiOkResponse({ type: AuthUserDto })
   @Get('me')
-  @UseGuards(JwtAuthGuard)
+  @AllowWithdrawing()
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard)
   async getMe(@UserId() userId: string) {
     return await this.authService.getMe(userId);
   }

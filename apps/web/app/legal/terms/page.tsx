@@ -51,8 +51,10 @@ export default function TermsPage() {
           <section>
             <h2 className="font-semibold text-brand-primary">제4조 (계정)</h2>
             <p className="mt-1.5">
-              계정 정보는 이용자 본인이 관리합니다. 회원 탈퇴 및 계정 관련
-              절차는 서비스 정책에 따릅니다.
+              계정 정보는 이용자 본인이 관리합니다. 회원 탈퇴는 마이 홈 →
+              설정에서 예약할 수 있으며, 예약 시점부터 7일간 유예됩니다. 유예
+              중에는 탈퇴를 취소할 수 있고, 유예가 끝나면 계정이 정리됩니다.
+              유예 기간 동안 일부 쓰기 기능은 제한될 수 있습니다.
             </p>
           </section>
 

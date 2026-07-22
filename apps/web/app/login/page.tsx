@@ -10,6 +10,7 @@ import {
   authSubmitClassName,
   authTitleClassName,
   fieldErrorClassName,
+  fieldSuccessClassName,
 } from '@/lib/form';
 import {
   type AuthFieldErrors,
@@ -36,6 +37,10 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectPath = getRedirectPathFromSearchParams(searchParams);
   const oauthError = searchParams.get('oauthError');
+  const withdrawn = searchParams.get('withdrawn') === '1';
+  const graceDaysRaw = Number(searchParams.get('days') ?? '7');
+  const graceDays =
+    Number.isFinite(graceDaysRaw) && graceDaysRaw > 0 ? graceDaysRaw : 7;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -54,11 +59,13 @@ function LoginForm() {
         ? '이메일 정보를 받지 못했습니다. 다른 계정으로 시도해 주세요.'
         : oauthError === 'account_link_failed'
           ? '계정 연결에 실패했습니다. 잠시 후 다시 시도해 주세요.'
-          : oauthError === 'provider_error'
-            ? '소셜 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.'
-            : oauthError
-              ? '소셜 로그인에 실패했습니다.'
-              : null;
+          : oauthError === 'account_withdrawn'
+            ? '탈퇴가 완료된 계정입니다.'
+            : oauthError === 'provider_error'
+              ? '소셜 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.'
+              : oauthError
+                ? '소셜 로그인에 실패했습니다.'
+                : null;
 
   const googleHref = `${getApiBaseUrl()}/auth/oauth/google?${REDIRECT_QUERY_KEY}=${encodeURIComponent(redirectPath)}`;
   const naverHref = `${getApiBaseUrl()}/auth/oauth/naver?${REDIRECT_QUERY_KEY}=${encodeURIComponent(redirectPath)}`;
@@ -100,6 +107,14 @@ function LoginForm() {
       <header className="mb-8">
         <h1 className={`${authTitleClassName} text-center`}>로그인</h1>
       </header>
+      {withdrawn ? (
+        <p
+          className={`${fieldSuccessClassName} mb-6 text-center`}
+          role="status">
+          탈퇴가 예약됐어요. {graceDays}일 안에 다시 로그인하면 취소할 수
+          있어요. 유예가 끝나면 계정이 정리됩니다.
+        </p>
+      ) : null}
 
       <form action={formAction} className="flex flex-col gap-4">
         <PillInput

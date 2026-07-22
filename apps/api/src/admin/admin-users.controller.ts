@@ -1,9 +1,11 @@
 import {
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   ParseBoolPipe,
-  ParseEnumPipe,
   ParseIntPipe,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -18,6 +20,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UserRole } from 'src/generated/prisma/enums';
 import { AdminUsersService } from './admin-users.service';
+import { UsersService } from 'src/users/users.service';
 
 @ApiTags('Admin')
 @ApiBearerAuth('access-token')
@@ -25,7 +28,17 @@ import { AdminUsersService } from './admin-users.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
 export class AdminUsersController {
-  constructor(private readonly adminUsersService: AdminUsersService) {}
+  constructor(
+    private readonly adminUsersService: AdminUsersService,
+    private readonly usersService: UsersService,
+  ) {}
+
+  @ApiOperation({ summary: '유예 만료 탈퇴 확정 (cron 수동 실행)' })
+  @Post('withdraw/finalize')
+  @HttpCode(HttpStatus.OK)
+  async finalizeWithdrawals() {
+    return await this.usersService.finalizeExpiredWithdrawals();
+  }
 
   @ApiOperation({ summary: '사용자 목록 검색' })
   @ApiQuery({

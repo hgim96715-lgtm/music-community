@@ -11,6 +11,7 @@ import { GoogleStrategy } from './google.strategy';
 import { OAuthController } from './oauth.controller';
 import { NaverStrategy } from './naver.strategy';
 import { KakaoStrategy } from './kakao.strategy';
+import { ActiveAccountGuard } from './active-account.guard';
 
 @Module({
   imports: [
@@ -27,12 +28,19 @@ import { KakaoStrategy } from './kakao.strategy';
   providers: [
     JwtAuthGuard,
     RolesGuard,
+    ActiveAccountGuard,
     AuthService,
     GoogleStrategy,
     NaverStrategy,
     KakaoStrategy,
   ],
-  exports: [JwtModule, JwtAuthGuard, RolesGuard, AuthService],
+  exports: [
+    JwtModule,
+    JwtAuthGuard,
+    RolesGuard,
+    ActiveAccountGuard,
+    AuthService,
+  ],
   controllers: [AuthController, OAuthController],
 })
 export class AuthModule {}

@@ -302,3 +302,28 @@ export async function createSupportContact(body: {
     body: JSON.stringify(body),
   });
 }
+
+export type WithdrawResult = {
+  ok: true;
+  deletedAt: string;
+  withdrawScheduledAt: string;
+  graceDays: number;
+};
+/** POST /users/me/withdraw — 탈퇴 예약 */
+export function withdrawMe(body: {
+  confirm: string;
+  password?: string;
+}): Promise<WithdrawResult> {
+  return authFetchApi<WithdrawResult>('/users/me/withdraw', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+/** POST /users/me/withdraw/cancel — 유예 중 취소 */
+export function cancelWithdraw(): Promise<{ ok: true }> {
+  return authFetchApi<{ ok: true }>('/users/me/withdraw/cancel', {
+    method: 'POST',
+  });
+}
