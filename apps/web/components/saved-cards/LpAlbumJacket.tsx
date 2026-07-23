@@ -49,18 +49,24 @@ type LpAlbumJacketProps = {
   penWidth?: number;
 };
 
-/** 고정 rem — `w-full`은 부모(버튼 등) 너비가 비정일 때 모바일에서 0으로 접힘 */
+/**
+ * 항상 이 크기로 그린 뒤 바깥 프레임에 맞게 scale.
+ * Top3·모달에서 스티커/타이포 구도가 같아지게.
+ */
+export const JACKET_STAGE_PX = 224;
+
+/** 바깥 프레임 너비 — `w-full`은 버튼 등에서 0으로 접힘 */
 const SIZE_CLASS = {
   sm: 'w-[7.5rem] shrink-0',
   md: 'w-[9.5rem] shrink-0',
   lg: 'w-[14rem] shrink-0',
 } as const;
 
-/** 마이홈·내 앨범 Top3 공통 크기 */
+/** 마이홈·내 앨범 Top3 공통 프레임 (내 앨범 sm = 7.5rem 기준) */
 export const TOP3_JACKET_CLASS =
-  '!w-[6.5rem] shrink-0 shadow-[0_3px_12px_rgba(0,0,0,0.2)] sm:!w-[7.5rem]';
-export const TOP3_SLOT_BOX_CLASS = 'size-[6.5rem] sm:size-[7.5rem]';
-export const TOP3_TITLE_MAX_CLASS = 'max-w-[6.5rem] sm:max-w-[7.5rem]';
+  '!w-[7.5rem] shrink-0 shadow-[0_3px_12px_rgba(0,0,0,0.2)]';
+export const TOP3_SLOT_BOX_CLASS = 'size-[7.5rem]';
+export const TOP3_TITLE_MAX_CLASS = 'max-w-[7.5rem]';
 
 const DISPLAY_ON_BY_DEFAULT = new Set<DisplayKey>([
   'title',
@@ -110,9 +116,11 @@ export function LpAlbumJacket({
   penWidth = 2.5,
 }: LpAlbumJacketProps) {
   const uid = useId();
+  const frameRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const drawing = useRef<ApiSavedCardStroke | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [scale, setScale] = useState(1);
 
   const customImage = customization?.backgroundImage?.trim() || null;
   const tint = customization?.background;
@@ -127,8 +135,6 @@ export function LpAlbumJacket({
   const showPostedAt =
     isOn(customization?.display, 'postedAt') && Boolean(postedAt);
   const showSavedAt = isOn(customization?.display, 'savedAt');
-  const compact = size === 'sm';
-  const comfortable = size === 'lg';
   const [albumThumb, setAlbumThumb] = useState<string | null>(null);
 
   useEffect(() => {
@@ -153,6 +159,20 @@ export function LpAlbumJacket({
       cancelled = true;
     };
   }, [customImage, embedUrl]);
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    const sync = () => {
+      const w = frame.clientWidth;
+      if (w < 1) return;
+      setScale(w / JACKET_STAGE_PX);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(frame);
+    return () => ro.disconnect();
+  }, [size, className]);
 
   const coverSrc = customImage || albumThumb;
   const showBottom =
@@ -231,153 +251,124 @@ export function LpAlbumJacket({
 
   return (
     <div
-      ref={stageRef}
-      className={`lp-album-jacket relative block aspect-square overflow-hidden rounded-md ${SIZE_CLASS[size]} ${className} ${
-        interactive ? 'touch-none select-none' : ''
-      }`}
+      ref={frameRef}
+      className={`lp-album-jacket relative block aspect-square overflow-hidden rounded-md text-left ${SIZE_CLASS[size]} ${className}`}
       style={
         !coverSrc && tint
           ? { backgroundColor: tint }
           : { backgroundColor: 'var(--color-lp-ink)' }
-      }
-      onPointerDown={onStagePointerDown}
-      onPointerMove={onStagePointerMove}
-      onPointerUp={onStagePointerUp}
-      onPointerCancel={onStagePointerUp}>
-      {coverSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element -- oEmbed / data URL
-        <img
-          src={coverSrc}
-          alt=""
-          className="pointer-events-none absolute inset-0 size-full object-cover"
-          style={
-            customImage && imageOpacity < 1
-              ? { opacity: imageOpacity }
-              : undefined
-          }
-        />
-      ) : (
-        <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <Music2 className="size-8 text-[color:var(--color-lp-muted)]" />
-        </span>
-      )}
-      {tint && coverSrc ? (
-        <span
-          className="pointer-events-none absolute inset-0 mix-blend-multiply"
-          style={{ backgroundColor: tint, opacity: 0.28 }}
-          aria-hidden
-        />
-      ) : null}
-      {showMoods ? (
-        <span
-          className={`pointer-events-none absolute left-1.5 top-1.5 z-10 flex max-w-[calc(100%-0.75rem)] flex-wrap gap-1 ${
-            compact ? 'left-1 top-1' : ''
-          }`}>
-          {moods.map((mood) => {
-            const colors = getMoodColors(mood);
-            return (
+      }>
+      <div
+        ref={stageRef}
+        className={`absolute left-0 top-0 ${interactive ? 'touch-none select-none' : ''}`}
+        style={{
+          width: JACKET_STAGE_PX,
+          height: JACKET_STAGE_PX,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+        }}
+        onPointerDown={onStagePointerDown}
+        onPointerMove={onStagePointerMove}
+        onPointerUp={onStagePointerUp}
+        onPointerCancel={onStagePointerUp}>
+        {coverSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element -- oEmbed / data URL
+          <img
+            src={coverSrc}
+            alt=""
+            className="pointer-events-none absolute inset-0 size-full object-cover"
+            style={
+              customImage && imageOpacity < 1
+                ? { opacity: imageOpacity }
+                : undefined
+            }
+          />
+        ) : (
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <Music2 className="size-8 text-[color:var(--color-lp-muted)]" />
+          </span>
+        )}
+        {tint && coverSrc ? (
+          <span
+            className="pointer-events-none absolute inset-0 mix-blend-multiply"
+            style={{ backgroundColor: tint, opacity: 0.28 }}
+            aria-hidden
+          />
+        ) : null}
+        {showMoods ? (
+          <span className="pointer-events-none absolute left-1.5 top-1.5 z-10 flex max-w-[calc(100%-0.75rem)] flex-wrap gap-1">
+            {moods.map((mood) => {
+              const colors = getMoodColors(mood);
+              return (
+                <span
+                  key={mood}
+                  className={`mood-pill-depth rounded-md border px-1.5 py-0.5 text-[10px] font-semibold shadow-sm ${colors.pillBg} ${colors.pillText} ${colors.pillBorder}`}>
+                  {mood}
+                </span>
+              );
+            })}
+          </span>
+        ) : null}
+        {showBottom ? (
+          <span className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-[rgb(20_17_14/0.92)] via-[rgb(20_17_14/0.45)] to-transparent px-2.5 pb-2.5 pt-12">
+            {showTitle ? (
               <span
-                key={mood}
-                className={`mood-pill-depth rounded-md border px-1.5 py-0.5 font-semibold shadow-sm ${
-                  compact
-                    ? 'text-[7px]'
-                    : comfortable
-                      ? 'text-[10px]'
-                      : 'text-[8px]'
-                } ${colors.pillBg} ${colors.pillText} ${colors.pillBorder}`}>
-                {mood}
+                className="block truncate text-[12px] font-semibold leading-tight"
+                style={{ color: textColor(customization, 'title') }}>
+                {title}
               </span>
-            );
-          })}
-        </span>
-      ) : null}
-      {showBottom ? (
-        <span
-          className={`pointer-events-none absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-[rgb(20_17_14/0.92)] via-[rgb(20_17_14/0.45)] to-transparent ${
-            comfortable ? 'px-2.5 pb-2.5 pt-12' : 'px-2 pb-2 pt-10'
-          }`}>
-          {showTitle ? (
-            <span
-              className={`block truncate font-semibold leading-tight ${
-                compact
-                  ? 'text-[10px]'
-                  : comfortable
-                    ? 'text-[12px]'
-                    : 'text-[11px]'
-              }`}
-              style={{ color: textColor(customization, 'title') }}>
-              {title}
-            </span>
-          ) : null}
-          {showArtist ? (
-            <span
-              className={`block truncate leading-tight ${
-                showTitle ? 'mt-0.5' : ''
-              } ${
-                compact
-                  ? 'text-[8px]'
-                  : comfortable
-                    ? 'text-[10px]'
-                    : 'text-[9px]'
-              }`}
-              style={{ color: textColor(customization, 'artist') }}>
-              {artist}
-            </span>
-          ) : null}
-          {showReason ? (
-            <span
-              className={`mt-1 block line-clamp-2 leading-snug ${
-                compact
-                  ? 'text-[7px]'
-                  : comfortable
-                    ? 'text-[10px]'
-                    : 'text-[8px]'
-              }`}
-              style={{ color: textColor(customization, 'reason') }}>
-              {reason}
-            </span>
-          ) : null}
-          {showPostedAt || showSavedAt ? (
-            <span
-              className={`mt-1 block space-y-0.5 leading-tight ${
-                compact
-                  ? 'text-[7px]'
-                  : comfortable
-                    ? 'text-[9px]'
-                    : 'text-[8px]'
-              }`}>
-              {showPostedAt && postedAt ? (
-                <span
-                  className="block"
-                  style={{ color: textColor(customization, 'postedAt') }}>
-                  올림 {formatFeedDate(postedAt)}
-                </span>
-              ) : null}
-              {showSavedAt ? (
-                <span
-                  className="block"
-                  style={{ color: textColor(customization, 'savedAt') }}>
-                  저장 {savedAt ? formatFeedDate(savedAt) : '저장 시 표시'}
-                </span>
-              ) : null}
-            </span>
-          ) : null}
-        </span>
-      ) : null}
+            ) : null}
+            {showArtist ? (
+              <span
+                className={`block truncate text-[10px] leading-tight ${
+                  showTitle ? 'mt-0.5' : ''
+                }`}
+                style={{ color: textColor(customization, 'artist') }}>
+                {artist}
+              </span>
+            ) : null}
+            {showReason ? (
+              <span
+                className="mt-1 block line-clamp-2 text-[10px] leading-snug"
+                style={{ color: textColor(customization, 'reason') }}>
+                {reason}
+              </span>
+            ) : null}
+            {showPostedAt || showSavedAt ? (
+              <span className="mt-1 block space-y-0.5 text-[9px] leading-tight">
+                {showPostedAt && postedAt ? (
+                  <span
+                    className="block"
+                    style={{ color: textColor(customization, 'postedAt') }}>
+                    올림 {formatFeedDate(postedAt)}
+                  </span>
+                ) : null}
+                {showSavedAt ? (
+                  <span
+                    className="block"
+                    style={{ color: textColor(customization, 'savedAt') }}>
+                    저장 {savedAt ? formatFeedDate(savedAt) : '저장 시 표시'}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
 
-      <StrokeLayer strokes={strokes} />
+        <StrokeLayer strokes={strokes} />
 
-      {stickers.map((s, index) => (
-        <StickerNode
-          key={`${s.assetId}-${index}-${s.x.toFixed(3)}-${s.y.toFixed(3)}`}
-          sticker={s}
-          interactive={interactive}
-          onPointerDown={(e) => moveStickerStart(index, e)}
-          onDoubleClick={() => removeSticker(index)}
-        />
-      ))}
+        {stickers.map((s, index) => (
+          <StickerNode
+            key={`${s.assetId}-${index}-${s.x.toFixed(3)}-${s.y.toFixed(3)}`}
+            sticker={s}
+            interactive={interactive}
+            onPointerDown={(e) => moveStickerStart(index, e)}
+            onDoubleClick={() => removeSticker(index)}
+          />
+        ))}
 
-      <span className="pointer-events-none absolute inset-0 z-20 rounded-md ring-1 ring-inset ring-[rgb(201_166_107/0.35)]" />
+        <span className="pointer-events-none absolute inset-0 z-20 rounded-md ring-1 ring-inset ring-[rgb(201_166_107/0.35)]" />
+      </div>
     </div>
   );
 }
@@ -434,28 +425,41 @@ function StrokeLayer({ strokes }: { strokes: ApiSavedCardStroke[] }) {
     if (!c) return;
     const parent = c.parentElement;
     if (!parent) return;
-    const w = parent.clientWidth;
-    const h = parent.clientHeight;
-    c.width = w;
-    c.height = h;
-    const ctx = c.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, w, h);
-    for (const s of strokes) {
-      if (s.points.length < 2) continue;
-      ctx.beginPath();
-      ctx.strokeStyle = s.color;
-      ctx.lineWidth = s.width;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      s.points.forEach((p, i) => {
-        const x = p.x * w;
-        const y = p.y * h;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-    }
+
+    const paint = () => {
+      const w = parent.clientWidth;
+      const h = parent.clientHeight;
+      if (w < 1 || h < 1) return;
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      c.width = Math.round(w * dpr);
+      c.height = Math.round(h * dpr);
+      c.style.width = `${w}px`;
+      c.style.height = `${h}px`;
+      const ctx = c.getContext('2d');
+      if (!ctx) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      for (const s of strokes) {
+        if (s.points.length < 2) continue;
+        ctx.beginPath();
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = s.width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        s.points.forEach((p, i) => {
+          const x = p.x * w;
+          const y = p.y * h;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+    };
+
+    paint();
+    const ro = new ResizeObserver(paint);
+    ro.observe(parent);
+    return () => ro.disconnect();
   }, [strokes]);
 
   return (

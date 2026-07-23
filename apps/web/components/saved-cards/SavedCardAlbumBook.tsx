@@ -208,11 +208,11 @@ export function SavedCardAlbumBook({
                 </span>
               ) : null}
             </p>
-            <ul className="flex items-end justify-center gap-4 sm:gap-6">
+            <ul className="flex w-full items-end justify-between gap-2 px-0.5 sm:gap-4">
               {([1, 2, 3] as const).map((rank, index) => {
                 const card = topSlots[index];
                 return (
-                  <li key={rank} className="flex flex-col items-center gap-1.5">
+                  <li key={rank} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => handleTopClick(rank, card)}
@@ -225,7 +225,7 @@ export function SavedCardAlbumBook({
                           : undefined
                       }
                       disabled={shelfBusy}
-                      className={`lp-album-top-slot ${replaceMode ? 'is-pickable' : ''}`}
+                      className={`lp-album-top-slot text-left ${replaceMode ? 'is-pickable' : ''}`}
                       aria-label={
                         card
                           ? replaceMode
