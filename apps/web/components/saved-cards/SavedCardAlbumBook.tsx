@@ -238,8 +238,8 @@ export function SavedCardAlbumBook({
                           postedAt={card.recommendation.createdAt}
                           savedAt={card.createdAt}
                           customization={card.customization}
-                          size="md"
-                          className="w-[6.5rem] shadow-[0_3px_12px_rgba(0,0,0,0.2)] sm:w-[7.5rem]"
+                          size="sm"
+                          className="shadow-[0_3px_12px_rgba(0,0,0,0.2)] max-sm:!w-[6.5rem]"
                         />
                       ) : (
                         <LpAlbumDisc size="lg" empty label={`#${rank}`} />

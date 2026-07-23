@@ -49,10 +49,11 @@ type LpAlbumJacketProps = {
   penWidth?: number;
 };
 
+/** 고정 rem — `w-full`은 부모(버튼 등) 너비가 비정일 때 모바일에서 0으로 접힘 */
 const SIZE_CLASS = {
-  sm: 'w-[7.5rem]',
-  md: 'w-full max-w-[9.5rem]',
-  lg: 'w-full max-w-[14rem]',
+  sm: 'w-[7.5rem] shrink-0',
+  md: 'w-[9.5rem] shrink-0',
+  lg: 'w-[14rem] shrink-0',
 } as const;
 
 const DISPLAY_ON_BY_DEFAULT = new Set<DisplayKey>([

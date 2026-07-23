@@ -123,7 +123,7 @@ export function MyHomeDashboard({
                     savedAt={card.createdAt}
                     customization={card.customization}
                     size="sm"
-                    className="w-[4.5rem] shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
+                    className="!w-[4.5rem] shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
                   />
                   <span className="mt-1 max-w-[4.5rem] truncate text-[10px] font-medium text-[#6b5c4c]">
                     {card.recommendation.title}
