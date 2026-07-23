@@ -56,6 +56,12 @@ const SIZE_CLASS = {
   lg: 'w-[14rem] shrink-0',
 } as const;
 
+/** 마이홈·내 앨범 Top3 공통 크기 */
+export const TOP3_JACKET_CLASS =
+  '!w-[6.5rem] shrink-0 shadow-[0_3px_12px_rgba(0,0,0,0.2)] sm:!w-[7.5rem]';
+export const TOP3_SLOT_BOX_CLASS = 'size-[6.5rem] sm:size-[7.5rem]';
+export const TOP3_TITLE_MAX_CLASS = 'max-w-[6.5rem] sm:max-w-[7.5rem]';
+
 const DISPLAY_ON_BY_DEFAULT = new Set<DisplayKey>([
   'title',
   'artist',

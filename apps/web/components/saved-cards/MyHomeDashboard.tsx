@@ -3,7 +3,7 @@
 import type { ApiSavedCard } from '@/lib/apiTypes';
 import { ChevronRight, Disc3, Quote } from 'lucide-react';
 import Link from 'next/link';
-import { LpAlbumJacket } from './LpAlbumJacket';
+import { LpAlbumJacket, TOP3_JACKET_CLASS, TOP3_TITLE_MAX_CLASS } from './LpAlbumJacket';
 import { LpAlbumDisc } from './LpAlbumDisc';
 import { MyHomeNav } from './MyHomeNav';
 
@@ -123,9 +123,10 @@ export function MyHomeDashboard({
                     savedAt={card.createdAt}
                     customization={card.customization}
                     size="sm"
-                    className="!w-[4.5rem] shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
+                    className={TOP3_JACKET_CLASS}
                   />
-                  <span className="mt-1 max-w-[4.5rem] truncate text-[10px] font-medium text-[#6b5c4c]">
+                  <span
+                    className={`mt-1 truncate text-[10px] font-medium text-[#6b5c4c] ${TOP3_TITLE_MAX_CLASS}`}>
                     {card.recommendation.title}
                   </span>
                 </li>

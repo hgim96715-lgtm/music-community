@@ -9,7 +9,12 @@ import {
 } from '@/lib/albumShelfStorage';
 import { useCallback, useMemo, useState } from 'react';
 import { LpAlbumDisc } from './LpAlbumDisc';
-import { LpAlbumJacket } from './LpAlbumJacket';
+import {
+  LpAlbumJacket,
+  TOP3_JACKET_CLASS,
+  TOP3_SLOT_BOX_CLASS,
+  TOP3_TITLE_MAX_CLASS,
+} from './LpAlbumJacket';
 
 type SavedCardAlbumBookProps = {
   cards: ApiSavedCard[];
@@ -239,13 +244,18 @@ export function SavedCardAlbumBook({
                           savedAt={card.createdAt}
                           customization={card.customization}
                           size="sm"
-                          className="shadow-[0_3px_12px_rgba(0,0,0,0.2)] max-sm:!w-[6.5rem]"
+                          className={TOP3_JACKET_CLASS}
                         />
                       ) : (
-                        <LpAlbumDisc size="lg" empty label={`#${rank}`} />
+                        <span
+                          className={`flex items-center justify-center rounded-md border-[1.5px] border-dashed border-[rgb(31_26_22/0.28)] bg-[rgb(255_255_255/0.35)] text-[0.65rem] font-bold text-[rgb(92_74_56/0.55)] ${TOP3_SLOT_BOX_CLASS}`}
+                          aria-hidden>
+                          #{rank}
+                        </span>
                       )}
                     </button>
-                    <span className="max-w-[5.5rem] truncate text-center text-[10px] font-medium text-[#5c4a38]">
+                    <span
+                      className={`truncate text-center text-[10px] font-medium text-[#5c4a38] ${TOP3_TITLE_MAX_CLASS}`}>
                       {card ? card.recommendation.title : `빈 자리`}
                     </span>
                     {editable && card && !replaceMode ? (
