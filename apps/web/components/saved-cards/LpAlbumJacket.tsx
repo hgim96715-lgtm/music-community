@@ -121,6 +121,8 @@ export function LpAlbumJacket({
   const showPostedAt =
     isOn(customization?.display, 'postedAt') && Boolean(postedAt);
   const showSavedAt = isOn(customization?.display, 'savedAt');
+  const compact = size === 'sm';
+  const comfortable = size === 'lg';
   const [albumThumb, setAlbumThumb] = useState<string | null>(null);
 
   useEffect(() => {
@@ -250,7 +252,7 @@ export function LpAlbumJacket({
         />
       ) : (
         <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <Music2 className="size-[14cqw] text-[color:var(--color-lp-muted)]" />
+          <Music2 className="size-8 text-[color:var(--color-lp-muted)]" />
         </span>
       )}
       {tint && coverSrc ? (
@@ -261,13 +263,22 @@ export function LpAlbumJacket({
         />
       ) : null}
       {showMoods ? (
-        <span className="pointer-events-none absolute left-[4cqw] top-[4cqw] z-10 flex max-w-[calc(100%-8cqw)] flex-wrap gap-[2cqw]">
+        <span
+          className={`pointer-events-none absolute left-1.5 top-1.5 z-10 flex max-w-[calc(100%-0.75rem)] flex-wrap gap-1 ${
+            compact ? 'left-1 top-1' : ''
+          }`}>
           {moods.map((mood) => {
             const colors = getMoodColors(mood);
             return (
               <span
                 key={mood}
-                className={`mood-pill-depth rounded-[2cqw] border px-[3.5cqw] py-[1.5cqw] text-[4.5cqw] font-semibold shadow-sm ${colors.pillBg} ${colors.pillText} ${colors.pillBorder}`}>
+                className={`mood-pill-depth rounded-md border px-1.5 py-0.5 font-semibold shadow-sm ${
+                  compact
+                    ? 'text-[7px]'
+                    : comfortable
+                      ? 'text-[10px]'
+                      : 'text-[8px]'
+                } ${colors.pillBg} ${colors.pillText} ${colors.pillBorder}`}>
                 {mood}
               </span>
             );
@@ -275,18 +286,33 @@ export function LpAlbumJacket({
         </span>
       ) : null}
       {showBottom ? (
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-[rgb(20_17_14/0.92)] via-[rgb(20_17_14/0.45)] to-transparent px-[4.5cqw] pb-[4.5cqw] pt-[21cqw]">
+        <span
+          className={`pointer-events-none absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-[rgb(20_17_14/0.92)] via-[rgb(20_17_14/0.45)] to-transparent ${
+            comfortable ? 'px-2.5 pb-2.5 pt-12' : 'px-2 pb-2 pt-10'
+          }`}>
           {showTitle ? (
             <span
-              className="block truncate text-[5.4cqw] font-semibold leading-tight"
+              className={`block truncate font-semibold leading-tight ${
+                compact
+                  ? 'text-[10px]'
+                  : comfortable
+                    ? 'text-[12px]'
+                    : 'text-[11px]'
+              }`}
               style={{ color: textColor(customization, 'title') }}>
               {title}
             </span>
           ) : null}
           {showArtist ? (
             <span
-              className={`block truncate text-[4.5cqw] leading-tight ${
-                showTitle ? 'mt-[1.5cqw]' : ''
+              className={`block truncate leading-tight ${
+                showTitle ? 'mt-0.5' : ''
+              } ${
+                compact
+                  ? 'text-[8px]'
+                  : comfortable
+                    ? 'text-[10px]'
+                    : 'text-[9px]'
               }`}
               style={{ color: textColor(customization, 'artist') }}>
               {artist}
@@ -294,13 +320,26 @@ export function LpAlbumJacket({
           ) : null}
           {showReason ? (
             <span
-              className="mt-[2.5cqw] block line-clamp-2 text-[4.5cqw] leading-snug"
+              className={`mt-1 block line-clamp-2 leading-snug ${
+                compact
+                  ? 'text-[7px]'
+                  : comfortable
+                    ? 'text-[10px]'
+                    : 'text-[8px]'
+              }`}
               style={{ color: textColor(customization, 'reason') }}>
               {reason}
             </span>
           ) : null}
           {showPostedAt || showSavedAt ? (
-            <span className="mt-[2.5cqw] block space-y-[1cqw] text-[4cqw] leading-tight">
+            <span
+              className={`mt-1 block space-y-0.5 leading-tight ${
+                compact
+                  ? 'text-[7px]'
+                  : comfortable
+                    ? 'text-[9px]'
+                    : 'text-[8px]'
+              }`}>
               {showPostedAt && postedAt ? (
                 <span
                   className="block"
@@ -337,10 +376,6 @@ export function LpAlbumJacket({
   );
 }
 
-/** 편집 미리보기(lg ≈ 14rem) 기준 — 스티커·선 두께를 자켓 너비에 비례 */
-const JACKET_REF_PX = 224;
-const STICKER_BASE_CQW = 11;
-
 function StickerNode({
   sticker,
   interactive,
@@ -355,14 +390,13 @@ function StickerNode({
   const style = {
     left: `${sticker.x * 100}%`,
     top: `${sticker.y * 100}%`,
-    fontSize: `${STICKER_BASE_CQW * sticker.scale}cqw`,
-    transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg)`,
+    transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg) scale(${sticker.scale})`,
   } as const;
 
   if (!interactive) {
     return (
       <span
-        className="pointer-events-none absolute z-[15] leading-none"
+        className="pointer-events-none absolute z-[15] text-2xl leading-none"
         style={style}
         aria-hidden>
         {sticker.assetId}
@@ -373,7 +407,7 @@ function StickerNode({
   return (
     <button
       type="button"
-      className="absolute z-[15] cursor-grab touch-none leading-none active:cursor-grabbing"
+      className="absolute z-[15] cursor-grab touch-none text-2xl leading-none active:cursor-grabbing"
       style={style}
       onPointerDown={onPointerDown}
       onDoubleClick={(e) => {
@@ -394,42 +428,28 @@ function StrokeLayer({ strokes }: { strokes: ApiSavedCardStroke[] }) {
     if (!c) return;
     const parent = c.parentElement;
     if (!parent) return;
-
-    const paint = () => {
-      const w = parent.clientWidth;
-      const h = parent.clientHeight;
-      if (w < 1 || h < 1) return;
-      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-      c.width = Math.round(w * dpr);
-      c.height = Math.round(h * dpr);
-      c.style.width = `${w}px`;
-      c.style.height = `${h}px`;
-      const ctx = c.getContext('2d');
-      if (!ctx) return;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-      const widthScale = w / JACKET_REF_PX;
-      for (const s of strokes) {
-        if (s.points.length < 2) continue;
-        ctx.beginPath();
-        ctx.strokeStyle = s.color;
-        ctx.lineWidth = s.width * widthScale;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        s.points.forEach((p, i) => {
-          const x = p.x * w;
-          const y = p.y * h;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      }
-    };
-
-    paint();
-    const ro = new ResizeObserver(paint);
-    ro.observe(parent);
-    return () => ro.disconnect();
+    const w = parent.clientWidth;
+    const h = parent.clientHeight;
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, w, h);
+    for (const s of strokes) {
+      if (s.points.length < 2) continue;
+      ctx.beginPath();
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = s.width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      s.points.forEach((p, i) => {
+        const x = p.x * w;
+        const y = p.y * h;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
   }, [strokes]);
 
   return (

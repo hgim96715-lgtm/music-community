@@ -809,10 +809,8 @@
       0 2px 6px rgb(0 0 0 / 20%);
   }
 
-  /* LP 자켓 — 사각 앨범 커버 (방 공유·채팅)
-     container-type: 스티커·타이포를 cqw로 비율 고정 (작은 Top3에서도 깨지지 않게) */
+  /* LP 자켓 — 사각 앨범 커버 (방 공유·채팅) */
   .lp-album-jacket {
-    container-type: size;
     box-shadow:
       0 0 0 1px rgb(201 166 107 / 22%),
       0 3px 10px rgb(0 0 0 / 28%);
