@@ -143,8 +143,8 @@ export function MyHomeDashboard({
           <span>통계 · 곧</span>
         </div>
 
-        <section className="mt-3" aria-label="컬렉션">
-          <h2 className="mb-2 text-[12px] font-bold tracking-wide text-[#3d342c]">
+        <section className="mt-4" aria-label="컬렉션">
+          <h2 className="mb-2.5 text-[12px] font-bold tracking-wide text-[#3d342c]">
             컬렉션
           </h2>
           <div className="grid grid-cols-2 gap-2.5">
@@ -202,11 +202,11 @@ export function MyHomeDashboard({
                   aria-hidden
                 />
               </span>
-              <span className="flex flex-1 flex-col items-center justify-center gap-1 py-0.5">
+              <span className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 overflow-hidden py-0.5">
                 {loading ? (
                   <span className="text-[11px] text-[#8a8070]">…</span>
                 ) : lyricPreview ? (
-                  <span className="line-clamp-3 px-0.5 text-center text-[11px] font-semibold leading-snug text-[#3d342c]">
+                  <span className="napkin-hand line-clamp-2 w-full px-0.5 text-center text-[0.95rem] leading-[1.15] text-[#3d342c]">
                     “{lyricPreview}”
                   </span>
                 ) : (

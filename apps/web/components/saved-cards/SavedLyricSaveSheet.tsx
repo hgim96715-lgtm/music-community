@@ -236,7 +236,7 @@ export function SavedLyricSaveSheet({
                   onChange={(e) => setLyrics(e.target.value)}
                   rows={4}
                   placeholder="이 소절을 붙여넣으세요"
-                  className="mt-1.5 w-full resize-none rounded-xl border border-[rgb(31_26_22/0.12)] bg-[#f7f1e8] px-3 py-2.5 text-sm text-[#1a1410] placeholder:text-[#a89880] focus:outline-none focus:ring-2 focus:ring-[rgb(138_112_72/0.35)]"
+                  className="napkin-hand mt-1.5 w-full resize-none rounded-xl border border-[rgb(31_26_22/0.12)] bg-[#f7f1e8] px-3 py-2.5 text-[1.15rem] leading-snug text-[#1a1410] placeholder:text-[#a89880] focus:outline-none focus:ring-2 focus:ring-[rgb(138_112_72/0.35)]"
                 />
               </label>
               <label className="block">
@@ -248,7 +248,7 @@ export function SavedLyricSaveSheet({
                   onChange={(e) => setNote(e.target.value)}
                   rows={2}
                   placeholder="왜 와닿았는지, 그때의 감정…"
-                  className="mt-1.5 w-full resize-none rounded-xl border border-[rgb(31_26_22/0.12)] bg-[#f7f1e8] px-3 py-2.5 text-sm text-[#1a1410] placeholder:text-[#a89880] focus:outline-none focus:ring-2 focus:ring-[rgb(138_112_72/0.35)]"
+                  className="napkin-hand mt-1.5 w-full resize-none rounded-xl border border-[rgb(31_26_22/0.12)] bg-[#f7f1e8] px-3 py-2.5 text-[1.15rem] leading-snug text-[#1a1410] placeholder:text-[#a89880] focus:outline-none focus:ring-2 focus:ring-[rgb(138_112_72/0.35)]"
                 />
               </label>
               <div className="flex gap-2">

@@ -13,6 +13,7 @@ import {
   formLegendClassName,
   fieldHintClassName,
 } from '@/lib/form';
+import { napkinHandClassName } from '@/lib/napkinFont';
 import { MAX_MOODS, MIN_MOODS, MOODS, type Mood } from '@/lib/moods';
 import { buildLoginHref } from '@/lib/redirect';
 import {
@@ -104,8 +105,16 @@ export default function NewRecommendationPage() {
         피드로 돌아가기
       </Link>
 
-      <header className="mb-8">
-        <h1 className={`${authTitleClassName} text-center`}>추천 올리기</h1>
+      <header className="mb-8 text-center">
+        <h1 className={`${authTitleClassName}`}>추천 올리기</h1>
+        <p
+          className={`${napkinHandClassName} mx-auto mt-2.5 max-w-[20rem] text-[1.15rem] leading-snug text-[#c9a66b]`}
+          style={{
+            transform: 'rotate(-0.8deg)',
+            transformOrigin: 'center',
+          }}>
+          켜진 조명 아래, 오늘 고른 한 곡을 남겨 주세요.
+        </p>
       </header>
 
       <form action={formAction} className="flex flex-col gap-4">

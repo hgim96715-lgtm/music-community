@@ -14,6 +14,7 @@ import {
   formLegendClassName,
   fieldHintClassName,
 } from '@/lib/form';
+import { napkinHandClassName } from '@/lib/napkinFont';
 import { MAX_MOODS, MIN_MOODS, MOODS, type Mood } from '@/lib/moods';
 import { buildLoginHref } from '@/lib/redirect';
 import {
@@ -142,8 +143,16 @@ export default function EditRecommendationPage() {
         피드로 돌아가기
       </Link>
 
-      <header className="mb-8">
-        <h1 className={`${authTitleClassName} text-center`}>추천 수정</h1>
+      <header className="mb-8 text-center">
+        <h1 className={authTitleClassName}>추천 수정</h1>
+        <p
+          className={`${napkinHandClassName} mx-auto mt-2.5 max-w-[18rem] text-[1.15rem] leading-snug text-[#c9a66b]`}
+          style={{
+            transform: 'rotate(-0.8deg)',
+            transformOrigin: 'center',
+          }}>
+          오늘 남긴 한 곡, 손글씨만 다시 고쳐요.
+        </p>
       </header>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">

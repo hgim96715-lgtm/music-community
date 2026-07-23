@@ -2,8 +2,8 @@
 
 import { MessageCircle, PencilIcon, Share2, Trash2 } from 'lucide-react';
 import { ACTION_BTN, ACTION_ICON, COUNT_SLOT } from '@/lib/feedCardActions';
-import { MoodPill } from './MoodPill';
 import { HeartButton } from './HeartButton';
+import { MoodNapkin } from './MoodNapkin';
 import { FeedCardSaveButton } from '@/components/saved-cards/FeedCardSaveButton';
 import { LoginPromptDialog } from '../auth/LoginPromptDialog';
 import { useAuth } from '../auth/AuthProvider';
@@ -211,18 +211,9 @@ export function FeedCardFooter({
 
   return (
     <footer className="mt-2">
-      {moods.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
-          {moods.map((mood) => (
-            <MoodPill key={mood} mood={mood} />
-          ))}
-        </div>
-      ) : null}
+      <MoodNapkin moods={moods} />
 
-      <div
-        className={`flex items-center justify-between gap-3 border-t border-[rgb(201_166_107/0.12)] pt-3 ${
-          moods.length > 0 ? 'mt-4' : 'mt-3'
-        }`}>
+      <div className="mt-3 flex items-center justify-between gap-3 border-t border-[rgb(201_166_107/0.12)] pt-3">
         <div className="flex items-center">
           <HeartButton
             recommendationId={recommendationId}

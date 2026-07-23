@@ -24,7 +24,7 @@ export const savedCardChip = 'saved-card-chip';
 export const albumBookWrap = 'album-book-wrap';
 export const albumBook = 'album-book';
 
-/** P0 피드 — quiet 다크 글래스 · mood는 MoodPill만 */
+/** P0 피드 — quiet 다크 글래스 · mood는 냅킨 낙서(U1) */
 export const neoHeaderDefault = {
   band: 'bg-transparent',
   text: 'text-[#ebe4da]',

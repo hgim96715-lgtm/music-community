@@ -10,8 +10,8 @@ import {
   fetchSpotifyThumbnailUrl,
   getEmbedPreview,
 } from '@/lib/embedMedia';
-import { getMoodColors } from '@/lib/moodColors';
 import { DEFAULT_TEXT_COLORS } from '@/lib/savedCardColors';
+import { MoodNapkin } from '@/components/recommendations/MoodNapkin';
 import { Music2 } from 'lucide-react';
 import {
   useEffect,
@@ -296,17 +296,12 @@ export function LpAlbumJacket({
           />
         ) : null}
         {showMoods ? (
-          <span className="pointer-events-none absolute left-1.5 top-1.5 z-10 flex max-w-[calc(100%-0.75rem)] flex-wrap gap-1">
-            {moods.map((mood) => {
-              const colors = getMoodColors(mood);
-              return (
-                <span
-                  key={mood}
-                  className={`mood-pill-depth rounded-md border px-1.5 py-0.5 text-[10px] font-semibold shadow-sm ${colors.pillBg} ${colors.pillText} ${colors.pillBorder}`}>
-                  {mood}
-                </span>
-              );
-            })}
+          <span className="pointer-events-none absolute left-1.5 top-1.5 z-10 max-w-[calc(100%-0.75rem)] overflow-hidden">
+            <MoodNapkin
+              moods={moods}
+              size="jacket"
+              color={textColor(customization, 'moods')}
+            />
           </span>
         ) : null}
         {showBottom ? (
@@ -321,7 +316,7 @@ export function LpAlbumJacket({
             {showArtist ? (
               <span
                 className={`block truncate text-[10px] leading-tight ${
-                  showTitle ? 'mt-0.5' : ''
+                  showTitle ? 'mt-1' : ''
                 }`}
                 style={{ color: textColor(customization, 'artist') }}>
                 {artist}
@@ -329,13 +324,13 @@ export function LpAlbumJacket({
             ) : null}
             {showReason ? (
               <span
-                className="mt-1 block line-clamp-2 text-[10px] leading-snug"
+                className="napkin-hand mt-1.5 block line-clamp-2 text-[11px] leading-snug"
                 style={{ color: textColor(customization, 'reason') }}>
                 {reason}
               </span>
             ) : null}
             {showPostedAt || showSavedAt ? (
-              <span className="mt-1 block space-y-0.5 text-[9px] leading-tight">
+              <span className="mt-1.5 block space-y-0.5 text-[9px] leading-tight">
                 {showPostedAt && postedAt ? (
                   <span
                     className="block"

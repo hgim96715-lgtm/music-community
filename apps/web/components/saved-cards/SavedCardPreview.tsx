@@ -1,6 +1,5 @@
 import type { ApiSavedCardCustomization } from '@/lib/apiTypes';
 import { formatFeedDate } from '@/lib/date';
-import { getMoodColors } from '@/lib/moodColors';
 import {
   getSavedCardPlayerBarColor,
   getSavedCardTextColor,
@@ -9,6 +8,7 @@ import {
 } from '@/lib/savedCardColors';
 import { resolveSavedCardLayout } from '@/lib/savedCardLayout';
 import { savedCardFace, savedCardFaceLg } from '@/lib/neobrutal';
+import { MoodNapkin } from '@/components/recommendations/MoodNapkin';
 import {
   MusicStripControls,
   MusicStripProgress,
@@ -120,19 +120,12 @@ function PosterSavedCardPreview({
           </p>
         ) : null}
         {showMoods && data.moods.length > 0 ? (
-          <div className="flex flex-wrap gap-0.5 pt-0.5">
-            {data.moods.map((mood) => {
-              const colors = getMoodColors(mood);
-              return (
-                <span
-                  key={mood}
-                  className={`mood-pill-depth rounded border px-1 py-px font-medium ${
-                    size === 'thumb' ? 'text-[7px]' : 'text-[9px]'
-                  } ${colors.pillBg} ${colors.pillText} ${colors.pillBorder}`}>
-                  {mood}
-                </span>
-              );
-            })}
+          <div className="pt-0.5">
+            <MoodNapkin
+              moods={data.moods}
+              size={size === 'thumb' ? 'jacketThumb' : 'jacket'}
+              color={getSavedCardTextColor(customization, 'moods')}
+            />
           </div>
         ) : null}
       </div>
@@ -206,23 +199,12 @@ function MusicStripSavedCardPreview({
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
         <div className="relative min-h-0 flex-[1.35]">
           {showMoods && data.moods.length > 0 ? (
-            <div className="absolute left-2 top-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap gap-1">
-              {data.moods.map((mood) => {
-                const colors = getMoodColors(mood);
-                return (
-                  <span
-                    key={mood}
-                  className={`mood-pill-depth rounded-md border px-1.5 py-0.5 font-semibold shadow-sm ${
-                    compact
-                      ? 'text-[7px]'
-                      : comfortable
-                        ? 'text-[10px]'
-                        : 'text-[8px]'
-                  } ${colors.pillBg} ${colors.pillText} ${colors.pillBorder}`}>
-                    {mood}
-                  </span>
-                );
-              })}
+            <div className="absolute left-2 top-2 z-10 max-w-[calc(100%-1rem)]">
+              <MoodNapkin
+                moods={data.moods}
+                size={compact ? 'jacketThumb' : 'jacket'}
+                color={getSavedCardTextColor(customization, 'moods')}
+              />
             </div>
           ) : null}
         </div>
