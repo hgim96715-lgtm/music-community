@@ -220,7 +220,7 @@ export function FeedCardFooter({
       ) : null}
 
       <div
-        className={`flex items-center justify-between gap-3 border-t border-neutral-100 pt-3 ${
+        className={`flex items-center justify-between gap-3 border-t border-[rgb(201_166_107/0.12)] pt-3 ${
           moods.length > 0 ? 'mt-4' : 'mt-3'
         }`}>
         <div className="flex items-center">

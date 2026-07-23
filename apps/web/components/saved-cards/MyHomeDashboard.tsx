@@ -3,6 +3,7 @@
 import type { ApiSavedCard } from '@/lib/apiTypes';
 import { ChevronRight, Disc3, Quote } from 'lucide-react';
 import Link from 'next/link';
+import { LpAlbumJacket } from './LpAlbumJacket';
 import { LpAlbumDisc } from './LpAlbumDisc';
 import { MyHomeNav } from './MyHomeNav';
 
@@ -92,7 +93,7 @@ export function MyHomeDashboard({
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className="size-14 animate-pulse rounded-full bg-[rgb(31_26_22/0.08)]"
+                  className="size-16 animate-pulse rounded-md bg-[rgb(31_26_22/0.08)]"
                 />
               ))}
             </div>
@@ -112,10 +113,17 @@ export function MyHomeDashboard({
             <ul className="my-home-top3-slots">
               {tops.map((card) => (
                 <li key={card.id} className="my-home-top3-slot">
-                  <LpAlbumDisc
+                  <LpAlbumJacket
                     embedUrl={card.recommendation.embedUrl}
                     title={card.recommendation.title}
-                    size="md"
+                    artist={card.recommendation.artist}
+                    reason={card.recommendation.reason}
+                    moods={card.recommendation.moods}
+                    postedAt={card.recommendation.createdAt}
+                    savedAt={card.createdAt}
+                    customization={card.customization}
+                    size="sm"
+                    className="w-[4.5rem] shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
                   />
                   <span className="mt-1 max-w-[4.5rem] truncate text-[10px] font-medium text-[#6b5c4c]">
                     {card.recommendation.title}

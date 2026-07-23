@@ -46,6 +46,9 @@ export function SavedCardEditorDialog({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [decorTool, setDecorTool] = useState<'select' | 'pen'>('select');
+  const [penColor, setPenColor] = useState('#2c2418');
+  const [penWidth, setPenWidth] = useState(2.5);
 
   useEffect(() => {
     setMounted(true);
@@ -55,6 +58,7 @@ export function SavedCardEditorDialog({
     if (!open) return;
     setCustomization(buildSavedCardCustomization(defaultBackground));
     setError('');
+    setDecorTool('select');
   }, [open, defaultBackground]);
 
   if (!open || !mounted) return null;
@@ -120,6 +124,10 @@ export function SavedCardEditorDialog({
                   moods={moods}
                   postedAt={postedAt}
                   customization={customization}
+                  decorTool={decorTool}
+                  penColor={penColor}
+                  penWidth={penWidth}
+                  onCustomizationChange={setCustomization}
                   className="shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
                 />
               </div>
@@ -129,6 +137,12 @@ export function SavedCardEditorDialog({
                 setCustomization={setCustomization}
                 defaultBackground={defaultBackground}
                 onError={setError}
+                decorTool={decorTool}
+                onDecorToolChange={setDecorTool}
+                penColor={penColor}
+                onPenColorChange={setPenColor}
+                penWidth={penWidth}
+                onPenWidthChange={setPenWidth}
               />
             </div>
 

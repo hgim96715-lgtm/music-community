@@ -26,7 +26,6 @@ export function FeedDialog({
   title = '삭제하시겠습니까?',
   description = '삭제하면 되돌릴 수 없어요.',
   confirmLabel,
-  comfirmLabel,
   pendingLabel,
   cancelLabel = '취소',
   isPending = false,
@@ -37,7 +36,7 @@ export function FeedDialog({
     setMounted(true);
   }, []);
 
-  const actionLabel = confirmLabel ?? comfirmLabel ?? '삭제';
+  const actionLabel = confirmLabel ?? confirmLabel ?? '삭제';
   const actionPendingLabel = pendingLabel ?? `${actionLabel} 중…`;
 
   useEffect(() => {

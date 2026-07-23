@@ -2,9 +2,12 @@
 
 export const postCardShell = 'post-card-shell';
 export const postCard = 'post-card';
+/** 레거시 가로 미니바 — 피드 idle은 lpStage 사용 */
 export const trackCard = 'track-card';
+/** 피드 idle — 세로 LP 히어로 */
+export const lpStage = 'lp-stage';
 export const playButton = 'play-button';
-/** 펼친 embed · fallback — track-card와 동일 톤 (#fafafa · soft shadow) */
+/** 펼친 embed · fallback — 종이 톤 soft shadow */
 export const embedPlayerShell = 'embed-player-shell';
 export const embedPlayerFooter = 'embed-player-footer';
 
@@ -21,10 +24,10 @@ export const savedCardChip = 'saved-card-chip';
 export const albumBookWrap = 'album-book-wrap';
 export const albumBook = 'album-book';
 
-/** P0 피드 헤더·뒤판 — 종이·잉크 고정 (mood 색은 MoodPill만) */
+/** P0 피드 — quiet 다크 글래스 · mood는 MoodPill만 */
 export const neoHeaderDefault = {
-  band: 'bg-[#ebe3d8]',
-  text: 'text-[#1a1410]',
-  muted: 'text-[#3d342c]',
+  band: 'bg-transparent',
+  text: 'text-[#ebe4da]',
+  muted: 'text-[#a89880]',
   cardBack: 'var(--color-brand-card-back)',
 };

@@ -67,6 +67,38 @@ class SavedCardStickerDto {
   scale: number;
 }
 
+class SavedCardStrokePointDto {
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  x: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  y: number;
+}
+
+class SavedCardStrokeDto {
+  @IsString()
+  @MaxLength(64)
+  id: string;
+
+  @IsString()
+  @MaxLength(32)
+  color: string;
+
+  @IsNumber()
+  @Min(0.5)
+  @Max(24)
+  width: number;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SavedCardStrokePointDto)
+  points: SavedCardStrokePointDto[];
+}
+
 class SavedCardTextColorsDto {
   @IsOptional()
   @IsString()
@@ -153,6 +185,12 @@ export class SavedCardCustomizationDto {
   @ValidateNested({ each: true })
   @Type(() => SavedCardStickerDto)
   stickers?: SavedCardStickerDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SavedCardStrokeDto)
+  strokes?: SavedCardStrokeDto[];
 }
 
 export class CreateSavedCardDto {

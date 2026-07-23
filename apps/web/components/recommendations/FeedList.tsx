@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { FriendIdsProvider } from '@/components/friends/FriendIdsContext';
 import { FeedCard } from './FeedCard';
 import { FeedHeader } from './FeedHeader';
+import { FeedNoteDivider } from './FeedNoteDivider';
 import { SavedCardsFeedProvider } from '@/components/saved-cards/SavedCardsFeedContext';
 import { AvatarActionProvider } from '../friends/AvatarActionContext';
 
@@ -101,9 +102,10 @@ export function FeedList() {
       <AvatarActionProvider>
         <SavedCardsFeedProvider>
           <FeedHeader />
-          <ul className="flex flex-col gap-10 pb-2">
-            {items.map((item) => (
-              <li key={item.id}>
+          <ul className="flex flex-col gap-5 pb-2">
+            {items.map((item, index) => (
+              <li key={item.id} className="flex flex-col gap-5">
+                {index > 0 ? <FeedNoteDivider /> : null}
                 <FeedCard recommendation={item} onDeleted={handleDeleted} />
               </li>
             ))}

@@ -12,12 +12,13 @@ import {
   savedCardChip,
   savedCardFormSection,
 } from '@/lib/neobrutal';
-import { ImagePlus, Loader2, Palette } from 'lucide-react';
+import type { JacketDecorTool } from './LpAlbumJacket';
+import { Eraser, ImagePlus, Loader2, Palette, Pencil, Smile, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 const BG_PRESETS = ['#ebe3d8', '#f3ebe3', '#d4c4a8', '#3a322a', '#2a2218'];
 const TEXT_PRESETS = ['#ffffff', '#ebe4da', '#171717', '#c9a66b', '#f3ebe3'];
-
+const QUICK_EMOJIS = ['😎', '💜', '🎵', '✨', '😭', '🔥', '🥹', '✍️', '🌙', '💫'];
 const DISPLAY_FIELDS = [
   { key: 'title' as const, label: '제목' },
   { key: 'artist' as const, label: '아티스트' },
@@ -110,6 +111,13 @@ type SavedCardCustomizationFormProps = {
   >;
   defaultBackground?: string;
   onError?: (message: string) => void;
+  /** 14.6++ 미리보기 연동 */
+  decorTool?: JacketDecorTool;
+  onDecorToolChange?: (tool: JacketDecorTool) => void;
+  penColor?: string;
+  onPenColorChange?: (color: string) => void;
+  penWidth?: number;
+  onPenWidthChange?: (width: number) => void;
 };
 
 export function SavedCardCustomizationForm({
@@ -117,8 +125,15 @@ export function SavedCardCustomizationForm({
   setCustomization,
   defaultBackground,
   onError,
+  decorTool = 'select',
+  onDecorToolChange,
+  penColor = '#2c2418',
+  onPenColorChange,
+  penWidth = 2.5,
+  onPenWidthChange,
 }: SavedCardCustomizationFormProps) {
   const [imageLoading, setImageLoading] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const visibleTextColorFields = TEXT_COLOR_FIELDS.filter(({ key }) =>
@@ -179,10 +194,136 @@ export function SavedCardCustomizationForm({
     });
   }
 
+  function addSticker(emoji: string) {
+    setCustomization((prev) => ({
+      ...prev,
+      stickers: [
+        ...(prev.stickers ?? []),
+        {
+          assetId: emoji,
+          x: 0.45 + Math.random() * 0.1,
+          y: 0.35 + Math.random() * 0.1,
+          rotation: 0,
+          scale: 0.85 + Math.random() * 0.3,
+        },
+      ],
+    }));
+    setShowEmojis(false);
+    onDecorToolChange?.('select');
+  }
+
+  function undoStroke() {
+    setCustomization((prev) => ({
+      ...prev,
+      strokes: (prev.strokes ?? []).slice(0, -1),
+    }));
+  }
+
+  function clearStrokes() {
+    setCustomization((prev) => ({ ...prev, strokes: [] }));
+  }
+
+  function clearStickers() {
+    setCustomization((prev) => ({ ...prev, stickers: [] }));
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <section className={savedCardFormSection}>
-        <h3 className="text-xs font-semibold text-brand-primary">표시할 내용</h3>
+        <h3 className="text-xs font-semibold text-brand-primary">
+          스티커 · 연필
+        </h3>
+        <p className="mt-1 text-[11px] text-neutral-500">
+          미리보기 표지 위에 붙이거나 그려 주세요 · 스티커 더블탭=삭제
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={showEmojis}
+            onClick={() => {
+              setShowEmojis((v) => !v);
+              onDecorToolChange?.('select');
+            }}
+            className={`${savedCardChip} inline-flex items-center gap-1`}>
+            <Smile className="size-3.5" aria-hidden />
+            이모지
+          </button>
+          <button
+            type="button"
+            aria-pressed={decorTool === 'pen'}
+            onClick={() => {
+              setShowEmojis(false);
+              onDecorToolChange?.(decorTool === 'pen' ? 'select' : 'pen');
+            }}
+            className={`${savedCardChip} inline-flex items-center gap-1`}>
+            <Pencil className="size-3.5" aria-hidden />
+            연필
+          </button>
+          <button
+            type="button"
+            onClick={undoStroke}
+            className={`${savedCardChip} inline-flex items-center gap-1`}>
+            <Eraser className="size-3.5" aria-hidden />
+            되돌리기
+          </button>
+          <button
+            type="button"
+            onClick={clearStrokes}
+            className={`${savedCardChip} inline-flex items-center gap-1`}>
+            <Trash2 className="size-3.5" aria-hidden />
+            낙서 지우기
+          </button>
+          {(customization.stickers?.length ?? 0) > 0 ? (
+            <button
+              type="button"
+              onClick={clearStickers}
+              className="rounded-full px-3 py-1.5 text-[11px] text-neutral-500 hover:text-red-600">
+              스티커 전부 지우기
+            </button>
+          ) : null}
+        </div>
+        {showEmojis ? (
+          <div className="mt-3 flex flex-wrap gap-2 rounded-xl border border-neutral-200 bg-white/60 p-3">
+            {QUICK_EMOJIS.map((e) => (
+              <button
+                key={e}
+                type="button"
+                className="text-2xl"
+                onClick={() => addSticker(e)}>
+                {e}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {decorTool === 'pen' ? (
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-neutral-600">
+            <label className="flex items-center gap-2">
+              색
+              <input
+                type="color"
+                value={penColor}
+                onChange={(e) => onPenColorChange?.(e.target.value)}
+              />
+            </label>
+            <label className="flex items-center gap-2">
+              굵기
+              <input
+                type="range"
+                min={1}
+                max={8}
+                step={0.5}
+                value={penWidth}
+                onChange={(e) => onPenWidthChange?.(Number(e.target.value))}
+              />
+            </label>
+          </div>
+        ) : null}
+      </section>
+
+      <section className={savedCardFormSection}>
+        <h3 className="text-xs font-semibold text-brand-primary">
+          표시할 내용
+        </h3>
         <p className="mt-1 text-[11px] text-neutral-500">
           자켓에 보일 내용을 골라 주세요
         </p>
@@ -220,7 +361,8 @@ export function SavedCardCustomizationForm({
                   <ColorSwatches
                     size="sm"
                     value={
-                      customization.textColors?.[key] ?? DEFAULT_TEXT_COLORS[key]
+                      customization.textColors?.[key] ??
+                      DEFAULT_TEXT_COLORS[key]
                     }
                     presets={TEXT_PRESETS}
                     onChange={(color) => setTextColor(key, color)}
@@ -291,7 +433,10 @@ export function SavedCardCustomizationForm({
               <span className="flex items-center justify-between text-[11px] font-medium text-neutral-600">
                 투명도
                 <span className="tabular-nums text-neutral-400">
-                  {Math.round((customization.backgroundImageOpacity ?? 1) * 100)}%
+                  {Math.round(
+                    (customization.backgroundImageOpacity ?? 1) * 100,
+                  )}
+                  %
                 </span>
               </span>
               <input

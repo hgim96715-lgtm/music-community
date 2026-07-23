@@ -9,6 +9,7 @@ import {
 } from '@/lib/albumShelfStorage';
 import { useCallback, useMemo, useState } from 'react';
 import { LpAlbumDisc } from './LpAlbumDisc';
+import { LpAlbumJacket } from './LpAlbumJacket';
 
 type SavedCardAlbumBookProps = {
   cards: ApiSavedCard[];
@@ -228,10 +229,17 @@ export function SavedCardAlbumBook({
                           : `Top ${rank} 비어 있음`
                       }>
                       {card ? (
-                        <LpAlbumDisc
+                        <LpAlbumJacket
                           embedUrl={card.recommendation.embedUrl}
                           title={card.recommendation.title}
-                          size="lg"
+                          artist={card.recommendation.artist}
+                          reason={card.recommendation.reason}
+                          moods={card.recommendation.moods}
+                          postedAt={card.recommendation.createdAt}
+                          savedAt={card.createdAt}
+                          customization={card.customization}
+                          size="md"
+                          className="w-[6.5rem] shadow-[0_3px_12px_rgba(0,0,0,0.2)] sm:w-[7.5rem]"
                         />
                       ) : (
                         <LpAlbumDisc size="lg" empty label={`#${rank}`} />

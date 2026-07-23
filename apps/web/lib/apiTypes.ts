@@ -61,11 +61,19 @@ export type ApiSavedCardDisplay = {
 };
 
 export type ApiSavedCardSticker = {
+  /** 유니코드 이모지 또는 프리셋 id */
   assetId: string;
   x: number;
   y: number;
   rotation: number;
   scale: number;
+};
+
+export type ApiSavedCardStroke = {
+  id: string;
+  color: string;
+  width: number;
+  points: { x: number; y: number }[];
 };
 
 export type ApiSavedCardTextColors = {
@@ -88,6 +96,8 @@ export type ApiSavedCardCustomization = {
   playerBar?: string;
   textColors?: ApiSavedCardTextColors;
   stickers?: ApiSavedCardSticker[];
+  /** 14.6++ 연필 낙서 */
+  strokes?: ApiSavedCardStroke[];
 };
 
 export type ApiSavedCardRecommendation = {
@@ -131,6 +141,7 @@ export type ApiSavedLyricBody = {
   startSec?: number;
   endSec?: number;
 };
+
 export type UpdateSavedLyricBody = {
   lyricsText?: string;
   note?: string | null;

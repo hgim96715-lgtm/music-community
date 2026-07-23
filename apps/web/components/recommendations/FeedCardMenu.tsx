@@ -68,7 +68,7 @@ export function FeedCardMenu({
         aria-expanded={open}
         className={
           variant === 'neo'
-            ? '-mr-1 rounded-md p-1 text-neutral-700 transition-colors hover:bg-black/[0.06]'
+            ? '-mr-1 rounded-md p-1 text-[#a89880] transition-colors hover:bg-white/[0.06] hover:text-[#ebe4da]'
             : '-mr-1 rounded-full p-1 text-neutral-400 transition-colors hover:bg-neutral-100/80 hover:text-neutral-700'
         }>
         <Ellipsis

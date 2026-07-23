@@ -27,7 +27,6 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
     createdAt,
   } = recommendation;
 
-  /* P0: mood 색은 MoodPill만 — 헤더·cardBack은 종이·잉크 고정 */
   const { band, text, muted, cardBack } = neoHeaderDefault;
 
   return (
@@ -36,16 +35,16 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
       style={{ '--card-back': cardBack } as CSSProperties}>
       <article className={postCard}>
         <header
-          className={`flex items-center justify-between gap-3 border-b border-[rgb(42_34_28/0.12)] px-4 py-3 ${band}`}>
+          className={`flex items-center justify-between gap-3 border-b border-[rgb(201_166_107/0.12)] px-4 py-2.5 ${band}`}>
           <FeedAuthorNickname
             userId={author.id}
             nickname={author.nickname}
-            className={`text-sm font-semibold leading-5 [font-family:ui-sans-serif,system-ui,sans-serif] ${text}`}
+            className={`text-[0.8125rem] font-semibold leading-5 tracking-tight ${text}`}
           />
 
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-0.5">
             <time
-              className={`text-xs font-medium leading-5 opacity-80 ${muted}`}
+              className={`text-[0.6875rem] font-medium leading-5 ${muted}`}
               dateTime={createdAt}>
               {formatFeedDate(createdAt)}
             </time>
@@ -62,7 +61,7 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
         <div className="p-4">
           <FeedCardMedia embedUrl={embedUrl} title={title} artist={artist} />
 
-          <p className="mt-3.5 break-words whitespace-pre-line font-sans text-[0.9375rem] font-normal leading-[1.65] text-neutral-700 [overflow-wrap:anywhere]">
+          <p className="mt-3.5 break-words whitespace-pre-line font-sans text-[0.9375rem] font-normal leading-[1.65] text-[#d4c8b8] [overflow-wrap:anywhere]">
             {reason}
           </p>
 

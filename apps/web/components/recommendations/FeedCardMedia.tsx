@@ -9,12 +9,7 @@ import {
   spotifyEmbedHeight,
   youtubeWatchUrl,
 } from '@/lib/embedMedia';
-import {
-  embedPlayerFooter,
-  embedPlayerShell,
-  playButton,
-  trackCard,
-} from '@/lib/neobrutal';
+import { embedPlayerFooter, embedPlayerShell } from '@/lib/neobrutal';
 import { ChevronUp, Music2, Play } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -123,45 +118,57 @@ export function FeedCardMedia({ embedUrl, title, artist }: FeedCardMediaProps) {
       ? 'Spotify'
       : preview.platform === 'youtube'
         ? 'YouTube'
-        : '재생';
+        : null;
 
+  /* quiet 트랙 — 밝은 베이지 면 ❌ · 얇은 브라스 라인만 */
   return (
     <button
       type="button"
       onClick={() => setPlaying(true)}
-      className={trackCard}>
-      {thumbnailUrl ? (
-        <span className="lp-disc" aria-hidden>
-          <img src={thumbnailUrl} alt="" />
-          <span className="lp-disc-label" />
-        </span>
-      ) : (
-        <span className="lp-disc lp-disc-fallback" aria-hidden>
-          {preview.platform === 'spotify' ? (
-            <span className="relative z-[1] font-sans text-[0.5rem] font-semibold tracking-wide text-neutral-400">
-              {platformLabel}
-            </span>
-          ) : (
-            <Music2 className="relative z-[1] h-5 w-5" aria-hidden />
-          )}
-          <span className="lp-disc-label" />
-        </span>
-      )}
+      className="group flex w-full min-w-0 items-center gap-3 rounded-xl border border-[rgb(201_166_107/0.14)] bg-[rgb(255_255_255/0.04)] px-2.5 py-2 text-left transition-colors hover:border-[rgb(201_166_107/0.28)] hover:bg-[rgb(255_255_255/0.07)]">
+      <span className="relative flex size-12 shrink-0 items-center justify-center">
+        {thumbnailUrl ? (
+          <span
+            className="lp-disc absolute inset-0 size-full motion-safe:group-hover:animate-[lp-spin_12s_linear_infinite]"
+            aria-hidden>
+            <img src={thumbnailUrl} alt="" />
+            <span className="lp-disc-label" />
+          </span>
+        ) : (
+          <span
+            className="lp-disc lp-disc-fallback absolute inset-0 size-full motion-safe:group-hover:animate-[lp-spin_12s_linear_infinite]"
+            aria-hidden>
+            <Music2 className="relative z-[1] size-3.5 text-[#a89880]" />
+            <span className="lp-disc-label" />
+          </span>
+        )}
+      </span>
+
       <span className="min-w-0 flex-1 overflow-hidden font-sans">
         <span
-          className="block truncate text-sm font-semibold text-neutral-900"
+          className="block truncate text-sm font-semibold text-[#ebe4da]"
           title={title}>
           {title}
         </span>
         <span
-          className="mt-0.5 block truncate text-xs font-normal text-neutral-500"
+          className="mt-0.5 block truncate text-xs font-medium text-[#a89880]"
           title={artist}>
           {artist}
+          {platformLabel ? (
+            <span className="text-[#8a7a68]">
+              {' '}
+              · {platformLabel}
+            </span>
+          ) : null}
         </span>
       </span>
-      <span className={playButton} aria-hidden>
-        <Play className="h-3.5 w-3.5 fill-current" />
+
+      <span
+        className="grid size-8 shrink-0 place-items-center rounded-full border border-[rgb(201_166_107/0.28)] text-[#c9a66b] transition-colors duration-150 group-hover:border-[rgb(201_166_107/0.45)] group-hover:bg-[rgb(201_166_107/0.1)]"
+        aria-hidden>
+        <Play className="size-3 fill-current" />
       </span>
+
       <span className="sr-only">
         {title} · {artist} 재생
       </span>

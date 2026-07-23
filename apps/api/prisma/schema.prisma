@@ -313,6 +313,7 @@ model SavedLyric{
     note String?
     startSec Int?
     endSec Int?
+    customization Json?
     createdAt DateTime @default(now()) @db.Timestamptz(3)
     updatedAt DateTime @updatedAt @db.Timestamptz(3)
 

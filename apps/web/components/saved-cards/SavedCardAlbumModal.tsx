@@ -43,6 +43,9 @@ export function SavedCardAlbumModal({
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState('');
+  const [decorTool, setDecorTool] = useState<'select' | 'pen'>('select');
+  const [penColor, setPenColor] = useState('#2c2418');
+  const [penWidth, setPenWidth] = useState(2.5);
 
   useEffect(() => {
     setMounted(true);
@@ -51,7 +54,10 @@ export function SavedCardAlbumModal({
   useEffect(() => {
     if (!open || !card) return;
     setMode('view');
-    setCustomization(asJacketCustomization(structuredClone(card.customization)));
+    setDecorTool('select');
+    setCustomization(
+      asJacketCustomization(structuredClone(card.customization)),
+    );
   }, [open, card]);
 
   if (!open || !mounted || !card || !customization) return null;
@@ -133,6 +139,12 @@ export function SavedCardAlbumModal({
                   postedAt={card.recommendation.createdAt}
                   savedAt={card.createdAt}
                   customization={customization}
+                  decorTool={mode === 'edit' ? decorTool : 'select'}
+                  penColor={penColor}
+                  penWidth={penWidth}
+                  onCustomizationChange={
+                    mode === 'edit' ? updateCustomization : undefined
+                  }
                   className="shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
                 />
               </div>
@@ -142,6 +154,12 @@ export function SavedCardAlbumModal({
                     customization={customization}
                     setCustomization={updateCustomization}
                     onError={setError}
+                    decorTool={decorTool}
+                    onDecorToolChange={setDecorTool}
+                    penColor={penColor}
+                    onPenColorChange={setPenColor}
+                    penWidth={penWidth}
+                    onPenWidthChange={setPenWidth}
                   />
                 </div>
               ) : null}
@@ -212,7 +230,7 @@ export function SavedCardAlbumModal({
         isPending={deleting}
         title="앨범에서 삭제할까요?"
         description="자켓만 지워지고 피드 글은 남아요."
-        comfirmLabel="삭제"
+        confirmLabel="삭제"
       />
     </>,
     document.body,
