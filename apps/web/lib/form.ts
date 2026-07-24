@@ -1,4 +1,4 @@
-/** 인증·작성 폼 — pill 스타일 (로그인·회원가입·/new 공용 예정) */
+/** 인증·작성 폼 — LP 톤 (흰 pill ❌ · brass border · 잉크 패널) */
 
 export const authPageClassName =
   'mx-auto flex min-h-screen max-w-lg flex-col bg-brand-bg px-5 py-10';
@@ -7,10 +7,10 @@ export const authTitleClassName =
   'text-2xl font-semibold text-brand-primary';
 
 export const pillInputClassName =
-  'w-full rounded-full border border-neutral-200 bg-white py-2.5 text-sm text-neutral-900 outline-none transition-[border-color,box-shadow] placeholder:text-neutral-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20';
+  'w-full rounded-full border border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.9)] py-2.5 text-sm text-[#ebe4da] outline-none transition-[border-color,box-shadow] placeholder:text-[#a89880]/65 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/25';
 
 export const pillTextareaClassName =
-  'w-full resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition-[border-color,box-shadow] placeholder:text-neutral-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20';
+  'w-full resize-none rounded-2xl border border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.9)] px-4 py-3 text-sm text-[#ebe4da] outline-none transition-[border-color,box-shadow] placeholder:text-[#a89880]/65 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/25';
 
 export const formLegendClassName = 'text-sm font-medium text-brand-primary';
 
@@ -38,13 +38,13 @@ export const feedNicknameLinkClassName =
   'inline max-w-full truncate rounded-full px-1.5 py-0.5 font-semibold no-underline transition-colors hover:bg-black/[0.06] active:opacity-80';
 
 export const fieldHintClassName =
-  'mt-1.5 px-1 text-xs leading-relaxed text-neutral-500';
+  'mt-1.5 px-1 text-xs leading-relaxed text-[color:var(--color-lp-muted)]';
 
 export const fieldSuccessClassName =
-  'mt-1.5 px-1 text-xs leading-relaxed text-emerald-600';
+  'mt-1.5 px-1 text-xs leading-relaxed text-emerald-500';
 
 export const fieldErrorClassName =
-  'mt-1.5 px-1 text-xs leading-relaxed text-red-500';
+  'mt-1.5 px-1 text-xs leading-relaxed text-red-400';
 
 export const pillInputErrorClassName =
-  'border-red-400 focus:border-red-500 focus:ring-red-500/20';
+  'border-red-400/70 focus:border-red-400 focus:ring-red-400/20';

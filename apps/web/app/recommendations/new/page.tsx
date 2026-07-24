@@ -13,8 +13,17 @@ import {
   formLegendClassName,
   fieldHintClassName,
 } from '@/lib/form';
-import { napkinHandClassName } from '@/lib/napkinFont';
-import { MAX_MOODS, MIN_MOODS, MOODS, type Mood } from '@/lib/moods';
+import {
+  napkinHandClassName,
+  napkinMoodInputClassName,
+} from '@/lib/napkinFont';
+import {
+  isValidMood,
+  MAX_MOOD_LEN,
+  MAX_MOODS,
+  MIN_MOODS,
+  MOODS,
+} from '@/lib/moods';
 import { buildLoginHref } from '@/lib/redirect';
 import {
   MAX_ARTIST_LENGTH,
@@ -42,7 +51,8 @@ type FormState = {
 export default function NewRecommendationPage() {
   const router = useRouter();
   const embedUrlNoticeId = useId();
-  const [selectedMoods, setSelectedMoods] = useState<Mood[]>([]);
+  const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
+  const [customMood, setCustomMood] = useState('');
 
   useEffect(() => {
     if (!getApiAccessToken()) {
@@ -50,12 +60,23 @@ export default function NewRecommendationPage() {
     }
   }, [router]);
 
-  function toggleMood(mood: Mood) {
+  function toggleMood(mood: string) {
     setSelectedMoods((prev) => {
       if (prev.includes(mood)) return prev.filter((m) => m !== mood);
       if (prev.length >= MAX_MOODS) return prev;
       return [...prev, mood];
     });
+  }
+
+  function commitCustomMood() {
+    const t = customMood.trim();
+    if (!isValidMood(t)) return;
+    setSelectedMoods((prev) => {
+      if (prev.includes(t)) return prev;
+      if (prev.length >= MAX_MOODS) return prev;
+      return [...prev, t];
+    });
+    setCustomMood('');
   }
 
   async function submitRecommendation(
@@ -65,7 +86,13 @@ export default function NewRecommendationPage() {
     const moods = formData.getAll('moods') as string[];
     if (moods.length < MIN_MOODS || moods.length > MAX_MOODS) {
       return {
-        message: `${MIN_MOODS}~${MAX_MOODS}개의 분위기를 선택해주세요.`,
+        message: `무드를 ${MIN_MOODS}~${MAX_MOODS}개 선택해주세요.`,
+        moodError: true,
+      };
+    }
+    if (!moods.every(isValidMood)) {
+      return {
+        message: '무드는 1~8자로 입력해주세요.',
         moodError: true,
       };
     }
@@ -132,7 +159,7 @@ export default function NewRecommendationPage() {
             id={embedUrlNoticeId}
             className={`${fieldHintClassName} flex gap-1.5`}>
             <Info
-              className="size-4 shrink-0 mt-0.5 text-neutral-400"
+              className="size-4 shrink-0 mt-0.5 text-[#a89880]"
               aria-hidden
             />
             <span>
@@ -170,9 +197,9 @@ export default function NewRecommendationPage() {
         />
         <fieldset>
           <legend className={formLegendClassName}>
-            분위기 ({MIN_MOODS}~{MAX_MOODS}개)
+            {`무드를 ${MIN_MOODS}~${MAX_MOODS}개 선택해주세요.`}
           </legend>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-wrap items-end gap-2">
             {MOODS.map((mood) => (
               <MoodPicker
                 key={mood}
@@ -181,7 +208,35 @@ export default function NewRecommendationPage() {
                 onToggle={() => toggleMood(mood)}
               />
             ))}
+            {selectedMoods
+              .filter((m) => !(MOODS as readonly string[]).includes(m))
+              .map((mood) => (
+                <MoodPicker
+                  key={mood}
+                  mood={mood}
+                  selected
+                  onToggle={() => toggleMood(mood)}
+                />
+              ))}
+            <input
+              type="text"
+              value={customMood}
+              maxLength={MAX_MOOD_LEN}
+              placeholder="직접 쓰기"
+              aria-label="무드 직접 입력"
+              onChange={(e) => setCustomMood(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  commitCustomMood();
+                }
+              }}
+              className={napkinMoodInputClassName}
+            />
           </div>
+          <p className={`${fieldHintClassName} mt-1.5`}>
+            직접 쓴 뒤 Enter · 최대 {MAX_MOOD_LEN}자
+          </p>
           {selectedMoods.map((mood) => (
             <input key={mood} type="hidden" name="moods" value={mood} />
           ))}

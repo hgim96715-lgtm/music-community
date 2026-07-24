@@ -55,7 +55,7 @@ export function PillEmailInput({
       <div className="flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
           <Mail
-            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a89880]"
             aria-hidden
           />
           <input
@@ -71,7 +71,7 @@ export function PillEmailInput({
             className={`${inputClass()} pl-10 pr-4`}
           />
         </div>
-        <span className="shrink-0 text-sm font-medium text-neutral-500">@</span>
+        <span className="shrink-0 text-sm font-medium text-[#a89880]">@</span>
         {isCustom ? (
           <input
             id={customDomainId}

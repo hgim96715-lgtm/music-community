@@ -19,3 +19,11 @@ export type Mood = (typeof MOODS)[number];
 
 export const MIN_MOODS = 1;
 export const MAX_MOODS = 3;
+
+/** free-text 한 칸 최대 글자 (공백 trim 후) — Nest MAX_MOOD_LEN 과 동일 */
+export const MAX_MOOD_LEN = 8;
+
+export function isValidMood(value: string): boolean {
+  const t = value.trim();
+  return t.length >= 1 && t.length <= MAX_MOOD_LEN;
+}

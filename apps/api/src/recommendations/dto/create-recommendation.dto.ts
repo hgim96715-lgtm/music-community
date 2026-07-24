@@ -2,14 +2,14 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
-  IsIn,
   IsNotEmpty,
   IsString,
   IsUrl,
   MaxLength,
+  ValidateBy,
 } from 'class-validator';
 
-import { MAX_MOODS, MIN_MOODS, MOOD_VALUES } from '../constants/moods';
+import { isValidMood, MAX_MOODS, MIN_MOODS } from '../constants/moods';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
@@ -47,17 +47,27 @@ export class CreateRecommendationDto {
   @IsNotEmpty()
   reason: string;
 
-  /** 분위기 1~3개 — MOODS 단일 소스 */
+  /** 무드 1~3개 — 프리셋 + free-text (길이만) */
   @ApiProperty({
     type: [String],
-    enum: MOOD_VALUES,
     minItems: MIN_MOODS,
     maxItems: MAX_MOODS,
-    example: ['새벽', '운전'],
+    example: ['새벽', '출퇴근'],
   })
   @IsArray()
   @ArrayMinSize(MIN_MOODS)
   @ArrayMaxSize(MAX_MOODS)
-  @IsIn(MOOD_VALUES, { each: true })
+  @IsString({ each: true })
+  @ValidateBy(
+    {
+      name: 'isMood',
+      validator: {
+        validate: (value: unknown) =>
+          typeof value === 'string' && isValidMood(value),
+        defaultMessage: () => '무드는 1~8자로 입력해주세요.',
+      },
+    },
+    { each: true },
+  )
   moods: string[];
 }

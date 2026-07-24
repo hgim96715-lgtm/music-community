@@ -45,6 +45,19 @@
     min-height: 100%;
   }
 
+  /* 브라우저 autofill이 흰 배경으로 덮는 것 방지 — LP pill */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: #ebe4da;
+    caret-color: #ebe4da;
+    box-shadow: 0 0 0 1000px rgb(42 36 30) inset;
+    transition: background-color 99999s ease-out;
+  }
+
   .napkin-hand {
     font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', cursive;
     font-weight: 400;

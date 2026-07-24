@@ -27,10 +27,11 @@ const FIELD_MESSAGES: Record<string, Partial<Record<string, string>>> = {
     maxLength: '추천 이유는 200자 이하여야 합니다.',
   },
   moods: {
-    arrayMinSize: '분위기를 1개 이상 선택해주세요.',
-    arrayMaxSize: '분위기는 최대 3개까지 선택할 수 있어요.',
-    isIn: '올바른 분위기를 선택해주세요.',
+    arrayMinSize: '무드를 1개 이상 선택해주세요.',
+    arrayMaxSize: '무드는 최대 3개까지 선택할 수 있어요.',
+    isMood: '무드는 1~8자로 입력해주세요.',
   },
+
   fromEmail: {
     isEmail: '올바른 회신 이메일을 입력해주세요.',
   },
