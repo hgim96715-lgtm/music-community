@@ -1,5 +1,5 @@
 'use client';
-import { brandPillBtn, dialogBack, dialogPanel } from '@/lib/neobrutal';
+import { brandPillBtn, dialogPanel } from '@/lib/neobrutal';
 import { getWelcomeCopy, WelcomeCopy } from '@/lib/welcomeCopy';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -53,7 +53,6 @@ export function WelcomeDialog({
       <div
         className="relative w-full max-w-sm"
         onClick={(e) => e.stopPropagation()}>
-        <div className={dialogBack} aria-hidden />
         <div className={`${dialogPanel} p-6`}>
           <p className="text-center text-2xl" aria-hidden>
             👋
@@ -63,7 +62,7 @@ export function WelcomeDialog({
             className="mt-2 text-center text-lg font-semibold text-brand-primary">
             {nickname}님, 안녕하세요
           </h2>
-          <p className="mt-2 text-center text-sm leading-relaxed text-neutral-600">
+          <p className="mt-2 text-center text-sm leading-relaxed text-[#a89880]">
             {copy.greeting}
             <br />
             {copy.wish}
@@ -78,7 +77,7 @@ export function WelcomeDialog({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full py-2 text-sm font-medium text-neutral-500 transition-colors hover:text-brand-primary">
+              className="rounded-full py-2 text-sm font-medium text-[#a89880] transition-colors hover:text-brand-primary">
               닫기
             </button>
           </div>

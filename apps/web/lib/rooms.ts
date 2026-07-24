@@ -84,7 +84,7 @@ export type ApiRoomMessage = {
   lyricEndSec: number | null;
 };
 
-/** 공백·쉼표 구분 · `#` 제거 · 최대 8개 */
+/** 공백·쉼표 구분 · 레거시 `#` 제거 · 최대 8개 */
 export function parseTopicTags(raw: string): string[] {
   return raw
     .split(/[\s,]+/)

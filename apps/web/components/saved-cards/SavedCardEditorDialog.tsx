@@ -6,7 +6,7 @@ import {
   buildSavedCardCustomization,
   prepareSavedCardCustomization,
 } from '@/lib/savedCardDefaults';
-import { brandPillBtn, dialogBack, dialogPanel } from '@/lib/neobrutal';
+import { brandPillBtn, dialogPanel } from '@/lib/neobrutal';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -96,7 +96,6 @@ export function SavedCardEditorDialog({
       <div
         className="relative w-full max-w-lg"
         onClick={(e) => e.stopPropagation()}>
-        <div className={dialogBack} aria-hidden />
         <div className={`${dialogPanel} flex max-h-[92vh] flex-col overflow-hidden`}>
           <div className="shrink-0 border-b border-neutral-100 px-6 pb-4 pt-6 text-center">
             <h2

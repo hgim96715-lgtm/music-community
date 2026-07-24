@@ -127,13 +127,13 @@ export function RoomLyricShareSheet({
         onClose();
       }}>
       <div
-        className="flex max-h-[78vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[14px] bg-[#f3ebe3] shadow-[0_8px_32px_rgba(0,0,0,0.18)] sm:rounded-[14px]"
+        className="room-sheet flex max-h-[78vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[14px] sm:rounded-[14px]"
         onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-[rgb(31_26_22/0.1)] px-4 py-3">
-          <h2 className="text-[15px] font-semibold text-[#1a1410]">
+        <div className="border-b border-[rgb(201_166_107/0.18)] px-4 py-3">
+          <h2 className="text-[15px] font-semibold text-[#ebe3d8]">
             {picked ? '가사 적기' : '가사 공유'}
           </h2>
-          <p className="mt-0.5 text-[12px] text-[#6b5c4c]">
+          <p className="mt-0.5 text-[12px] text-[#a89880]">
             {picked
               ? `${picked.title} · ${picked.artist}`
               : '곡을 고른 뒤 가사를 붙여넣으세요'}
@@ -142,11 +142,11 @@ export function RoomLyricShareSheet({
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
           {!picked ? (
             loading ? (
-              <Loader2 className="mx-auto my-8 size-5 animate-spin text-[#8a7048]" />
+              <Loader2 className="mx-auto my-8 size-5 animate-spin text-brand-primary" />
             ) : error ? (
               <p className="py-6 text-center text-sm text-red-600">{error}</p>
             ) : mine.length === 0 ? (
-              <p className="py-8 text-center text-sm text-[#6b5c4c]">
+              <p className="py-8 text-center text-sm text-[#a89880]">
                 공유할 내 추천 글이 없어요
               </p>
             ) : (
@@ -181,7 +181,7 @@ export function RoomLyricShareSheet({
                 }}
               />
               <label className="block">
-                <span className="text-[12px] font-medium text-[#6b5c4c]">
+                <span className="text-[12px] font-medium text-[#a89880]">
                   가사
                 </span>
                 <textarea
@@ -189,12 +189,12 @@ export function RoomLyricShareSheet({
                   onChange={(e) => setLyrics(e.target.value)}
                   rows={4}
                   placeholder="이 소절을 붙여넣으세요"
-                  className="mt-1.5 w-full resize-none rounded-xl border border-[rgb(31_26_22/0.12)] bg-[#f7f1e8] px-3 py-2.5 text-sm text-[#1a1410] placeholder:text-[#a89880] focus:outline-none focus:ring-2 focus:ring-[rgb(138_112_72/0.35)]"
+                  className="mt-1.5 w-full resize-none rounded-xl border border-[rgb(201_166_107/0.28)] bg-[rgb(26_22_18/0.55)] px-3 py-2.5 text-sm text-[#ebe3d8] placeholder:text-[#8a8070] focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
                 />
               </label>
               <div className="flex gap-2">
                 <label className="min-w-0 flex-1">
-                  <span className="text-[12px] font-medium text-[#6b5c4c]">
+                  <span className="text-[12px] font-medium text-[#a89880]">
                     시작 (선택)
                   </span>
                   <input
@@ -203,11 +203,11 @@ export function RoomLyricShareSheet({
                     value={startRaw}
                     onChange={(e) => setStartRaw(e.target.value)}
                     placeholder="0:42"
-                    className="mt-1.5 w-full rounded-xl border border-[rgb(31_26_22/0.12)] bg-[#f7f1e8] px-3 py-2 text-sm tabular-nums text-[#1a1410] placeholder:text-[#a89880] focus:outline-none focus:ring-2 focus:ring-[rgb(138_112_72/0.35)]"
+                    className="mt-1.5 w-full rounded-xl border border-[rgb(201_166_107/0.28)] bg-[rgb(26_22_18/0.55)] px-3 py-2 text-sm tabular-nums text-[#ebe3d8] placeholder:text-[#8a8070] focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
                   />
                 </label>
                 <label className="min-w-0 flex-1">
-                  <span className="text-[12px] font-medium text-[#6b5c4c]">
+                  <span className="text-[12px] font-medium text-[#a89880]">
                     끝 (선택)
                   </span>
                   <input
@@ -216,7 +216,7 @@ export function RoomLyricShareSheet({
                     value={endRaw}
                     onChange={(e) => setEndRaw(e.target.value)}
                     placeholder="1:05"
-                    className="mt-1.5 w-full rounded-xl border border-[rgb(31_26_22/0.12)] bg-[#f7f1e8] px-3 py-2 text-sm tabular-nums text-[#1a1410] placeholder:text-[#a89880] focus:outline-none focus:ring-2 focus:ring-[rgb(138_112_72/0.35)]"
+                    className="mt-1.5 w-full rounded-xl border border-[rgb(201_166_107/0.28)] bg-[rgb(26_22_18/0.55)] px-3 py-2 text-sm tabular-nums text-[#ebe3d8] placeholder:text-[#8a8070] focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
                   />
                 </label>
               </div>
@@ -226,14 +226,14 @@ export function RoomLyricShareSheet({
             </div>
           )}
         </div>
-        <div className="flex flex-col border-t border-[rgb(31_26_22/0.1)]">
+        <div className="flex flex-col border-t border-[rgb(201_166_107/0.18)]">
           {picked ? (
             <>
               <button
                 type="button"
                 disabled={sending}
                 onClick={handleSubmit}
-                className="py-3.5 text-[15px] font-semibold text-[#6b5428] disabled:opacity-40">
+                className="py-3.5 text-[15px] font-semibold text-brand-primary disabled:opacity-40">
                 {sending ? '보내는 중…' : '보내기'}
               </button>
               <button
@@ -243,7 +243,7 @@ export function RoomLyricShareSheet({
                   setPicked(null);
                   setFormError('');
                 }}
-                className="border-t border-[rgb(31_26_22/0.1)] py-3 text-[14px] font-medium text-[#8a8070]">
+                className="border-t border-[rgb(201_166_107/0.18)] py-3 text-[14px] font-medium text-[#a89880]">
                 곡 다시 고르기
               </button>
             </>
@@ -252,7 +252,7 @@ export function RoomLyricShareSheet({
             type="button"
             onClick={onClose}
             disabled={sending}
-            className="border-t border-[rgb(31_26_22/0.1)] py-3.5 text-[15px] font-semibold text-[#6b5428] disabled:opacity-40">
+            className="border-t border-[rgb(201_166_107/0.18)] py-3.5 text-[15px] font-semibold text-brand-primary disabled:opacity-40">
             취소
           </button>
         </div>

@@ -13,6 +13,7 @@ export const embedPlayerFooter = 'embed-player-footer';
 
 export const brandPillBtn = 'brand-pill-btn';
 export const brandPillBtnGuest = 'brand-pill-btn-guest';
+/** @deprecated LP 다크 — 오프셋 겹침 미사용. `dialogPanel`만 */
 export const dialogBack = 'dialog-back';
 export const dialogPanel = 'dialog-panel';
 

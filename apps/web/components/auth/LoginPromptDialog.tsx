@@ -3,7 +3,6 @@
 import { authLinkClassName } from '@/lib/form';
 import {
   brandPillBtn,
-  dialogBack,
   dialogPanel,
 } from '@/lib/neobrutal';
 import { buildLoginHref, buildRegisterHref } from '@/lib/redirect';
@@ -48,14 +47,13 @@ export function LoginPromptDialog({
       <div
         className="relative w-full max-w-sm"
         onClick={(e) => e.stopPropagation()}>
-        <div className={dialogBack} aria-hidden />
         <div className={`${dialogPanel} p-6`}>
           <h2
             id="login-prompt-title"
             className="text-center text-lg font-semibold text-brand-primary">
             {title}
           </h2>
-          <p className="mt-2 text-center text-sm leading-relaxed text-neutral-600">
+          <p className="mt-2 text-center text-sm leading-relaxed text-[#a89880]">
             {description}
           </p>
           <div className="mt-6 flex flex-col items-stretch gap-2">
@@ -65,11 +63,11 @@ export function LoginPromptDialog({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full py-2 text-sm font-medium text-neutral-500 transition-colors hover:text-brand-primary">
+              className="rounded-full py-2 text-sm font-medium text-[#a89880] transition-colors hover:text-brand-primary">
               닫기
             </button>
           </div>
-          <p className="mt-5 text-center text-xs text-neutral-500">
+          <p className="mt-5 text-center text-xs text-[#a89880]">
             계정이 없으신가요?{' '}
             <Link href={registerHref} className={`${authLinkClassName} text-xs`}>
               회원가입

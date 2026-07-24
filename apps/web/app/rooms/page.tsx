@@ -34,7 +34,7 @@ function RoomGrid({
 }) {
   if (rooms.length === 0) {
     return (
-      <p className="rounded-2xl bg-[color:var(--color-lp-paper)]/80 px-4 py-8 text-center text-sm text-[color:var(--color-lp-muted)]">
+      <p className="rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.45)] px-4 py-8 text-center text-sm text-[color:var(--color-lp-muted)]">
         {empty}
       </p>
     );
@@ -149,7 +149,7 @@ export default function RoomsPage() {
       <div
         role="tablist"
         aria-label="방 목록"
-        className="flex rounded-full bg-[color:var(--color-lp-paper)]/12 p-1">
+        className="flex rounded-full border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.45)] p-1">
         <button
           type="button"
           role="tab"
@@ -157,13 +157,17 @@ export default function RoomsPage() {
           onClick={() => setTab('mine')}
           className={`relative flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
             tab === 'mine'
-              ? 'bg-[color:var(--color-lp-paper)] text-[color:var(--color-lp-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.2)]'
+              ? 'bg-brand-primary text-[color:var(--color-lp-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.25)]'
               : 'text-[color:var(--color-lp-muted)] hover:text-brand-primary'
           }`}>
           내 방
           {mineHasUnread ? (
             <span
-              className="absolute right-3 top-2 size-1.5 rounded-full bg-brand-primary"
+              className={`absolute right-3 top-2 size-1.5 rounded-full ${
+                tab === 'mine'
+                  ? 'bg-[color:var(--color-lp-ink)]'
+                  : 'bg-brand-primary'
+              }`}
               aria-hidden
             />
           ) : null}
@@ -175,7 +179,7 @@ export default function RoomsPage() {
           onClick={() => setTab('discover')}
           className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
             tab === 'discover'
-              ? 'bg-[color:var(--color-lp-paper)] text-[color:var(--color-lp-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.2)]'
+              ? 'bg-brand-primary text-[color:var(--color-lp-ink)] shadow-[0_1px_3px_rgba(0,0,0,0.25)]'
               : 'text-[color:var(--color-lp-muted)] hover:text-brand-primary'
           }`}>
           둘러보기
@@ -201,7 +205,7 @@ export default function RoomsPage() {
       ) : (
         <div role="tabpanel" className="flex flex-col gap-3">
           {discover.length > 0 ? (
-            <div className="flex h-10 items-center gap-2 rounded-full bg-[color:var(--color-lp-paper)] px-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.2)] focus-within:ring-2 focus-within:ring-brand-primary/30">
+            <div className="flex h-10 items-center gap-2 rounded-full border border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.65)] px-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.2)] focus-within:ring-2 focus-within:ring-brand-primary/30">
               <Search
                 className="size-3.5 shrink-0 text-[color:var(--color-lp-muted)]"
                 aria-hidden
@@ -210,8 +214,8 @@ export default function RoomsPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="방 이름이나 #재즈…"
-                className="min-w-0 flex-1 bg-transparent text-[14px] text-[color:var(--color-lp-ink)] outline-none placeholder:text-[color:var(--color-lp-muted)]"
+                placeholder="방 이름이나 재즈…"
+                className="min-w-0 flex-1 bg-transparent text-[14px] text-[#ebe3d8] outline-none placeholder:text-[color:var(--color-lp-muted)]"
               />
               {query ? (
                 <button

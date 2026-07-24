@@ -70,21 +70,21 @@ export function RoomPhotocardShareSheet({
         onClose();
       }}>
       <div
-        className="flex max-h-[70vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[14px] bg-[#f3ebe3] shadow-[0_8px_32px_rgba(0,0,0,0.18)] sm:rounded-[14px]"
+        className="room-sheet flex max-h-[70vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[14px] sm:rounded-[14px]"
         onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-[rgb(31_26_22/0.1)] px-4 py-3">
-          <h2 className="text-[15px] font-semibold text-[#1a1410]">자켓 공유</h2>
-          <p className="mt-0.5 text-[12px] text-[#6b5c4c]">
+        <div className="border-b border-[rgb(201_166_107/0.18)] px-4 py-3">
+          <h2 className="text-[15px] font-semibold text-[#ebe3d8]">자켓 공유</h2>
+          <p className="mt-0.5 text-[12px] text-[#a89880]">
             내가 저장한 앨범 중에서 고르세요
           </p>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
           {loading ? (
-            <Loader2 className="mx-auto my-8 size-5 animate-spin text-[#8a7048]" />
+            <Loader2 className="mx-auto my-8 size-5 animate-spin text-brand-primary" />
           ) : error ? (
             <p className="py-6 text-center text-sm text-red-600">{error}</p>
           ) : cards.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[#6b5c4c]">
+            <p className="py-8 text-center text-sm text-[#a89880]">
               공유할 자켓이 없어요
             </p>
           ) : (
@@ -119,7 +119,7 @@ export function RoomPhotocardShareSheet({
         <button
           type="button"
           onClick={onClose}
-          className="border-t border-[rgb(31_26_22/0.1)] py-3.5 text-[15px] font-semibold text-[#6b5428]">
+          className="border-t border-[rgb(201_166_107/0.18)] py-3.5 text-[15px] font-semibold text-brand-primary">
           취소
         </button>
       </div>

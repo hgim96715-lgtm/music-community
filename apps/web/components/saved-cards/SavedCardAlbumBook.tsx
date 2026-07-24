@@ -178,7 +178,7 @@ export function SavedCardAlbumBook({
   const body = (
     <>
       {embedded && !loading && cards.length > 0 ? (
-        <p className="mb-3 text-right text-[11px] font-bold text-[#6b5428]">
+        <p className="mb-3 text-right text-[11px] font-bold text-[#cbbba0]">
           {cards.length}장
         </p>
       ) : null}
@@ -187,11 +187,11 @@ export function SavedCardAlbumBook({
       ) : error ? (
         <p className="text-sm text-red-600">{error}</p>
       ) : cards.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[rgb(31_26_22/0.2)] bg-[rgb(255_255_255/0.35)] px-3 py-12 text-center">
-          <p className="text-sm font-medium text-[#3d342c]">
+        <div className="rounded-xl border border-dashed border-[rgb(201_166_107/0.28)] bg-[rgb(42_36_30/0.45)] px-3 py-12 text-center">
+          <p className="text-sm font-medium text-[#ebe3d8]">
             아직 꽂은 LP가 없어요
           </p>
-          <p className="mt-1 text-xs text-[#6b5c4c]">
+          <p className="mt-1 text-xs text-[#a89880]">
             피드에서 내 글의 저장 버튼을 눌러 보세요
           </p>
         </div>
@@ -200,10 +200,10 @@ export function SavedCardAlbumBook({
           <div
             className={`lp-album-top ${replaceMode ? 'is-replace' : ''}`}
             aria-label="Top 3">
-            <p className="mb-2 text-[11px] font-semibold tracking-wide text-[#6b5c4c]">
+            <p className="mb-2 text-[11px] font-semibold tracking-wide text-[#a89880]">
               TOP 3
               {replaceMode ? (
-                <span className="ml-2 font-medium text-[#8a7048]">
+                <span className="ml-2 font-medium text-brand-primary">
                   · 바꿀 자리 선택
                 </span>
               ) : null}
@@ -248,14 +248,14 @@ export function SavedCardAlbumBook({
                         />
                       ) : (
                         <span
-                          className={`flex items-center justify-center rounded-md border-[1.5px] border-dashed border-[rgb(31_26_22/0.28)] bg-[rgb(255_255_255/0.35)] text-[0.65rem] font-bold text-[rgb(92_74_56/0.55)] ${TOP3_SLOT_BOX_CLASS}`}
+                          className={`flex items-center justify-center rounded-md border-[1.5px] border-dashed border-[rgb(201_166_107/0.32)] bg-[rgb(26_22_18/0.5)] text-[0.65rem] font-bold text-[rgb(201_166_107/0.55)] ${TOP3_SLOT_BOX_CLASS}`}
                           aria-hidden>
                           #{rank}
                         </span>
                       )}
                     </button>
                     <span
-                      className={`truncate text-center text-[10px] font-medium text-[#5c4a38] ${TOP3_TITLE_MAX_CLASS}`}>
+                      className={`truncate text-center text-[10px] font-medium text-[#cbbba0] ${TOP3_TITLE_MAX_CLASS}`}>
                       {card ? card.recommendation.title : `빈 자리`}
                     </span>
                     {editable && card && !replaceMode ? (
@@ -263,7 +263,7 @@ export function SavedCardAlbumBook({
                         type="button"
                         disabled={shelfBusy}
                         onClick={() => void demoteFromTop(card.id)}
-                        className="text-[10px] text-[#8a7048] underline-offset-2 hover:underline disabled:opacity-50">
+                        className="text-[10px] text-brand-primary underline-offset-2 hover:underline disabled:opacity-50">
                         책장으로
                       </button>
                     ) : null}
@@ -274,7 +274,7 @@ export function SavedCardAlbumBook({
           </div>
 
           <div className="lp-album-shelf-block" aria-label="LP 책장">
-            <p className="mb-2 text-[11px] font-semibold tracking-wide text-[#6b5c4c]">
+            <p className="mb-2 text-[11px] font-semibold tracking-wide text-[#a89880]">
               책장
               {editable ? (
                 <span className="ml-2 font-normal text-[#8a8070]">
@@ -285,7 +285,7 @@ export function SavedCardAlbumBook({
 
             {shelfCards.length === 0 ? (
               <div className="lp-album-shelf lp-album-shelf-empty">
-                <p className="py-6 text-center text-xs text-[#8a8070]">
+                <p className="py-6 text-center text-xs text-[#a89880]">
                   Top에 다 꽂혀 있거나, 책장에 남은 LP가 없어요
                 </p>
               </div>
@@ -331,7 +331,7 @@ export function SavedCardAlbumBook({
               <button
                 type="button"
                 onClick={() => onSelectCard(pulledCard)}
-                className="rounded-full border border-[rgb(31_26_22/0.18)] bg-[#f7f1e8] px-3 py-1.5 text-xs font-semibold text-[#3d342c]">
+                className="rounded-full border border-[rgb(201_166_107/0.35)] bg-[rgb(42_36_30/0.85)] px-3 py-1.5 text-xs font-semibold text-[#ebe3d8]">
                 자세히 · 꾸미기
               </button>
               <button
@@ -341,7 +341,7 @@ export function SavedCardAlbumBook({
                   setReplaceMode(false);
                   setHint('');
                 }}
-                className="rounded-full px-3 py-1.5 text-xs font-medium text-[#6b5c4c]">
+                className="rounded-full px-3 py-1.5 text-xs font-medium text-[#a89880]">
                 다시 꽂기
               </button>
             </div>
@@ -349,7 +349,7 @@ export function SavedCardAlbumBook({
 
           {hint ? (
             <p
-              className="mt-2 text-center text-[11px] text-[#8a7048]"
+              className="mt-2 text-center text-[11px] text-brand-primary"
               role="status">
               {hint}
             </p>
@@ -394,11 +394,11 @@ function AlbumSkeleton() {
         {Array.from({ length: 3 }, (_, i) => (
           <div
             key={i}
-            className="size-[4.75rem] animate-pulse rounded-full bg-[rgb(31_26_22/0.08)]"
+            className="size-[4.75rem] animate-pulse rounded-full bg-[rgb(201_166_107/0.12)]"
           />
         ))}
       </div>
-      <div className="h-20 animate-pulse rounded-lg bg-[rgb(31_26_22/0.06)]" />
+      <div className="h-20 animate-pulse rounded-lg bg-[rgb(201_166_107/0.08)]" />
     </div>
   );
 }

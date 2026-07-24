@@ -10,7 +10,7 @@ import {
   authPageClassName,
   fieldErrorClassName,
 } from '@/lib/form';
-import { brandPillBtn, dialogBack, dialogPanel } from '@/lib/neobrutal';
+import { brandPillBtn, dialogPanel } from '@/lib/neobrutal';
 import { fetchMyRooms, type ApiRoom } from '@/lib/rooms';
 import { ChevronLeft, KeyRound, Loader2, User } from 'lucide-react';
 import Link from 'next/link';
@@ -46,7 +46,7 @@ export default function MySettingsPage() {
   const [mounted, setMounted] = useState(false);
 
   const itemClassName =
-    'w-full flex items-center justify-between rounded-xl border border-dashed border-[rgb(31_26_22/0.12)] px-3.5 py-3 text-sm text-[#a89880]';
+    'w-full flex items-center justify-between rounded-xl border border-dashed border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.35)] px-3.5 py-3 text-sm text-[#cbbba0]';
 
   const isWithdrawing = Boolean(user?.deletedAt);
   const daysLeft = daysUntil(user?.withdrawScheduledAt ?? null);
@@ -224,14 +224,14 @@ export default function MySettingsPage() {
           </li>
         </ul>
 
-        <div className="mt-6 border-t border-[rgb(31_26_22/0.12)] pt-4">
+        <div className="mt-6 border-t border-[rgb(201_166_107/0.18)] pt-4">
           <button
             type="button"
             onClick={() => {
               clearSession();
               router.push('/login');
             }}
-            className={`${appNavLinkClassName} w-full border border-red-200/80 bg-white py-2.5 text-center text-red-600 shadow-[2px_2px_0_rgb(46_38_31/0.12)]`}>
+            className={`${appNavLinkClassName} w-full border border-red-400/35 bg-[rgb(42_36_30/0.65)] py-2.5 text-center text-red-400 shadow-none`}>
             로그아웃
           </button>
         </div>
@@ -261,8 +261,7 @@ export default function MySettingsPage() {
               <div
                 className="relative w-full max-w-sm"
                 onClick={(e) => e.stopPropagation()}>
-                <div className={dialogBack} aria-hidden />
-                <div className={`${dialogPanel} p-6`}>
+                        <div className={`${dialogPanel} p-6`}>
                   {withdrawStep === 'loading' ? (
                     <>
                       <h2

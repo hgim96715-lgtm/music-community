@@ -1,4 +1,5 @@
 'use client';
+import { MoodNapkin } from '@/components/recommendations/MoodNapkin';
 import { PillInput } from '@/components/auth/PillInput';
 import { PillTextarea } from '@/components/auth/PillTextarea';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -7,12 +8,15 @@ import {
   authSubmitClassName,
   authTitleClassName,
   fieldErrorClassName,
+  fieldHintClassName,
+  formLegendClassName,
 } from '@/lib/form';
+import { napkinTopicInputClassName } from '@/lib/napkinFont';
 import { createRoom, parseTopicTags, RoomVisibility } from '@/lib/rooms';
 import { ChevronLeft, Hash, KeyRound, Loader2, Music2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export default function NewRoomPage() {
   const router = useRouter();
@@ -23,6 +27,10 @@ export default function NewRoomPage() {
   const [error, setError] = useState('');
 
   const [topicTagsText, setTopicTagsText] = useState('');
+  const topicPreview = useMemo(
+    () => parseTopicTags(topicTagsText).slice(0, 2),
+    [topicTagsText],
+  );
 
   const [visibility, setVisibility] = useState<RoomVisibility>('public');
   const [password, setPassword] = useState('');
@@ -105,20 +113,37 @@ export default function NewRoomPage() {
           maxLength={200}
           rows={3}
         />
-        <PillInput
-          label="태그 (선택)"
-          name="topicTags"
-          value={topicTagsText}
-          onChange={setTopicTagsText}
-          icon={Hash}
-          maxLength={80}
-          hint="공백으로 구분 · 최대 8개 · 목록엔 2개 · 있으면 설명 대신 #"
-        />
+        <div>
+          <label htmlFor="topicTags" className={formLegendClassName}>
+            태그 (선택)
+          </label>
+          <input
+            id="topicTags"
+            name="topicTags"
+            type="text"
+            value={topicTagsText}
+            onChange={(e) => setTopicTagsText(e.target.value)}
+            maxLength={80}
+            placeholder="재즈 새벽 드라이브"
+            aria-describedby="topicTags-hint"
+            className={`${napkinTopicInputClassName} mt-1.5`}
+          />
+          {topicPreview.length > 0 ? (
+            <MoodNapkin
+              moods={topicPreview}
+              size="room"
+              className="mt-2 justify-start"
+            />
+          ) : null}
+          <p id="topicTags-hint" className={`${fieldHintClassName} mt-1.5`}>
+            공백으로 구분 · 최대 8개 · 목록엔 손글씨 2개 · 있으면 설명 대신
+          </p>
+        </div>
         <fieldset className="flex flex-col gap-2">
           <legend className="px-1 text-[12px] font-semibold text-neutral-400">
             공개 여부
           </legend>
-          <div className="flex overflow-hidden rounded-full bg-white shadow-[0_1px_2px_rgba(51,91,115,0.08)]">
+          <div className="flex overflow-hidden rounded-full border border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.65)]">
             {(
               [
                 { value: 'public', label: '공개' },
@@ -133,8 +158,8 @@ export default function NewRoomPage() {
                   onClick={() => setVisibility(opt.value)}
                   className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
                     on
-                      ? 'bg-brand-primary text-white'
-                      : 'text-neutral-500 hover:bg-neutral-50'
+                      ? 'bg-brand-primary text-[color:var(--color-lp-ink)]'
+                      : 'text-[#a89880] hover:bg-[rgb(201_166_107/0.1)]'
                   }`}>
                   {opt.label}
                 </button>

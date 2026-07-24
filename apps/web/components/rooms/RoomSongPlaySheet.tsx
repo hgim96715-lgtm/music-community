@@ -64,18 +64,18 @@ export function RoomSongPlaySheet({
       aria-label={`${song.title} 재생`}
       onClick={onClose}>
       <div
-        className="w-full max-w-sm overflow-hidden rounded-t-[14px] bg-[#f3ebe3] shadow-[0_8px_32px_rgba(0,0,0,0.18)] sm:rounded-[14px]"
+        className="room-sheet w-full max-w-sm overflow-hidden rounded-t-[14px] sm:rounded-[14px]"
         onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-[rgb(31_26_22/0.1)] px-4 py-3">
-          <p className="truncate text-[15px] font-semibold text-[#1a1410]">
+        <div className="border-b border-[rgb(201_166_107/0.18)] px-4 py-3">
+          <p className="truncate text-[15px] font-semibold text-[#ebe3d8]">
             {song.title}
           </p>
-          <p className="mt-0.5 truncate text-[12px] text-[#6b5c4c]">
+          <p className="mt-0.5 truncate text-[12px] text-[#a89880]">
             {song.artist}
           </p>
         </div>
 
-        <div className="bg-[#ebe3d8]">
+        <div className="bg-[rgb(22_18_15)]">
           {preview.platform === 'youtube' && youtubeBlocked && videoId ? (
             <EmbedPlaybackFallback
               thumbnailUrl={preview.thumbnailUrl}
@@ -121,14 +121,14 @@ export function RoomSongPlaySheet({
             <button
               type="button"
               onClick={onSaveLyric}
-              className="w-full border-t border-[rgb(31_26_22/0.1)] py-3 text-[14px] font-semibold text-[#6b5428]">
+              className="w-full border-t border-[rgb(201_166_107/0.18)] py-3 text-[14px] font-semibold text-brand-primary">
               이 가사 저장
             </button>
           ) : null}
           <button
             type="button"
             onClick={onClose}
-            className="w-full border-t border-[rgb(31_26_22/0.1)] py-3.5 text-[15px] font-semibold text-[#6b5428]">
+            className="w-full border-t border-[rgb(201_166_107/0.18)] py-3.5 text-[15px] font-semibold text-brand-primary">
             닫기
           </button>
         </>

@@ -131,14 +131,14 @@ export default function MyLyricsPage() {
         ) : error ? (
           <p className="py-8 text-center text-sm text-red-600">{error}</p>
         ) : items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[rgb(31_26_22/0.2)] bg-[rgb(255_255_255/0.35)] px-4 py-12 text-center">
-            <span className="mx-auto grid size-12 place-items-center rounded-xl bg-[#4a3728] text-[#f7f1e8]">
+          <div className="rounded-xl border border-dashed border-[rgb(201_166_107/0.28)] bg-[rgb(42_36_30/0.45)] px-4 py-12 text-center">
+            <span className="mx-auto grid size-12 place-items-center rounded-xl border border-[rgb(201_166_107/0.28)] bg-[rgb(26_22_18/0.55)] text-brand-primary">
               <Quote className="size-5" aria-hidden />
             </span>
-            <p className="mt-4 text-sm font-medium text-[#3d342c]">
+            <p className="mt-4 text-sm font-medium text-[#ebe3d8]">
               아직 쪽지가 없어요
             </p>
-            <p className="mt-1.5 text-[12px] text-[#6b5c4c]">
+            <p className="mt-1.5 text-[12px] text-[#a89880]">
               듣다가 꽂힌 소절을 여기에 붙여 두세요
             </p>
           </div>

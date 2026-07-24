@@ -58,6 +58,7 @@ import {
 import { RoomSongPlaySheet } from '@/components/rooms/RoomSongPlaySheet';
 import { RoomSongShareSheet } from '@/components/rooms/RoomSongShareSheet';
 import { RoomNoticeSheet } from '@/components/rooms/RoomNoticeSheet';
+import { JacketPreviewModal } from '@/components/saved-cards/JacketPreviewModal';
 import { LpAlbumJacket } from '@/components/saved-cards/LpAlbumJacket';
 import { markChatSeen } from '@/lib/roomChatUnreadStorage';
 import { RoomPhotocardShareSheet } from '@/components/rooms/RoomPhotocardShareSheet';
@@ -158,6 +159,10 @@ export default function RoomPage() {
   const [lyricSavePreset, setLyricSavePreset] =
     useState<SavedLyricPreset | null>(null);
   const [lyricSaving, setLyricSaving] = useState(false);
+
+  const [previewJacket, setPreviewJacket] = useState<NonNullable<
+    (typeof messages)[number]['savedCard']
+  > | null>(null);
 
   function clearPlaying() {
     setPlayingSong(null);
@@ -544,18 +549,18 @@ export default function RoomPage() {
       return (
         <main className={`${authPageClassName} gap-4`}>
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-lg">
+            <div className="w-full max-w-sm rounded-2xl border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.96)] p-5 shadow-[0_16px_48px_rgb(0_0_0/0.42)]">
               <p className="text-center text-2xl" aria-hidden>
                 🔒
               </p>
-              <h2 className="mt-2 text-center text-lg font-semibold text-neutral-800">
+              <h2 className="mt-2 text-center text-lg font-semibold text-[#ebe3d8]">
                 비공개 방
               </h2>
-              <p className="mt-1 truncate text-center text-sm text-neutral-500">
+              <p className="mt-1 truncate text-center text-sm text-[#a89880]">
                 {pendingRoom.name}
               </p>
               <label className="mt-4 flex flex-col gap-1.5">
-                <span className="px-1 text-[12px] font-semibold text-neutral-400">
+                <span className="px-1 text-[12px] font-semibold text-[#a89880]">
                   비밀번호
                 </span>
                 <input
@@ -565,12 +570,12 @@ export default function RoomPage() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') void confirmJoinWithPassword();
                   }}
-                  className="rounded-full border border-neutral-200 px-4 py-2.5 text-sm outline-none focus:border-brand-primary"
+                  className="rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(26_22_18/0.55)] px-4 py-2.5 text-sm text-[#ebe3d8] outline-none focus:border-brand-primary"
                   autoFocus
                 />
               </label>
               {pendingRoom.passwordHint ? (
-                <p className="mt-2 px-1 text-[12px] text-neutral-400">
+                <p className="mt-2 px-1 text-[12px] text-[#a89880]">
                   힌트: {pendingRoom.passwordHint}
                 </p>
               ) : null}
@@ -582,14 +587,14 @@ export default function RoomPage() {
                   type="button"
                   disabled={joining}
                   onClick={goRooms}
-                  className="flex-1 rounded-full border border-neutral-200 py-2.5 text-sm font-semibold text-neutral-600">
+                  className="flex-1 rounded-full border border-[rgb(201_166_107/0.28)] py-2.5 text-sm font-semibold text-[#cbbba0]">
                   닫기
                 </button>
                 <button
                   type="button"
                   disabled={joining}
                   onClick={() => void confirmJoinWithPassword()}
-                  className="flex-1 rounded-full bg-brand-primary py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                  className="flex-1 rounded-full bg-brand-primary py-2.5 text-sm font-semibold text-[color:var(--color-lp-ink)] disabled:opacity-50">
                   {joining ? '입장 중…' : '입장'}
                 </button>
               </div>
@@ -629,24 +634,24 @@ export default function RoomPage() {
     <FriendIdsProvider>
       <AvatarActionProvider>
         <main
-          className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col bg-[color:var(--color-lp-paper-mute)]"
+          className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col bg-[color:var(--color-brand-bg)]"
           style={{
             // 키보드만큼 화면을 위로 — 메시지·composer가 가려지지 않게
             paddingBottom: keyboardInset,
             transition: 'padding-bottom 120ms ease-out',
           }}>
-          <header className="flex shrink-0 items-center gap-1 border-b border-[rgb(42_34_28/0.08)] bg-[color:var(--color-lp-paper-mute)]/95 px-2 pb-2.5 pt-2 backdrop-blur-sm">
+          <header className="flex shrink-0 items-center gap-1 border-b border-[rgb(201_166_107/0.18)] bg-[rgb(26_22_18/0.92)] px-2 pb-2.5 pt-2 backdrop-blur-sm">
             <Link
               href="/rooms"
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-brand-primary transition-colors hover:bg-white/70"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-brand-primary transition-colors hover:bg-[rgb(201_166_107/0.12)]"
               aria-label="방 목록">
               <ChevronLeft className="size-5" aria-hidden />
             </Link>
             <div className="min-w-0 flex-1 px-1 text-center">
-              <h1 className="truncate text-[15px] font-semibold tracking-tight text-neutral-800">
+              <h1 className="truncate text-[15px] font-semibold tracking-tight text-[#ebe3d8]">
                 {room.name}
               </h1>
-              <p className="flex min-w-0 items-center justify-center gap-1 truncate text-[11px] text-neutral-400">
+              <p className="flex min-w-0 items-center justify-center gap-1 truncate text-[11px] text-[#a89880]">
                 {room.owner ? (
                   <>
                     {user.id === room.ownerId ? (
@@ -661,7 +666,8 @@ export default function RoomPage() {
                     <button
                       type="button"
                       onClick={() => setMembersOpen(true)}
-                      className="shrink-0 font-medium text-neutral-500 underline-offset-2 hover:underline">
+                      aria-label={`멤버 ${room.memberCount}명 보기`}
+                      className="shrink-0 font-medium text-brand-primary underline-offset-2 hover:underline">
                       {room.memberCount}명
                     </button>
                   </>
@@ -669,7 +675,8 @@ export default function RoomPage() {
                   <button
                     type="button"
                     onClick={() => setMembersOpen(true)}
-                    className="font-medium text-neutral-500 underline-offset-2 hover:underline">
+                    aria-label={`멤버 ${room.memberCount}명 보기`}
+                    className="font-medium text-brand-primary underline-offset-2 hover:underline">
                     {room.memberCount}명
                   </button>
                 )}
@@ -682,15 +689,13 @@ export default function RoomPage() {
                 type="button"
                 onClick={openNotice}
                 aria-label={noticeUnread ? '방 공지 (새 공지)' : '방 공지'}
-                className={`relative inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/70 hover:text-brand-primary ${
-                  room.description?.trim()
-                    ? 'text-neutral-400'
-                    : 'text-neutral-300'
+                className={`relative inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-brand-primary ${
+                  room.description?.trim() ? 'text-[#a89880]' : 'text-[#6b5c4c]'
                 }`}>
                 <Megaphone className="size-4" aria-hidden />
                 {noticeUnread ? (
                   <span
-                    className="absolute right-1.5 top-1.5 size-2 rounded-full bg-brand-primary ring-2 ring-[color:var(--color-lp-paper-mute)]"
+                    className="absolute right-1.5 top-1.5 size-2 rounded-full bg-brand-primary ring-2 ring-[color:var(--color-brand-bg)]"
                     aria-hidden
                   />
                 ) : null}
@@ -701,13 +706,13 @@ export default function RoomPage() {
                 type="button"
                 disabled={leaving}
                 onClick={() => setLeaveConfirmOpen(true)}
-                className="shrink-0 rounded-full px-2.5 py-1.5 text-[12px] font-medium text-neutral-400 transition-colors hover:bg-white/70 hover:text-red-500 disabled:opacity-50">
+                className="shrink-0 rounded-full px-2.5 py-1.5 text-[12px] font-medium text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-red-400 disabled:opacity-50">
                 퇴장
               </button>
             ) : (
               <Link
                 href={`/rooms/${room.id}/settings`}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-white/70 hover:text-brand-primary"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-brand-primary"
                 aria-label="방 설정">
                 <Settings className="size-4" aria-hidden />
               </Link>
@@ -721,10 +726,10 @@ export default function RoomPage() {
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3.5 py-4">
             {messages.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5 text-center">
-                <p className="text-[15px] font-medium text-neutral-500">
+                <p className="text-[15px] font-medium text-[#cbbba0]">
                   아직 메시지가 없어요
                 </p>
-                <p className="text-[13px] text-neutral-400">
+                <p className="text-[13px] text-[#a89880]">
                   같이 듣는 첫 말을 걸어 보세요
                 </p>
               </div>
@@ -741,14 +746,14 @@ export default function RoomPage() {
                 return (
                   <div key={m.id} className="flex w-full flex-col gap-3">
                     {showDivider ? (
-                      <p className="py-1 text-center text-[11px] font-medium tabular-nums text-neutral-400">
+                      <p className="py-1 text-center text-[11px] font-medium tabular-nums text-[#a89880]">
                         {formatMessageTimeDivider(m.createdAt)}
                       </p>
                     ) : null}
                     <div
                       className={`group/msg relative flex max-w-[78%] flex-col ${mine ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
                       {!mine ? (
-                        <span className="mb-1 flex items-center gap-1 px-1.5 text-[11px] font-medium text-neutral-400">
+                        <span className="mb-1 flex items-center gap-1 px-1.5 text-[11px] font-medium text-[#a89880]">
                           {senderIsOwner ? (
                             <Crown
                               className="size-3 shrink-0 text-brand-primary"
@@ -867,15 +872,7 @@ export default function RoomPage() {
                                 return;
                               }
                               clearLongPress();
-                              const rec = m.savedCard!.recommendation;
-                              openPlaying(
-                                {
-                                  title: rec.title,
-                                  artist: rec.artist,
-                                  embedUrl: rec.embedUrl,
-                                },
-                                rec.id,
-                              );
+                              setPreviewJacket(m.savedCard!);
                             }}>
                             <LpAlbumJacket
                               size="sm"
@@ -887,7 +884,7 @@ export default function RoomPage() {
                               postedAt={m.savedCard.recommendation.createdAt}
                               savedAt={m.savedCard.createdAt}
                               customization={m.savedCard.customization}
-                              className="shadow-[0_2px_8px_rgba(0,0,0,0.18)]"
+                              className="shadow-[0_2px_8px_rgba(0,0,0,0.18)] overflow-visible"
                             />
                           </button>
                         </div>
@@ -946,15 +943,7 @@ export default function RoomPage() {
                                 return;
                               }
                               clearLongPress();
-                              openPlaying(
-                                {
-                                  title: m.recommendation!.title,
-                                  artist: m.recommendation!.artist,
-                                  embedUrl: m.recommendation!.embedUrl,
-                                },
-                                m.recommendation!.id,
-                                m.lyricStartSec,
-                              );
+                              setPreviewJacket(m.savedCard!);
                             }}
                           />
                         </div>
@@ -1020,7 +1009,7 @@ export default function RoomPage() {
                           className={`select-none px-3.5 py-2 text-[15px] leading-snug outline-none touch-manipulation ${
                             mine
                               ? 'rounded-[1.25rem] rounded-br-md bg-brand-primary text-[color:var(--color-lp-ink)]'
-                              : 'rounded-[1.25rem] rounded-bl-md bg-white text-neutral-800 shadow-[0_0.5px_1px_rgba(0,0,0,0.06)]'
+                              : 'rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.92)] text-[#ebe3d8] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
                           }`}>
                           {m.body}
                         </div>
@@ -1036,7 +1025,7 @@ export default function RoomPage() {
           {/* composer — Messages식 하단 바 · safe-area */}
           <form
             onSubmit={onSend}
-            className="relative z-20 flex shrink-0 items-center gap-1.5 overflow-visible border-t border-black/[0.04] bg-[#e8ecef] px-2.5 pt-2"
+            className="relative z-20 flex shrink-0 items-center gap-1.5 overflow-visible border-t border-[rgb(201_166_107/0.18)] bg-[rgb(22_18_15/0.98)] px-2.5 pt-2"
             style={{
               paddingBottom: 'max(0.65rem, env(safe-area-inset-bottom, 0px))',
             }}>
@@ -1050,14 +1039,14 @@ export default function RoomPage() {
                 }}
                 aria-label="첨부"
                 aria-expanded={attachOpen}
-                className="flex size-9 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-white/80 hover:text-neutral-700 disabled:opacity-40">
+                className="flex size-9 items-center justify-center rounded-full text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-[#ebe3d8] disabled:opacity-40">
                 <Plus className="size-5" strokeWidth={1.75} aria-hidden />
               </button>
               {attachOpen ? (
                 <div
                   role="menu"
                   aria-label="첨부"
-                  className="absolute bottom-full left-0 z-30 mb-2 w-44 overflow-hidden rounded-2xl border border-neutral-200/80 bg-white py-1 shadow-[0_8px_28px_rgba(0,0,0,0.12)]">
+                  className="absolute bottom-full left-0 z-30 mb-2 w-44 overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.98)] py-1 shadow-[0_8px_28px_rgb(0_0_0/0.4)]">
                   {ATTACH_ITEMS.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -1092,15 +1081,15 @@ export default function RoomPage() {
                         }}
                         className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm ${
                           item.enabled
-                            ? 'text-neutral-800 hover:bg-neutral-50'
-                            : 'cursor-not-allowed text-neutral-400'
+                            ? 'text-[#ebe3d8] hover:bg-[rgb(201_166_107/0.1)]'
+                            : 'cursor-not-allowed text-[#6b5c4c]'
                         } disabled:opacity-40`}>
                         <Icon className="size-4 shrink-0" strokeWidth={1.75} />
                         <span className="min-w-0 flex-1 font-medium">
                           {item.label}
                         </span>
                         {item.hint ? (
-                          <span className="text-[10px] text-neutral-300">
+                          <span className="text-[10px] text-[#8a8070]">
                             {item.hint}
                           </span>
                         ) : null}
@@ -1129,7 +1118,7 @@ export default function RoomPage() {
               }}
               maxLength={2000}
               placeholder="메시지"
-              className="min-w-0 flex-1 rounded-[1.25rem] border-0 bg-white px-3.5 py-2 text-[15px] text-neutral-800 outline-none placeholder:text-neutral-300 focus:ring-2 focus:ring-brand-primary/20"
+              className="min-w-0 flex-1 rounded-[1.25rem] border-0 bg-[rgb(42_36_30)] px-3.5 py-2 text-[15px] text-[#ebe3d8] outline-none placeholder:text-[#8a8070] focus:ring-2 focus:ring-brand-primary/25"
             />
             <button
               type="submit"
@@ -1147,7 +1136,7 @@ export default function RoomPage() {
           {typeof document !== 'undefined' && actionTargetId
             ? createPortal(
                 <div
-                  className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
+                  className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
                   role="dialog"
                   aria-modal="true"
                   aria-label="메시지 메뉴"
@@ -1155,7 +1144,7 @@ export default function RoomPage() {
                   <div
                     className="w-full max-w-sm px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-0 sm:pb-0"
                     onClick={(e) => e.stopPropagation()}>
-                    <div className="overflow-hidden rounded-[14px] bg-white/95 shadow-[0_8px_32px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                    <div className="overflow-hidden rounded-[14px] border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.96)] shadow-[0_8px_32px_rgb(0_0_0/0.4)] backdrop-blur-md">
                       <button
                         type="button"
                         disabled={deleting}
@@ -1163,14 +1152,14 @@ export default function RoomPage() {
                           setDeleteTargetId(actionTargetId);
                           setActionTargetId(null);
                         }}
-                        className="w-full py-3.5 text-[17px] font-semibold text-red-500 transition-colors active:bg-neutral-100">
+                        className="w-full py-3.5 text-[17px] font-semibold text-red-400 transition-colors active:bg-[rgb(201_166_107/0.08)]">
                         삭제
                       </button>
                     </div>
                     <button
                       type="button"
                       onClick={() => setActionTargetId(null)}
-                      className="mt-2 w-full rounded-[14px] bg-white py-3.5 text-[17px] font-semibold text-brand-primary shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-colors active:bg-neutral-50">
+                      className="mt-2 w-full rounded-[14px] border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.96)] py-3.5 text-[17px] font-semibold text-brand-primary shadow-[0_4px_16px_rgb(0_0_0/0.3)] transition-colors active:bg-[rgb(201_166_107/0.08)]">
                       취소
                     </button>
                   </div>
@@ -1264,6 +1253,13 @@ export default function RoomPage() {
               })();
             }}
           />
+          <RoomMembersSheet
+            open={membersOpen}
+            onClose={() => setMembersOpen(false)}
+            roomId={room.id}
+            roomName={room.name}
+            myUserId={user.id}
+          />
           <RoomNoticeSheet
             open={noticeOpen}
             body={room.description}
@@ -1283,6 +1279,10 @@ export default function RoomPage() {
                 setNoticeSaving(false);
               }
             }}
+          />
+          <JacketPreviewModal
+            jacket={previewJacket}
+            onClose={() => setPreviewJacket(null)}
           />
         </main>
       </AvatarActionProvider>

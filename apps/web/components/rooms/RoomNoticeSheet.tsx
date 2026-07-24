@@ -73,10 +73,10 @@ export function RoomNoticeSheet({
         if (!saving) onClose();
       }}>
       <div
-        className="flex max-h-[70vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[14px] bg-[#f3ebe3] shadow-[0_8px_32px_rgba(0,0,0,0.18)] sm:rounded-[14px]"
+        className="room-sheet flex max-h-[70vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[14px] sm:rounded-[14px]"
         onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between gap-2 border-b border-[rgb(31_26_22/0.1)] px-4 py-3">
-          <h2 className="text-[15px] font-semibold text-[#1a1410]">방 공지</h2>
+        <div className="flex items-center justify-between gap-2 border-b border-[rgb(201_166_107/0.18)] px-4 py-3">
+          <h2 className="text-[15px] font-semibold text-[#ebe3d8]">방 공지</h2>
           {canEdit && !editing ? (
             <button
               type="button"
@@ -85,7 +85,7 @@ export function RoomNoticeSheet({
                 setEditing(true);
                 setError('');
               }}
-              className="text-[13px] font-semibold text-[#6b5428]">
+              className="text-[13px] font-semibold text-brand-primary">
               수정
             </button>
           ) : null}
@@ -99,14 +99,14 @@ export function RoomNoticeSheet({
               rows={6}
               disabled={saving}
               placeholder="규칙 · 오늘 주제 · 주의사항을 적어 주세요"
-              className="w-full resize-none rounded-xl border border-[rgb(31_26_22/0.12)] bg-[#f7f1e8] px-3 py-2.5 text-[14px] leading-relaxed text-[#1a1410] outline-none placeholder:text-[#9a8b7a] focus:ring-2 focus:ring-[#8a7048]/25 disabled:opacity-50"
+              className="w-full resize-none rounded-xl border border-[rgb(201_166_107/0.28)] bg-[rgb(26_22_18/0.55)] px-3 py-2.5 text-[14px] leading-relaxed text-[#ebe3d8] outline-none placeholder:text-[#8a8070] focus:ring-2 focus:ring-brand-primary/25 disabled:opacity-50"
             />
           ) : text ? (
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[#1a1410]">
+            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[#ebe3d8]">
               {text}
             </p>
           ) : (
-            <p className="py-6 text-center text-sm text-[#6b5c4c]">
+            <p className="py-6 text-center text-sm text-[#a89880]">
               아직 공지가 없어요
               {canEdit ? ' · 수정으로 적어 보세요' : ''}
             </p>
@@ -116,7 +116,7 @@ export function RoomNoticeSheet({
           ) : null}
         </div>
         {editing ? (
-          <div className="flex border-t border-[rgb(31_26_22/0.1)]">
+          <div className="flex border-t border-[rgb(201_166_107/0.18)]">
             <button
               type="button"
               disabled={saving}
@@ -125,14 +125,14 @@ export function RoomNoticeSheet({
                 setError('');
                 setDraft(body ?? '');
               }}
-              className="flex-1 py-3.5 text-[15px] font-semibold text-[#6b5c4c] disabled:opacity-40">
+              className="flex-1 py-3.5 text-[15px] font-semibold text-[#a89880] disabled:opacity-40">
               취소
             </button>
             <button
               type="button"
               disabled={saving}
               onClick={() => void handleSave()}
-              className="flex flex-1 items-center justify-center gap-1.5 border-l border-[rgb(31_26_22/0.1)] py-3.5 text-[15px] font-semibold text-[#6b5428] disabled:opacity-40">
+              className="flex flex-1 items-center justify-center gap-1.5 border-l border-[rgb(201_166_107/0.18)] py-3.5 text-[15px] font-semibold text-brand-primary disabled:opacity-40">
               {saving ? <Loader2 className="size-4 animate-spin" /> : '저장'}
             </button>
           </div>
@@ -140,7 +140,7 @@ export function RoomNoticeSheet({
           <button
             type="button"
             onClick={onClose}
-            className="border-t border-[rgb(31_26_22/0.1)] py-3.5 text-[15px] font-semibold text-[#6b5428]">
+            className="border-t border-[rgb(201_166_107/0.18)] py-3.5 text-[15px] font-semibold text-brand-primary">
             닫기
           </button>
         )}

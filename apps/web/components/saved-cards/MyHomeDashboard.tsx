@@ -46,7 +46,7 @@ function greetingLabel() {
 }
 
 const doorClassName =
-  'group flex min-h-[7.5rem] flex-col gap-1.5 rounded-xl border border-[rgb(31_26_22/0.14)] bg-[#f7f1e8] p-2.5 text-left shadow-[2px_2px_0_rgb(46_38_31/0.18)] transition-[transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:shadow-[3px_3px_0_rgb(46_38_31/0.22)] active:translate-y-px active:shadow-[1px_1px_0_rgb(46_38_31/0.16)]';
+  'group flex min-h-[7.5rem] flex-col gap-1.5 rounded-xl border border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.65)] p-2.5 text-left shadow-[0_2px_8px_rgb(0_0_0/0.28)] transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 hover:border-[rgb(201_166_107/0.38)] hover:shadow-[0_4px_12px_rgb(0_0_0/0.35)] active:translate-y-px';
 
 /** 마이 홈 대시보드 — 가로 nav · Top3 시그니처 · 컬렉션 문 (통계 자리 여유) */
 export function MyHomeDashboard({
@@ -81,10 +81,10 @@ export function MyHomeDashboard({
         {/* Top 3 — 꽂힌 LP만 (빈 자리·꽂기 CTA ❌ · 편집은 /album) */}
         <section className="my-home-top3" aria-label="Top 3">
           <div className="mb-2.5">
-            <h2 className="text-[12px] font-bold tracking-wide text-[#3d342c]">
+            <h2 className="text-[12px] font-bold tracking-wide text-[#ebe3d8]">
               Top 3
             </h2>
-            <p className="mt-0.5 text-[10px] text-[#8a8070]">
+            <p className="mt-0.5 text-[10px] text-[#a89880]">
               프로필에 꽂아 둔 애정곡
             </p>
           </div>
@@ -93,19 +93,19 @@ export function MyHomeDashboard({
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className="size-16 animate-pulse rounded-md bg-[rgb(31_26_22/0.08)]"
+                  className="size-16 animate-pulse rounded-md bg-[rgb(201_166_107/0.12)]"
                 />
               ))}
             </div>
           ) : tops.length === 0 ? (
             <Link
               href="/users/me/album"
-              className="flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-[rgb(31_26_22/0.16)] bg-[rgb(255_255_255/0.4)] px-3 py-5 text-center">
-              <Disc3 className="size-5 text-[#8a7048]" aria-hidden />
-              <span className="text-[12px] font-medium text-[#3d342c]">
+              className="flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-[rgb(201_166_107/0.28)] bg-[rgb(26_22_18/0.45)] px-3 py-5 text-center">
+              <Disc3 className="size-5 text-brand-primary" aria-hidden />
+              <span className="text-[12px] font-medium text-[#ebe3d8]">
                 아직 Top LP가 없어요
               </span>
-              <span className="text-[11px] text-[#6b5c4c]">
+              <span className="text-[11px] text-[#a89880]">
                 내 앨범에서 최대 3장 꽂을 수 있어요
               </span>
             </Link>
@@ -126,7 +126,7 @@ export function MyHomeDashboard({
                     className={TOP3_JACKET_CLASS}
                   />
                   <span
-                    className={`mt-1 truncate text-[10px] font-medium text-[#6b5c4c] ${TOP3_TITLE_MAX_CLASS}`}>
+                    className={`mt-1 truncate text-[10px] font-medium text-[#cbbba0] ${TOP3_TITLE_MAX_CLASS}`}>
                     {card.recommendation.title}
                   </span>
                 </li>
@@ -144,25 +144,25 @@ export function MyHomeDashboard({
         </div>
 
         <section className="mt-4" aria-label="컬렉션">
-          <h2 className="mb-2.5 text-[12px] font-bold tracking-wide text-[#3d342c]">
+          <h2 className="mb-2.5 text-[12px] font-bold tracking-wide text-[#ebe3d8]">
             컬렉션
           </h2>
           <div className="grid grid-cols-2 gap-2.5">
             <Link href="/users/me/album" className={doorClassName}>
               <span className="flex items-center justify-between gap-1">
-                <span className="text-[13px] font-bold text-[#1a1410]">
+                <span className="text-[13px] font-bold text-[#ebe3d8]">
                   내 앨범
                 </span>
                 <ChevronRight
-                  className="size-4 text-[#8a7048] transition-transform group-hover:translate-x-0.5"
+                  className="size-4 text-brand-primary transition-transform group-hover:translate-x-0.5"
                   aria-hidden
                 />
               </span>
               <span className="flex flex-1 items-center justify-center gap-1 py-0.5">
                 {loading ? (
-                  <span className="text-[11px] text-[#8a8070]">…</span>
+                  <span className="text-[11px] text-[#a89880]">…</span>
                 ) : preview.length === 0 ? (
-                  <span className="text-center text-[11px] text-[#6b5c4c]">
+                  <span className="text-center text-[11px] text-[#a89880]">
                     LP 책장
                   </span>
                 ) : (
@@ -183,7 +183,7 @@ export function MyHomeDashboard({
                   ))
                 )}
               </span>
-              <span className="text-[11px] font-medium text-[#6b5428]">
+              <span className="text-[11px] font-medium text-[#cbbba0]">
                 {loading
                   ? '…'
                   : cards.length > 0
@@ -194,33 +194,33 @@ export function MyHomeDashboard({
 
             <Link href="/users/me/lyrics" className={doorClassName}>
               <span className="flex items-center justify-between gap-1">
-                <span className="text-[13px] font-bold text-[#1a1410]">
+                <span className="text-[13px] font-bold text-[#ebe3d8]">
                   내 가사
                 </span>
                 <ChevronRight
-                  className="size-4 text-[#8a7048] transition-transform group-hover:translate-x-0.5"
+                  className="size-4 text-brand-primary transition-transform group-hover:translate-x-0.5"
                   aria-hidden
                 />
               </span>
               <span className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 overflow-hidden py-0.5">
                 {loading ? (
-                  <span className="text-[11px] text-[#8a8070]">…</span>
+                  <span className="text-[11px] text-[#a89880]">…</span>
                 ) : lyricPreview ? (
-                  <span className="napkin-hand line-clamp-2 w-full px-0.5 text-center text-[0.95rem] leading-[1.15] text-[#3d342c]">
+                  <span className="napkin-hand line-clamp-2 w-full px-0.5 text-center text-[0.95rem] leading-[1.15] text-[#ebe3d8]">
                     “{lyricPreview}”
                   </span>
                 ) : (
                   <>
-                    <span className="grid size-9 place-items-center rounded-lg bg-[#4a3728] text-[#f7f1e8]">
+                    <span className="grid size-9 place-items-center rounded-lg border border-[rgb(201_166_107/0.28)] bg-[rgb(26_22_18/0.55)] text-brand-primary">
                       <Quote className="size-3.5" aria-hidden />
                     </span>
-                    <span className="text-center text-[10px] leading-snug text-[#6b5c4c]">
+                    <span className="text-center text-[10px] leading-snug text-[#a89880]">
                       소절 모음
                     </span>
                   </>
                 )}
               </span>
-              <span className="text-[11px] font-medium text-[#6b5428]">
+              <span className="text-[11px] font-medium text-[#cbbba0]">
                 {loading
                   ? '…'
                   : lyricCount > 0

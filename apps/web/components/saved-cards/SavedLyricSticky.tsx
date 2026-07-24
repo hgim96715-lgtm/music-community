@@ -17,11 +17,16 @@ type SavedLyricStickyProps = {
   }) => Promise<void>;
 };
 
-const PAPER = ['#f3ebe3', '#efe6da', '#f0e4d4', '#ebe0d2'] as const;
+const PAPER_TINT = [
+  'rgb(46 40 34 / 100%)',
+  'rgb(42 36 30 / 100%)',
+  'rgb(44 38 32 / 100%)',
+  'rgb(40 34 28 / 100%)',
+] as const;
 
 /**
- * 가사 모음 — 종이 쪽지(포스트잇 톤) · 앞=소절 / 뒤=메모
- * LP Bar: pastel ❌ · 종이·잉크
+ * 가사 모음 — 잉크 쪽지 · 앞=소절 / 뒤=메모
+ * LP Bar: 크림 포스트잇 ❌ · ink + brass
  */
 export function SavedLyricSticky({
   item,
@@ -35,7 +40,7 @@ export function SavedLyricSticky({
   const [lyricsDraft, setLyricsDraft] = useState(item.lyricsText);
   const [noteDraft, setNoteDraft] = useState(item.note ?? '');
   const [saving, setSaving] = useState(false);
-  const paper = PAPER[tiltIndex % PAPER.length];
+  const paper = PAPER_TINT[tiltIndex % PAPER_TINT.length];
   const rotate = ((tiltIndex % 5) - 2) * 1.1;
   const hasNote = Boolean(item.note?.trim());
   const savedShort = formatDisplayDate(item.createdAt);

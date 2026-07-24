@@ -1,4 +1,5 @@
 'use client';
+import { MoodNapkin } from '@/components/recommendations/MoodNapkin';
 import { PillInput } from '@/components/auth/PillInput';
 import { PillTextarea } from '@/components/auth/PillTextarea';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -7,7 +8,10 @@ import {
   authSubmitClassName,
   authTitleClassName,
   fieldErrorClassName,
+  fieldHintClassName,
+  formLegendClassName,
 } from '@/lib/form';
+import { napkinTopicInputClassName } from '@/lib/napkinFont';
 import {
   ApiRoomMemberWithUser,
   closeRoom,
@@ -23,7 +27,7 @@ import {
 import { ChevronLeft, Hash, KeyRound, Loader2, Music2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FeedDialog } from '@/components/recommendations/FeedDialog';
 import { markNoticeSeen } from '@/lib/roomNoticeStorage';
 
@@ -55,6 +59,10 @@ export default function RoomSettingsPage() {
   const [closing, setClosing] = useState(false);
 
   const [topicTagsText, setTopicTagsText] = useState('');
+  const topicPreview = useMemo(
+    () => parseTopicTags(topicTagsText).slice(0, 2),
+    [topicTagsText],
+  );
 
   const [password, setPassword] = useState('');
   const [passwordHint, setPasswordHint] = useState('');
@@ -250,20 +258,37 @@ export default function RoomSettingsPage() {
           rows={3}
           hint="채팅 헤더 📣에 그대로 보여요 · 방장만 수정"
         />
-        <PillInput
-          label="태그 (선택)"
-          name="topicTags"
-          value={topicTagsText}
-          onChange={setTopicTagsText}
-          icon={Hash}
-          maxLength={80}
-          hint="공백으로 구분 · 최대 8개 · 목록엔 2개 · 있으면 설명 대신 #"
-        />
+        <div>
+          <label htmlFor="topicTags" className={formLegendClassName}>
+            태그 (선택)
+          </label>
+          <input
+            id="topicTags"
+            name="topicTags"
+            type="text"
+            value={topicTagsText}
+            onChange={(e) => setTopicTagsText(e.target.value)}
+            maxLength={80}
+            placeholder="재즈 새벽 드라이브"
+            aria-describedby="topicTags-hint"
+            className={`${napkinTopicInputClassName} mt-1.5`}
+          />
+          {topicPreview.length > 0 ? (
+            <MoodNapkin
+              moods={topicPreview}
+              size="room"
+              className="mt-2 justify-start"
+            />
+          ) : null}
+          <p id="topicTags-hint" className={`${fieldHintClassName} mt-1.5`}>
+            공백으로 구분 · 최대 8개 · 목록엔 손글씨 2개 · 있으면 설명 대신
+          </p>
+        </div>
         <fieldset className="flex flex-col gap-2">
           <legend className="px-1 text-[12px] font-semibold text-neutral-400">
             공개 여부
           </legend>
-          <div className="flex overflow-hidden rounded-full bg-white shadow-[0_1px_2px_rgba(51,91,115,0.08)]">
+          <div className="flex overflow-hidden rounded-full border border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.65)]">
             {(
               [
                 { value: 'public', label: '공개' },
@@ -278,8 +303,8 @@ export default function RoomSettingsPage() {
                   onClick={() => setVisibility(opt.value)}
                   className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
                     on
-                      ? 'bg-brand-primary text-white'
-                      : 'text-neutral-500 hover:bg-neutral-50'
+                      ? 'bg-brand-primary text-[color:var(--color-lp-ink)]'
+                      : 'text-[#a89880] hover:bg-[rgb(201_166_107/0.1)]'
                   }`}>
                   {opt.label}
                 </button>
@@ -321,11 +346,11 @@ export default function RoomSettingsPage() {
             멤버
           </h2>
           {members.length === 0 ? (
-            <p className="rounded-2xl bg-white/70 px-4 py-6 text-center text-sm text-neutral-400">
+            <p className="rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.45)] px-4 py-6 text-center text-sm text-[#a89880]">
               다른 멤버가 없어요
             </p>
           ) : (
-            <ul className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(51,91,115,0.06)] divide-y divide-neutral-100/90">
+            <ul className="overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.55)] divide-y divide-[rgb(201_166_107/0.12)]">
               {members.map((m) => {
                 const owner = m.role === 'owner';
                 const mine = m.userId === user.id;
@@ -334,10 +359,10 @@ export default function RoomSettingsPage() {
                     key={m.id}
                     className="flex items-center justify-between gap-3 px-3.5 py-3">
                     <div className="min-w-0">
-                      <p className="truncate text-[15px] font-medium text-neutral-800">
+                      <p className="truncate text-[15px] font-medium text-[#ebe3d8]">
                         @{m.user.nickname}
                         {mine ? (
-                          <span className="ml-1 text-[12px] text-neutral-400">
+                          <span className="ml-1 text-[12px] text-[#a89880]">
                             나
                           </span>
                         ) : null}
@@ -351,7 +376,7 @@ export default function RoomSettingsPage() {
                         type="button"
                         disabled={kicking}
                         onClick={() => setKickTarget(m)}
-                        className="shrink-0 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-neutral-50 disabled:opacity-50">
+                        className="shrink-0 rounded-full border border-red-400/35 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-[rgb(208_128_112/0.12)] disabled:opacity-50">
                         보내기
                       </button>
                     ) : null}
@@ -379,7 +404,7 @@ export default function RoomSettingsPage() {
           </p>
         ) : (
           <>
-            <ul className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(51,91,115,0.06)] divide-y divide-neutral-100/90">
+            <ul className="overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.55)] divide-y divide-[rgb(201_166_107/0.12)]">
               {transferCandidates.map((m) => {
                 const on = transferTarget?.userId === m.userId;
                 return (
@@ -388,20 +413,22 @@ export default function RoomSettingsPage() {
                       type="button"
                       onClick={() => setTransferTarget(m)}
                       className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors ${
-                        on ? 'bg-brand-primary-soft/60' : 'hover:bg-neutral-50'
+                        on
+                          ? 'bg-brand-primary-soft/60'
+                          : 'hover:bg-[rgb(201_166_107/0.08)]'
                       }`}>
                       <span
                         className={`flex size-5 shrink-0 items-center justify-center rounded-full border ${
                           on
                             ? 'border-brand-primary bg-brand-primary'
-                            : 'border-neutral-300'
+                            : 'border-[rgb(201_166_107/0.35)]'
                         }`}
                         aria-hidden>
                         {on ? (
-                          <span className="size-2 rounded-full bg-white" />
+                          <span className="size-2 rounded-full bg-[color:var(--color-lp-ink)]" />
                         ) : null}
                       </span>
-                      <span className="truncate text-[15px] font-medium text-neutral-800">
+                      <span className="truncate text-[15px] font-medium text-[#ebe3d8]">
                         @{m.user.nickname}
                       </span>
                     </button>
@@ -413,7 +440,7 @@ export default function RoomSettingsPage() {
               type="button"
               disabled={!transferTarget || transferring}
               onClick={() => setTransferDialogOpen(true)}
-              className="rounded-full border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-brand-primary shadow-[0_1px_2px_rgba(51,91,115,0.06)] hover:bg-neutral-50 disabled:opacity-50">
+              className="rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(42_36_30/0.65)] px-4 py-2.5 text-sm font-semibold text-brand-primary hover:bg-[rgb(201_166_107/0.12)] disabled:opacity-50">
               선택한 멤버에게 넘기기
             </button>
           </>
@@ -433,7 +460,7 @@ export default function RoomSettingsPage() {
           type="button"
           disabled={closing}
           onClick={() => setCloseOpen(true)}
-          className="rounded-full border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 shadow-[0_1px_2px_rgba(51,91,115,0.06)] hover:bg-red-50 disabled:opacity-50">
+          className="rounded-full border border-red-400/35 bg-[rgb(42_36_30/0.65)] px-4 py-2.5 text-sm font-semibold text-red-400 hover:bg-[rgb(208_128_112/0.12)] disabled:opacity-50">
           방 닫기
         </button>
       </section>

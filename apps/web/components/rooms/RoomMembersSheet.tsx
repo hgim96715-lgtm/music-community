@@ -66,19 +66,19 @@ export function RoomMembersSheet({
       aria-label="방 멤버"
       onClick={onClose}>
       <div
-        className="flex max-h-[70vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[18px] bg-white/95 shadow-[0_8px_32px_rgba(0,0,0,0.18)] backdrop-blur-md sm:rounded-[18px]"
+        className="room-sheet flex max-h-[70vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[18px] sm:rounded-[18px]"
         onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-[rgb(201_166_107/0.18)] px-4 py-3">
           <div className="min-w-0">
-            <p className="truncate text-[15px] font-semibold text-neutral-800">
+            <p className="truncate text-[15px] font-semibold text-[#ebe3d8]">
               이 방 · {members.length || '…'}명
             </p>
-            <p className="truncate text-[12px] text-neutral-400">{roomName}</p>
+            <p className="truncate text-[12px] text-[#a89880]">{roomName}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex size-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100"
+            className="inline-flex size-8 items-center justify-center rounded-full text-[#a89880] hover:bg-[rgb(201_166_107/0.12)]"
             aria-label="닫기">
             <X className="size-4" aria-hidden />
           </button>
@@ -107,11 +107,11 @@ export function RoomMembersSheet({
                           nickname: m.user.nickname,
                         });
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors active:bg-neutral-50">
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors active:bg-[rgb(201_166_107/0.1)]">
                       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary">
                         <User className="size-5" aria-hidden />
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-neutral-800">
+                      <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-[#ebe3d8]">
                         @{m.user.nickname}
                       </span>
                       {owner ? (
@@ -120,7 +120,7 @@ export function RoomMembersSheet({
                         </span>
                       ) : null}
                       {mine ? (
-                        <span className="shrink-0 text-[11px] font-medium text-neutral-400">
+                        <span className="shrink-0 text-[11px] font-medium text-[#a89880]">
                           나
                         </span>
                       ) : null}

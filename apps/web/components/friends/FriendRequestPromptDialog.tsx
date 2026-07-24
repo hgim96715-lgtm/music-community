@@ -1,6 +1,6 @@
 'use client';
 
-import { brandPillBtn, dialogBack, dialogPanel } from '@/lib/neobrutal';
+import { brandPillBtn, dialogPanel } from '@/lib/neobrutal';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -50,7 +50,6 @@ export function FriendRequestPromptDialog({
       <div
         className="relative w-full max-w-sm"
         onClick={(e) => e.stopPropagation()}>
-        <div className={dialogBack} aria-hidden />
         <div className={`${dialogPanel} p-6`}>
           <p className="text-center text-2xl" aria-hidden>
             💌
@@ -60,7 +59,7 @@ export function FriendRequestPromptDialog({
             className="mt-2 text-center text-lg font-semibold text-brand-primary">
             친구 요청이 있어요
           </h2>
-          <p className="mt-2 text-center text-sm leading-relaxed text-neutral-600">
+          <p className="mt-2 text-center text-sm leading-relaxed text-[#a89880]">
             {description}
           </p>
           <div className="mt-6 flex flex-col items-stretch gap-2">
@@ -73,7 +72,7 @@ export function FriendRequestPromptDialog({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full py-2 text-sm font-medium text-neutral-500 transition-colors hover:text-brand-primary">
+              className="rounded-full py-2 text-sm font-medium text-[#a89880] transition-colors hover:text-brand-primary">
               나중에
             </button>
           </div>

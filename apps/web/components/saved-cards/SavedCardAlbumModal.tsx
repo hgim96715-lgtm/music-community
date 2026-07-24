@@ -3,9 +3,9 @@
 import { deleteSavedCard, patchSavedCard } from '@/lib/api';
 import type { ApiSavedCard, ApiSavedCardCustomization } from '@/lib/apiTypes';
 import { prepareSavedCardCustomization } from '@/lib/savedCardDefaults';
-import { brandPillBtn, dialogBack, dialogPanel } from '@/lib/neobrutal';
+import { brandPillBtn, dialogPanel } from '@/lib/neobrutal';
 import { FeedDialog } from '@/components/recommendations/FeedDialog';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import { createPortal } from 'react-dom';
 import { LpAlbumJacket } from './LpAlbumJacket';
@@ -60,6 +60,15 @@ export function SavedCardAlbumModal({
     );
   }, [open, card]);
 
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !saving && !deleting) onClose();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, saving, deleting, onClose]);
+
   if (!open || !mounted || !card || !customization) return null;
 
   const updateCustomization: Dispatch<
@@ -108,7 +117,7 @@ export function SavedCardAlbumModal({
   return createPortal(
     <>
       <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/35 p-4 backdrop-blur-[2px]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="saved-card-album-title"
@@ -116,15 +125,21 @@ export function SavedCardAlbumModal({
         <div
           className="relative w-full max-w-lg"
           onClick={(e) => e.stopPropagation()}>
-          <div className={dialogBack} aria-hidden />
           <div
             className={`${dialogPanel} flex max-h-[92vh] flex-col overflow-hidden`}>
-            <div className="shrink-0 border-b border-neutral-100 px-6 pb-4 pt-6 text-center">
+            <div className="relative shrink-0 border-b border-[rgb(201_166_107/0.14)] px-6 pb-4 pt-6 text-center">
               <h2
                 id="saved-card-album-title"
                 className="text-lg font-semibold text-brand-primary">
                 {mode === 'view' ? '내 자켓' : '자켓 수정'}
               </h2>
+              <button
+                type="button"
+                aria-label="닫기"
+                onClick={onClose}
+                className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full border border-[rgb(201_166_107/0.35)] text-[#a89880] transition-colors hover:border-brand-primary hover:text-brand-primary">
+                <X className="size-4" strokeWidth={2.5} aria-hidden />
+              </button>
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
@@ -145,7 +160,7 @@ export function SavedCardAlbumModal({
                   onCustomizationChange={
                     mode === 'edit' ? updateCustomization : undefined
                   }
-                  className="shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+                  className="shadow-[0_8px_28px_rgba(0,0,0,0.35)]"
                 />
               </div>
               {mode === 'edit' ? (
@@ -164,11 +179,11 @@ export function SavedCardAlbumModal({
                 </div>
               ) : null}
               {error ? (
-                <p className="mt-4 text-center text-sm text-red-600">{error}</p>
+                <p className="mt-4 text-center text-sm text-red-400">{error}</p>
               ) : null}
             </div>
 
-            <div className="shrink-0 flex flex-col gap-2 border-t border-neutral-100 px-6 py-4">
+            <div className="shrink-0 flex flex-col gap-2 border-t border-[rgb(201_166_107/0.14)] px-6 py-4">
               {mode === 'view' ? (
                 <>
                   <button
@@ -180,13 +195,13 @@ export function SavedCardAlbumModal({
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(true)}
-                    className="rounded-full py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                    className="rounded-full py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10">
                     앨범에서 삭제
                   </button>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-full py-2 text-sm text-neutral-500 hover:text-brand-primary">
+                    className="rounded-full py-2 text-sm text-[#a89880] transition-colors hover:text-brand-primary">
                     닫기
                   </button>
                 </>
@@ -214,7 +229,7 @@ export function SavedCardAlbumModal({
                       setMode('view');
                     }}
                     disabled={saving}
-                    className="rounded-full py-2 text-sm text-neutral-500 hover:text-brand-primary">
+                    className="rounded-full py-2 text-sm text-[#a89880] transition-colors hover:text-brand-primary">
                     취소
                   </button>
                 </>

@@ -484,7 +484,7 @@ export function CommentEmojiPicker({
             id="mc-emoji-picker-panel"
             role="listbox"
             aria-label="이모지"
-            className="fixed z-[80] flex w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-neutral-200/80 bg-white shadow-[0_8px_28px_rgba(0,0,0,0.12)]"
+            className="fixed z-[80] flex w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.98)] shadow-[0_8px_28px_rgb(0_0_0/0.4)]"
             style={{
               left: pos.left,
               bottom: pos.bottom,
@@ -494,7 +494,7 @@ export function CommentEmojiPicker({
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
               {EMOJI_GROUPS.map((group) => (
                 <div key={group.label} className="mb-3 last:mb-0">
-                  <p className="px-1.5 pb-1.5 pt-0.5 text-[10px] font-medium text-neutral-400">
+                  <p className="px-1.5 pb-1.5 pt-0.5 text-[10px] font-medium text-[#a89880]">
                     {group.label}
                   </p>
                   <div className="grid grid-cols-8 gap-0.5">
@@ -504,7 +504,7 @@ export function CommentEmojiPicker({
                         type="button"
                         role="option"
                         onClick={() => pick(emoji)}
-                        className="flex aspect-square items-center justify-center rounded-lg text-xl transition-colors hover:bg-neutral-100 active:bg-neutral-200">
+                        className="flex aspect-square items-center justify-center rounded-lg text-xl transition-colors hover:bg-[rgb(201_166_107/0.12)] active:bg-[rgb(201_166_107/0.2)]">
                         {emoji}
                       </button>
                     ))}
@@ -525,7 +525,7 @@ export function CommentEmojiPicker({
         onClick={toggle}
         aria-label="이모지 선택"
         aria-expanded={open}
-        className="flex size-9 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 disabled:opacity-40">
+        className="flex size-9 items-center justify-center rounded-full text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-[#ebe3d8] disabled:opacity-40">
         <Smile className="size-5" strokeWidth={1.75} aria-hidden />
       </button>
       {panel}
