@@ -5,9 +5,13 @@ import {
   authTitleClassName,
   fieldErrorClassName,
 } from '@/lib/form';
-import { fetchRoom, type ApiRoom } from '@/lib/rooms';
 import {
-  getRoomThemePrefs,
+  fetchRoom,
+  loadRoomChatThemeCached,
+  saveRoomChatThemeCached,
+  type ApiRoom,
+} from '@/lib/rooms';
+import {
   setRoomThemeBackgroundUrl,
   setRoomThemePreset,
 } from '@/lib/roomThemeStorage';
@@ -92,15 +96,17 @@ export default function RoomThemePage() {
 
   useEffect(() => {
     if (!user || !roomId) return;
-    try {
-      const prefs = getRoomThemePrefs(user.id, roomId);
+    let cancelled = false;
+    async function loadTheme() {
+      const prefs = await loadRoomChatThemeCached(user!.id, roomId);
+      if (cancelled) return;
       setPresetId(prefs.presetId);
       setBackgroundUrl(prefs.backgroundUrl ?? '');
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : '배경을 불러오지 못했어요.',
-      );
     }
+    void loadTheme();
+    return () => {
+      cancelled = true;
+    };
   }, [user, roomId]);
 
   useEffect(() => {
@@ -153,16 +159,30 @@ export default function RoomThemePage() {
     reader.onload = () => {
       const dataUrl = typeof reader.result === 'string' ? reader.result : null;
       if (!dataUrl) return;
-      try {
-        setRoomThemeBackgroundUrl(user.id, roomId, dataUrl);
-        setBackgroundUrl(dataUrl);
-        flashSaveHint(true, '배경을 저장했어요.');
-      } catch (e) {
-        flashSaveHint(
-          false,
-          e instanceof Error ? e.message : '배경을 저장하지 못했어요.',
-        );
-      }
+      void (async () => {
+        try {
+          await saveRoomChatThemeCached(user.id, roomId, {
+            backgroundUrl: dataUrl,
+          });
+          setBackgroundUrl(dataUrl);
+          flashSaveHint(true, '배경을 저장했어요.');
+        } catch (e) {
+          // 서버 저장 실패 시 로컬 캐시에만 저장
+          try {
+            setRoomThemeBackgroundUrl(user.id, roomId, dataUrl);
+            setBackgroundUrl(dataUrl);
+            flashSaveHint(
+              true,
+              '용량 이슈로 로컬에만 저장했어요. DB 업로드는 나중에 진행돼요.',
+            );
+          } catch (e2) {
+            flashSaveHint(
+              false,
+              e2 instanceof Error ? e2.message : '배경을 저장하지 못했어요.',
+            );
+          }
+        }
+      })();
     };
     reader.onerror = () => {
       flashSaveHint(false, '이미지 파일을 읽는 중 오류가 발생했어요.');
@@ -203,18 +223,35 @@ export default function RoomThemePage() {
                     <button
                       type="button"
                       onClick={() => {
-                        try {
-                          setPresetId(p.id);
-                          if (user) setRoomThemePreset(user.id, roomId, p.id);
-                          flashSaveHint(true, `${p.label} 프리셋을 저장했어요.`);
-                        } catch (e) {
-                          flashSaveHint(
-                            false,
-                            e instanceof Error
-                              ? e.message
-                              : '프리셋을 저장하지 못했어요.',
-                          );
-                        }
+                        if (!user) return;
+                        setPresetId(p.id);
+                        void (async () => {
+                          try {
+                            await saveRoomChatThemeCached(user.id, roomId, {
+                              presetId: p.id,
+                            });
+                            flashSaveHint(
+                              true,
+                              `${p.label} 프리셋을 저장했어요.`,
+                            );
+                          } catch (e) {
+                            // 서버 저장 실패 시 로컬 캐시에만 저장
+                            try {
+                              setRoomThemePreset(user.id, roomId, p.id);
+                              flashSaveHint(
+                                true,
+                                '서버 저장에 실패해 로컬에만 저장했어요.',
+                              );
+                            } catch (e2) {
+                              flashSaveHint(
+                                false,
+                                e2 instanceof Error
+                                  ? e2.message
+                                  : '프리셋을 저장하지 못했어요.',
+                              );
+                            }
+                          }
+                        })();
                       }}
                       className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[rgb(201_166_107/0.08)] ${
                         i < ROOM_THEME_PRESETS.length - 1
@@ -222,7 +259,7 @@ export default function RoomThemePage() {
                           : ''
                       } ${selected ? 'bg-[rgb(201_166_107/0.1)]' : ''}`}>
                       <span
-                        className="size-10 shrink-0 rounded-full border border-[rgb(201_166_107/0.28)]"
+                        className="size-10 shrink-0 rounded-full border border-[rgb(201_166_107/0.48)]"
                         style={{ background: p.swatch }}
                         aria-hidden
                       />
@@ -247,7 +284,7 @@ export default function RoomThemePage() {
           </div>
           <div className="flex w-full flex-col gap-2">
             <p className="text-[12px] text-[#a89880]">
-              갤러리 또는 URL · 기기에만 저장 · 큰 사진은 실패할 수 있습니다.
+              갤러리 또는 URL · 로컬 우선 저장 · 큰 사진은 DB 업로드가 나중에 진행될 수 있습니다.
             </p>
             <div className="flex flex-col gap-2 rounded-2xl border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.94)] p-4">
               <input
@@ -282,22 +319,37 @@ export default function RoomThemePage() {
                   onClick={() => {
                     if (!user) return;
                     const next = backgroundUrl.trim() || null;
-                    try {
-                      setRoomThemeBackgroundUrl(user.id, roomId, next);
-                      setBackgroundUrl(next ?? '');
-                      setError('');
-                      flashSaveHint(
-                        true,
-                        next ? '배경을 저장했어요.' : '배경을 지웠어요.',
-                      );
-                    } catch (e) {
-                      flashSaveHint(
-                        false,
-                        e instanceof Error
-                          ? e.message
-                          : '배경을 저장하지 못했어요.',
-                      );
-                    }
+                    void (async () => {
+                      try {
+                        await saveRoomChatThemeCached(user.id, roomId, {
+                          backgroundUrl: next,
+                        });
+                        setBackgroundUrl(next ?? '');
+                        setError('');
+                        flashSaveHint(
+                          true,
+                          next ? '배경을 저장했어요.' : '배경을 지웠어요.',
+                        );
+                      } catch (e) {
+                        // 서버 저장 실패 시 로컬 캐시에만 저장
+                        try {
+                          setRoomThemeBackgroundUrl(user.id, roomId, next);
+                          setBackgroundUrl(next ?? '');
+                          setError('');
+                          flashSaveHint(
+                            true,
+                            '용량 이슈로 로컬에만 저장했어요. DB 업로드는 나중에 진행돼요.',
+                          );
+                        } catch (e2) {
+                          flashSaveHint(
+                            false,
+                            e2 instanceof Error
+                              ? e2.message
+                              : '배경을 저장하지 못했어요.',
+                          );
+                        }
+                      }
+                    })();
                   }}
                   className="flex-1 rounded-full bg-brand-primary py-2.5 text-[13px] font-semibold text-[color:var(--color-lp-ink)]">
                   배경 저장
@@ -306,18 +358,32 @@ export default function RoomThemePage() {
                   type="button"
                   onClick={() => {
                     if (!user) return;
-                    try {
-                      setRoomThemeBackgroundUrl(user.id, roomId, null);
-                      setBackgroundUrl('');
-                      flashSaveHint(true, '배경을 지웠어요.');
-                    } catch (e) {
-                      flashSaveHint(
-                        false,
-                        e instanceof Error
-                          ? e.message
-                          : '배경을 지우지 못했어요.',
-                      );
-                    }
+                    void (async () => {
+                      try {
+                        await saveRoomChatThemeCached(user.id, roomId, {
+                          backgroundUrl: null,
+                        });
+                        setBackgroundUrl('');
+                        flashSaveHint(true, '배경을 지웠어요.');
+                      } catch (e) {
+                        // 서버 저장 실패 시 로컬 캐시에만 저장
+                        try {
+                          setRoomThemeBackgroundUrl(user.id, roomId, null);
+                          setBackgroundUrl('');
+                          flashSaveHint(
+                            true,
+                            '용량 이슈로 로컬에만 저장했어요. DB 업로드는 나중에 진행돼요.',
+                          );
+                        } catch (e2) {
+                          flashSaveHint(
+                            false,
+                            e2 instanceof Error
+                              ? e2.message
+                              : '배경을 지우지 못했어요.',
+                          );
+                        }
+                      }
+                    })();
                   }}
                   className="rounded-full border border-[rgb(201_166_107/0.28)] px-4 py-2.5 text-[13px] font-medium text-[#a89880]">
                   지우기

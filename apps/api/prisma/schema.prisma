@@ -91,6 +91,8 @@ model User {
 
   notices Notice[]
 
+  roomChatThemes RoomChatTheme[]
+
   @@index([deletedAt])
   @@index([withdrawScheduledAt])
 }
@@ -247,6 +249,8 @@ model Room {
     messages RoomMessage[]
 
     bans RoomBan[]
+    chatThemes RoomChatTheme[]
+
 
     @@index([status,visibility])
     @@index([ownerId])
@@ -303,6 +307,22 @@ model RoomBan {
 
     @@unique([roomId, userId])
     @@index([userId])
+}
+
+model RoomChatTheme {
+    id String @id @default(uuid(7)) @db.Uuid
+    userId String @db.Uuid
+    roomId String @db.Uuid
+    presetId String  @default("lp-bar")
+    backgroundUrl String?
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+    updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, roomId])
+    @@index([roomId])
 }
 
 model SavedLyric{

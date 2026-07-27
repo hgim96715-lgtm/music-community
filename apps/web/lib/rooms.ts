@@ -1,5 +1,11 @@
 import { ApiSavedCard, ApiSavedCardCustomization } from './apiTypes';
 import { authFetchApi, authFetchApiVoid } from './authFetch';
+import {
+  getRoomThemePrefs,
+  RoomThemePrefs,
+  RoomThemePresetId,
+  setRoomThemePrefs,
+} from './roomThemeStorage';
 
 export type RoomVisibility = 'public' | 'private' | 'invite';
 export type RoomStatus = 'active' | 'closed' | 'archived';
@@ -243,4 +249,52 @@ export function deleteRoomMessage(
   return authFetchApiVoid(`/rooms/${roomId}/messages/${messageId}`, {
     method: 'DELETE',
   });
+}
+
+export type ApiRoomChatTheme = RoomThemePrefs;
+export type UpdateRoomChatThemeBody = {
+  presetId?: RoomThemePresetId;
+  backgroundUrl?: string | null;
+};
+
+/** GET /rooms/:id/theme */
+export function fetchRoomChatTheme(roomId: string): Promise<ApiRoomChatTheme> {
+  return authFetchApi<ApiRoomChatTheme>(`/rooms/${roomId}/theme`);
+}
+
+/** PATCH /rooms/:id/theme */
+export function updateRoomChatTheme(
+  roomId: string,
+  body: UpdateRoomChatThemeBody,
+): Promise<ApiRoomChatTheme> {
+  return authFetchApi<ApiRoomChatTheme>(`/rooms/${roomId}/theme`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+/** 서버 우선 · 실패 시 localStorage */
+export async function loadRoomChatThemeCached(
+  userId: string,
+  roomId: string,
+): Promise<RoomThemePrefs> {
+  try {
+    const remote = await fetchRoomChatTheme(roomId);
+    setRoomThemePrefs(userId, roomId, remote);
+    return remote;
+  } catch {
+    return getRoomThemePrefs(userId, roomId);
+  }
+}
+
+/** 서버 저장 후 로컬 캐시 */
+export async function saveRoomChatThemeCached(
+  userId: string,
+  roomId: string,
+  body: UpdateRoomChatThemeBody,
+): Promise<RoomThemePrefs> {
+  const remote = await updateRoomChatTheme(roomId, body);
+  setRoomThemePrefs(userId, roomId, remote);
+  return remote;
 }

@@ -13,6 +13,7 @@ import {
   fetchRoom,
   fetchRoomMessages,
   joinRoom,
+  loadRoomChatThemeCached,
   updateRoom,
   type ApiRoom,
   type ApiRoomMessage,
@@ -294,11 +295,18 @@ export default function RoomPage() {
 
   useEffect(() => {
     if (!user || !roomId) return;
-    // 꾸미기→채팅 soft nav 때도 다시 읽기
     if (pathname !== `/rooms/${roomId}`) return;
-    const prefs = getRoomThemePrefs(user.id, roomId);
-    setThemePreset(prefs.presetId);
-    setThemeBgUrl(prefs.backgroundUrl);
+    let cancelled = false;
+    async function loadTheme() {
+      const prefs = await loadRoomChatThemeCached(user!.id, roomId);
+      if (cancelled) return;
+      setThemePreset(prefs.presetId);
+      setThemeBgUrl(prefs.backgroundUrl);
+    }
+    void loadTheme();
+    return () => {
+      cancelled = true;
+    };
   }, [user, roomId, pathname]);
 
   useEffect(() => {

@@ -17,6 +17,7 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import * as bcrypt from 'bcrypt';
 import { ListRoomMemberQueryDto } from './dto/list-room-members-query.dto';
+import { UpdateRoomChatThemeDto } from './dto/update-room-chat-theme.dto';
 
 const BCRYPT_SALT_ROUNDS = 12;
 
@@ -664,5 +665,61 @@ export class RoomsService {
         data: { memberCount: { decrement: 1 } },
       }),
     ]);
+  }
+
+  async getChatTheme(roomId: string, userId: string) {
+    await this.findById(roomId);
+    const member = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+      select: { id: true },
+    });
+    if (!member) {
+      throw new ForbiddenException('방 멤버만 채팅 테마를 조회할 수 있습니다.');
+    }
+    const row = await this.prisma.roomChatTheme.findUnique({
+      where: { userId_roomId: { userId, roomId } },
+    });
+    return {
+      presetId: row?.presetId ?? 'lp-bar',
+      backgroundUrl: row?.backgroundUrl ?? null,
+    };
+  }
+
+  async upsertChatTheme(
+    roomId: string,
+    userId: string,
+    dto: UpdateRoomChatThemeDto,
+  ) {
+    await this.findById(roomId);
+    const member = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+      select: { id: true },
+    });
+    if (!member) {
+      throw new ForbiddenException('방 멤버만 테마를 저장할 수 있습니다.');
+    }
+    const presetId = dto.presetId ?? 'lp-bar';
+
+    const backgroundUrl =
+      dto.backgroundUrl === undefined
+        ? undefined
+        : dto.backgroundUrl?.trim() || null;
+    const row = await this.prisma.roomChatTheme.upsert({
+      where: { userId_roomId: { userId, roomId } },
+      create: {
+        userId,
+        roomId,
+        presetId: dto.presetId ?? 'lp-bar',
+        backgroundUrl: backgroundUrl ?? null,
+      },
+      update: {
+        ...(dto.presetId !== undefined ? { presetId: dto.presetId } : {}),
+        ...(backgroundUrl !== undefined ? { backgroundUrl } : {}),
+      },
+    });
+    return {
+      presetId: row.presetId,
+      backgroundUrl: row.backgroundUrl,
+    };
   }
 }

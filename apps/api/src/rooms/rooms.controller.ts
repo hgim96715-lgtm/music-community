@@ -27,6 +27,7 @@ import {
   AllowWithdrawing,
 } from 'src/auth/active-account.guard';
 import { ListRoomMemberQueryDto } from './dto/list-room-members-query.dto';
+import { UpdateRoomChatThemeDto } from './dto/update-room-chat-theme.dto';
 
 @ApiTags('Rooms')
 @Controller('rooms')
@@ -178,5 +179,26 @@ export class RoomsController {
   ) {
     await this.roomsService.deleteMessage(roomId, messageId, userId);
     this.roomsGateway.emitMessageDeleted(roomId, messageId);
+  }
+
+  @ApiOperation({ summary: '방 채팅 테마 조회' })
+  @AllowWithdrawing()
+  @Get(':id/theme')
+  async getChatTheme(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+  ) {
+    return await this.roomsService.getChatTheme(roomId, userId);
+  }
+
+  @ApiOperation({ summary: '방 채팅 테마 수정' })
+  @AllowWithdrawing()
+  @Patch(':id/theme')
+  async updateChatTheme(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+    @Body() dto: UpdateRoomChatThemeDto,
+  ) {
+    return await this.roomsService.upsertChatTheme(roomId, userId, dto);
   }
 }
