@@ -1,8 +1,8 @@
+import { SupportTopNav } from '@/components/support/SupportTopNav';
 import { fetchPublishedNotice } from '@/lib/api';
 import { formatDisplayDate } from '@/lib/date';
 import { authPageClassName, authTitleClassName } from '@/lib/form';
-import { ChevronLeft, Megaphone } from 'lucide-react';
-import Link from 'next/link';
+import { Megaphone } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 type NoticeDetailPageProps = {
@@ -24,14 +24,7 @@ export default async function SupportNoticeDetailPage({
 
   return (
     <main className={authPageClassName}>
-      <div className="mb-6">
-        <Link
-          href="/support/notices"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
-          <ChevronLeft className="size-4" aria-hidden />
-          공지사항
-        </Link>
-      </div>
+      <SupportTopNav backHref="/support/notices" backLabel="공지사항" />
 
       <article>
         <header className="border-b-2 border-[rgb(201_166_107/0.45)] pb-4">

@@ -1,6 +1,5 @@
+import { SupportTopNav } from '@/components/support/SupportTopNav';
 import { authPageClassName, authTitleClassName } from '@/lib/form';
-import { ChevronLeft } from 'lucide-react';
-import Link from 'next/link';
 
 /** FAQ (1차 placeholder · 비로그인 공개) */
 export default function SupportFaqPage() {
@@ -21,14 +20,7 @@ export default function SupportFaqPage() {
 
   return (
     <main className={authPageClassName}>
-      <div className="mb-6">
-        <Link
-          href="/support"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
-          <ChevronLeft className="size-4" aria-hidden />
-          고객지원
-        </Link>
-      </div>
+      <SupportTopNav backHref="/support" backLabel="고객지원" />
 
       <article>
         <h1 className={authTitleClassName}>자주 묻는 질문</h1>

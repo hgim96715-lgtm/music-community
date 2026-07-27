@@ -1,19 +1,11 @@
+import { SupportTopNav } from '@/components/support/SupportTopNav';
 import { authPageClassName, authTitleClassName } from '@/lib/form';
-import { ChevronLeft } from 'lucide-react';
-import Link from 'next/link';
 
 /** 개인정보 처리방침 (정적 · 비로그인 공개) */
 export default function PrivacyPage() {
   return (
     <main className={authPageClassName}>
-      <div className="mb-6">
-        <Link
-          href="/support"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
-          <ChevronLeft className="size-4" aria-hidden />
-          고객지원
-        </Link>
-      </div>
+      <SupportTopNav backHref="/support" backLabel="고객지원" />
 
       <article>
         <h1 className={authTitleClassName}>개인정보 처리방침</h1>

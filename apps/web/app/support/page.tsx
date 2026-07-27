@@ -1,3 +1,4 @@
+import { SupportTopNav } from '@/components/support/SupportTopNav';
 import {
   authPageClassName,
   appNavLinkClassName,
@@ -12,6 +13,7 @@ export default function SupportPage() {
     'w-full flex items-center justify-between rounded-xl border border-dashed border-[rgb(31_26_22/0.12)] px-3.5 py-3 text-sm text-[#a89880]';
   return (
     <main className={authPageClassName}>
+      <SupportTopNav backHref="/users/me" backLabel="마이 홈" />
       <div className="mb-6">
         <h1 className={authTitleClassName}>고객지원</h1>
         <p className="mt-2 text-sm leading-relaxed text-neutral-600">

@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -25,6 +26,7 @@ import {
   ActiveAccountGuard,
   AllowWithdrawing,
 } from 'src/auth/active-account.guard';
+import { ListRoomMemberQueryDto } from './dto/list-room-members-query.dto';
 
 @ApiTags('Rooms')
 @Controller('rooms')
@@ -161,8 +163,9 @@ export class RoomsController {
   async listMembers(
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) roomId: string,
+    @Query() query: ListRoomMemberQueryDto,
   ) {
-    return await this.roomsService.listMembers(roomId, userId);
+    return await this.roomsService.listMembers(roomId, userId, query);
   }
 
   @ApiOperation({ summary: '메시지 전체에서 삭제(작성자·방장)' })

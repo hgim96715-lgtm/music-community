@@ -92,8 +92,8 @@ export default function RoomSettingsPage() {
         setVisibility(room.visibility === 'private' ? 'private' : 'public');
         setTopicTagsText(room.topicTags.join(' '));
         setPasswordHint(room.passwordHint ?? '');
-        const list = await fetchRoomMembers(roomId);
-        if (!cancelled) setMembers(list);
+        const list = await fetchRoomMembers(roomId, { limit: 50 });
+        if (!cancelled) setMembers(list.items);
       })
       .catch((error) => {
         if (!cancelled) {

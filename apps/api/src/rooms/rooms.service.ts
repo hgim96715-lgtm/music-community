@@ -16,6 +16,7 @@ import { CreateRoomMessageDto } from './dto/create-room-message.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import * as bcrypt from 'bcrypt';
+import { ListRoomMemberQueryDto } from './dto/list-room-members-query.dto';
 
 const BCRYPT_SALT_ROUNDS = 12;
 
@@ -513,8 +514,11 @@ export class RoomsService {
     });
   }
 
-  /** 멤버만 · owner 먼저 · 나머지 joinedAt */
-  async listMembers(roomId: string, userId: string) {
+  async listMembers(
+    roomId: string,
+    userId: string,
+    query: ListRoomMemberQueryDto,
+  ) {
     await this.findById(roomId);
     const me = await this.prisma.roomMember.findUnique({
       where: { roomId_userId: { roomId, userId } },
@@ -523,22 +527,52 @@ export class RoomsService {
     if (!me) {
       throw new ForbiddenException('방 멤버만 멤버 목록을 조회할 수 있습니다.');
     }
-    const members = await this.prisma.roomMember.findMany({
-      where: { roomId },
-      orderBy: { joinedAt: 'asc' },
-      include: {
-        user: {
-          select: { id: true, nickname: true, image: true },
+
+    const take = Math.min(Math.max(query.limit ?? 30, 1), 50);
+    const q = query.q?.trim();
+    const where = {
+      roomId,
+      ...(q
+        ? {
+            user: {
+              nickname: { contains: q, mode: 'insensitive' as const },
+            },
+          }
+        : {}),
+    };
+    const [total, rows] = await Promise.all([
+      this.prisma.roomMember.count({ where }),
+      this.prisma.roomMember.findMany({
+        where,
+        take: take + 1,
+        ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+        orderBy: [{ joinedAt: 'asc' }, { id: 'asc' }],
+        include: {
+          user: {
+            select: { id: true, nickname: true, image: true },
+          },
         },
-      },
-    });
-    return members.sort((a, b) => {
-      if (a.role === RoomMemberRole.owner && b.role !== RoomMemberRole.owner)
-        return -1;
-      if (b.role === RoomMemberRole.owner && a.role !== RoomMemberRole.owner)
-        return 1;
-      return a.joinedAt.getTime() - b.joinedAt.getTime();
-    });
+      }),
+    ]);
+
+    const hasMore = rows.length > take;
+    const page = hasMore ? rows.slice(0, take) : rows;
+
+    // 첫 페이지만 방장 앞으로 (페이지 안에 있을 때)
+    if (!query.cursor) {
+      page.sort((a, b) => {
+        if (a.role === RoomMemberRole.owner && b.role !== RoomMemberRole.owner)
+          return -1;
+        if (b.role === RoomMemberRole.owner && a.role !== RoomMemberRole.owner)
+          return 1;
+        return a.joinedAt.getTime() - b.joinedAt.getTime();
+      });
+    }
+    return {
+      items: page,
+      nextCursor: hasMore ? (page[page.length - 1]?.id ?? null) : null,
+      total,
+    };
   }
 
   async close(roomId: string, actorId: string) {

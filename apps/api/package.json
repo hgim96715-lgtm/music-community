@@ -10,7 +10,9 @@
     "start:prod": "node dist/src/main",
     "start:deploy": "prisma migrate deploy && node dist/src/main",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "seed:room-members": "npx tsx scripts/seed-room-members.ts",
+    "seed:cleanup": "npx tsx scripts/cleanup-seed-users.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

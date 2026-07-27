@@ -1,7 +1,8 @@
+import { SupportTopNav } from '@/components/support/SupportTopNav';
 import { fetchPublishedNotices } from '@/lib/api';
 import { formatDisplayDate } from '@/lib/date';
 import { authPageClassName, authTitleClassName } from '@/lib/form';
-import { ChevronLeft, ChevronRight, Megaphone } from 'lucide-react';
+import { ChevronRight, Megaphone } from 'lucide-react';
 import Link from 'next/link';
 
 function noticeSummary(body: string, max = 80) {
@@ -23,12 +24,7 @@ export default async function SupportNoticesPage() {
 
   return (
     <main className={authPageClassName}>
-      <Link
-        href="/support"
-        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
-        <ChevronLeft className="size-4" aria-hidden />
-        고객지원
-      </Link>
+      <SupportTopNav backHref="/support" backLabel="고객지원" />
       <div className="mb-6">
         <h1 className={`${authTitleClassName} flex items-center gap-2`}>
           <Megaphone

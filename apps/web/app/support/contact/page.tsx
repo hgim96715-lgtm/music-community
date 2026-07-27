@@ -3,6 +3,7 @@ import { PillInput } from '@/components/auth/PillInput';
 import { PillTextarea } from '@/components/auth/PillTextarea';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { createSupportContact } from '@/lib/api';
+import { SupportTopNav } from '@/components/support/SupportTopNav';
 import {
   authPageClassName,
   authSubmitClassName,
@@ -10,8 +11,7 @@ import {
   fieldErrorClassName,
   fieldSuccessClassName,
 } from '@/lib/form';
-import { ChevronLeft, Loader2, Mail, User } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, Mail, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 /** 문의하기 — POST /support/contact (Nest SMTP) */
@@ -58,14 +58,7 @@ export default function SupportContactPage() {
   }
   return (
     <main className={authPageClassName}>
-      <div className="mb-6">
-        <Link
-          href="/support"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
-          <ChevronLeft className="size-4" aria-hidden />
-          고객지원
-        </Link>
-      </div>
+      <SupportTopNav backHref="/support" backLabel="고객지원" />
       <article>
         <h1 className={authTitleClassName}>문의하기</h1>
         <p className="mt-2 text-sm leading-relaxed text-neutral-500">

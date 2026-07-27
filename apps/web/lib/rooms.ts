@@ -45,10 +45,30 @@ export type ApiRoomMemberWithUser = ApiRoomMember & {
   user: ApiRoomOwner;
 };
 
+export type ApiRoomMembersPage = {
+  items: ApiRoomMemberWithUser[];
+  nextCursor: string | null;
+  total: number;
+};
+
+export type FetchRoomMembersParams = {
+  q?: string;
+  cursor?: string;
+  limit?: number;
+};
+
 export function fetchRoomMembers(
   roomId: string,
-): Promise<ApiRoomMemberWithUser[]> {
-  return authFetchApi<ApiRoomMemberWithUser[]>(`/rooms/${roomId}/members`);
+  params: FetchRoomMembersParams = {},
+): Promise<ApiRoomMembersPage> {
+  const sp = new URLSearchParams();
+  if (params.q?.trim()) sp.set('q', params.q.trim());
+  if (params.cursor) sp.set('cursor', params.cursor);
+  if (params.limit != null) sp.set('limit', params.limit.toString());
+  const qs = sp.toString();
+  return authFetchApi<ApiRoomMembersPage>(
+    `/rooms/${roomId}/members${qs ? `?${qs}` : ''}`,
+  );
 }
 
 export type ApiRoomRecommendation = {
