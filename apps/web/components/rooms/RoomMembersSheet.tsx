@@ -1,5 +1,7 @@
 'use client';
+
 import { useAvatarAction } from '@/components/friends/AvatarActionContext';
+import { useFriendIdSet } from '@/components/friends/FriendIdsContext';
 import { ApiRoomMemberWithUser, fetchRoomMembers } from '@/lib/rooms';
 import { Loader2, User, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -21,6 +23,7 @@ export function RoomMembersSheet({
   myUserId,
 }: Props) {
   const { openSheet } = useAvatarAction();
+  const friendIds = useFriendIdSet();
   const [members, setMembers] = useState<ApiRoomMemberWithUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -97,6 +100,7 @@ export function RoomMembersSheet({
               {members.map((m) => {
                 const mine = m.userId === myUserId;
                 const owner = m.role === 'owner';
+                const isFriend = !mine && friendIds.has(m.userId);
                 return (
                   <li key={m.id}>
                     <button
@@ -117,6 +121,11 @@ export function RoomMembersSheet({
                       {owner ? (
                         <span className="shrink-0 rounded-full bg-brand-primary-soft px-2 py-0.5 text-[11px] font-semibold text-brand-primary">
                           방장
+                        </span>
+                      ) : null}
+                      {isFriend ? (
+                        <span className="shrink-0 rounded-full border border-[rgb(201_166_107/0.28)] px-2 py-0.5 text-[11px] font-medium text-[#a89880]">
+                          친구
                         </span>
                       ) : null}
                       {mine ? (

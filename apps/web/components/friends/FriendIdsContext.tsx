@@ -69,6 +69,11 @@ export function useIsFriend(userId: string): boolean {
   }, [user, userId, ids]);
 }
 
+/** 목록에서 `.has(userId)` — map 안에서 useIsFriend 금지용 */
+export function useFriendIdSet(): ReadonlySet<string> {
+  return useContext(FriendIdsContext).ids;
+}
+
 export function useReloadFriendIds(): () => void {
   return useContext(FriendIdsContext).reload;
 }

@@ -13,8 +13,6 @@ import {
   fetchRoom,
   fetchRoomMessages,
   joinRoom,
-  kickRoomMember,
-  leaveRoom,
   updateRoom,
   type ApiRoom,
   type ApiRoomMessage,
@@ -43,14 +41,11 @@ import {
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FeedDialog } from '@/components/recommendations/FeedDialog';
 import { CommentEmojiPicker } from '@/components/recommendations/CommentEmojiPicker';
-import { AvatarActionProvider } from '@/components/friends/AvatarActionContext';
-import { FriendIdsProvider } from '@/components/friends/FriendIdsContext';
-import { RoomMembersSheet } from '@/components/rooms/RoomMembersSheet';
 import {
   RoomSongCard,
   type RoomSongCardData,
@@ -72,6 +67,11 @@ import {
   type SavedLyricPreset,
 } from '@/components/saved-cards/SavedLyricSaveSheet';
 import { createSavedLyric } from '@/lib/api';
+import {
+  getRoomThemePrefs,
+  getRoomThemePreset,
+  RoomThemePresetId,
+} from '@/lib/roomThemeStorage';
 
 const ATTACH_ITEMS = [
   {
@@ -125,8 +125,6 @@ export default function RoomPage() {
   /** Messages/인스타 — 꾹 누르면 뜨는 액션 시트 */
   const [actionTargetId, setActionTargetId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [leaving, setLeaving] = useState(false);
-  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
   const [songShareOpen, setSongShareOpen] = useState(false);
@@ -150,7 +148,6 @@ export default function RoomPage() {
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
 
-  const [membersOpen, setMembersOpen] = useState(false);
   /** 강퇴(ban) 등으로 입장 불가 — 방 UI 없이 모달 */
   const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
 
@@ -163,6 +160,10 @@ export default function RoomPage() {
   const [previewJacket, setPreviewJacket] = useState<NonNullable<
     (typeof messages)[number]['savedCard']
   > | null>(null);
+
+  const [themePreset, setThemePreset] = useState<RoomThemePresetId>('lp-bar');
+  const pathname = usePathname();
+  const [themeBgUrl, setThemeBgUrl] = useState<string | null>(null);
 
   function clearPlaying() {
     setPlayingSong(null);
@@ -287,6 +288,15 @@ export default function RoomPage() {
       setLoading(false);
     }
   }, [roomId, user?.id]);
+
+  useEffect(() => {
+    if (!user || !roomId) return;
+    // 꾸미기→채팅 soft nav 때도 다시 읽기
+    if (pathname !== `/rooms/${roomId}`) return;
+    const prefs = getRoomThemePrefs(user.id, roomId);
+    setThemePreset(prefs.presetId);
+    setThemeBgUrl(prefs.backgroundUrl);
+  }, [user, roomId, pathname]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -476,22 +486,6 @@ export default function RoomPage() {
     }
   }
 
-  async function confirmLeave() {
-    if (!roomId || leaving) return;
-    setLeaving(true);
-    setError('');
-    try {
-      await leaveRoom(roomId);
-      void socketLeaveRoom(roomId);
-      setLeaveConfirmOpen(false);
-      router.replace('/rooms');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '퇴장에 실패했습니다.');
-    } finally {
-      setLeaving(false);
-    }
-  }
-
   async function confirmJoinWithPassword() {
     if (!roomId || !pendingRoom || joining) return;
     const pw = joinPassword.trim();
@@ -547,7 +541,19 @@ export default function RoomPage() {
     }
     if (passwordOpen && pendingRoom) {
       return (
-        <main className={`${authPageClassName} gap-4`}>
+        <main
+          className={`room-theme--${themePreset} mx-auto flex h-[100dvh] w-full max-w-lg flex-col`}
+          style={{
+            paddingBottom: keyboardInset,
+            transition: 'padding-bottom 120ms ease-out',
+            ...(themeBgUrl
+              ? {
+                  backgroundImage: `linear-gradient(rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.55)), url("${themeBgUrl.replace(/"/g, '')}")`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }
+              : {}),
+          }}>
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
             <div className="w-full max-w-sm rounded-2xl border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.96)] p-5 shadow-[0_16px_48px_rgb(0_0_0/0.42)]">
               <p className="text-center text-2xl" aria-hidden>
@@ -631,661 +637,601 @@ export default function RoomPage() {
   }
 
   return (
-    <FriendIdsProvider>
-      <AvatarActionProvider>
-        <main
-          className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col bg-[color:var(--color-brand-bg)]"
-          style={{
-            // 키보드만큼 화면을 위로 — 메시지·composer가 가려지지 않게
-            paddingBottom: keyboardInset,
-            transition: 'padding-bottom 120ms ease-out',
-          }}>
-          <header className="flex shrink-0 items-center gap-1 border-b border-[rgb(201_166_107/0.18)] bg-[rgb(26_22_18/0.92)] px-2 pb-2.5 pt-2 backdrop-blur-sm">
-            <Link
-              href="/rooms"
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-brand-primary transition-colors hover:bg-[rgb(201_166_107/0.12)]"
-              aria-label="방 목록">
-              <ChevronLeft className="size-5" aria-hidden />
-            </Link>
-            <div className="min-w-0 flex-1 px-1 text-center">
-              <h1 className="truncate text-[15px] font-semibold tracking-tight text-[#ebe3d8]">
-                {room.name}
-              </h1>
-              <p className="flex min-w-0 items-center justify-center gap-1 truncate text-[11px] text-[#a89880]">
-                {room.owner ? (
-                  <>
-                    {user.id === room.ownerId ? (
-                      <Crown
-                        className="size-3 shrink-0 text-brand-primary"
-                        aria-hidden
-                      />
-                    ) : null}
-                    <span className="min-w-0 truncate">
-                      방장 @{room.owner.nickname} ·{' '}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setMembersOpen(true)}
-                      aria-label={`멤버 ${room.memberCount}명 보기`}
-                      className="shrink-0 font-medium text-brand-primary underline-offset-2 hover:underline">
-                      {room.memberCount}명
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setMembersOpen(true)}
-                    aria-label={`멤버 ${room.memberCount}명 보기`}
-                    className="font-medium text-brand-primary underline-offset-2 hover:underline">
-                    {room.memberCount}명
-                  </button>
-                )}
-              </p>
-            </div>
-            {room.description?.trim() ||
-            room.ownerId === user.id ||
-            noticeUnread ? (
-              <button
-                type="button"
-                onClick={openNotice}
-                aria-label={noticeUnread ? '방 공지 (새 공지)' : '방 공지'}
-                className={`relative inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-brand-primary ${
-                  room.description?.trim() ? 'text-[#a89880]' : 'text-[#6b5c4c]'
-                }`}>
-                <Megaphone className="size-4" aria-hidden />
-                {noticeUnread ? (
-                  <span
-                    className="absolute right-1.5 top-1.5 size-2 rounded-full bg-brand-primary ring-2 ring-[color:var(--color-brand-bg)]"
+    <main
+      className={`room-theme--${themePreset} mx-auto flex h-[100dvh] w-full max-w-lg flex-col`}
+      style={{
+        // 키보드만큼 화면을 위로 — 메시지·composer가 가려지지 않게
+        paddingBottom: keyboardInset,
+        transition: 'padding-bottom 120ms ease-out',
+        ...(themeBgUrl
+          ? {
+              backgroundImage: `linear-gradient(rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.55)), url("${themeBgUrl.replace(/"/g, '')}")`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }
+          : {}),
+      }}>
+      <header className="flex shrink-0 items-center gap-1 border-b border-[rgb(201_166_107/0.18)] bg-[rgb(26_22_18/0.92)] px-2 pb-2.5 pt-2 backdrop-blur-sm">
+        <Link
+          href="/rooms"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-brand-primary transition-colors hover:bg-[rgb(201_166_107/0.12)]"
+          aria-label="방 목록">
+          <ChevronLeft className="size-5" aria-hidden />
+        </Link>
+        <div className="min-w-0 flex-1 px-1 text-center">
+          <h1 className="truncate text-[15px] font-semibold tracking-tight text-[#ebe3d8]">
+            {room.name}
+          </h1>
+          <p className="flex min-w-0 items-center justify-center gap-1 truncate text-[11px] text-[#a89880]">
+            {room.owner ? (
+              <>
+                {user.id === room.ownerId ? (
+                  <Crown
+                    className="size-3 shrink-0 text-brand-primary"
                     aria-hidden
                   />
                 ) : null}
-              </button>
+                <span className="min-w-0 truncate">
+                  방장 @{room.owner.nickname}
+                </span>
+              </>
             ) : null}
-            {room.ownerId !== user.id ? (
-              <button
-                type="button"
-                disabled={leaving}
-                onClick={() => setLeaveConfirmOpen(true)}
-                className="shrink-0 rounded-full px-2.5 py-1.5 text-[12px] font-medium text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-red-400 disabled:opacity-50">
-                퇴장
-              </button>
-            ) : (
-              <Link
-                href={`/rooms/${room.id}/settings`}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-brand-primary"
-                aria-label="방 설정">
-                <Settings className="size-4" aria-hidden />
-              </Link>
-            )}
-          </header>
+          </p>
+        </div>
+        {room.description?.trim() ||
+        room.ownerId === user.id ||
+        noticeUnread ? (
+          <button
+            type="button"
+            onClick={openNotice}
+            aria-label={noticeUnread ? '방 공지 (새 공지)' : '방 공지'}
+            className={`relative inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-brand-primary ${
+              room.description?.trim() ? 'text-[#a89880]' : 'text-[#6b5c4c]'
+            }`}>
+            <Megaphone className="size-4" aria-hidden />
+            {noticeUnread ? (
+              <span
+                className="absolute right-1.5 top-1.5 size-2 rounded-full bg-brand-primary ring-2 ring-[color:var(--color-brand-bg)]"
+                aria-hidden
+              />
+            ) : null}
+          </button>
+        ) : null}
+        <Link
+          href={`/rooms/${room.id}/info`}
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-brand-primary"
+          aria-label="이 방">
+          <Settings className="size-4" aria-hidden />
+        </Link>
+      </header>
 
-          {error ? (
-            <p className={`${fieldErrorClassName} px-4 py-1`}>{error}</p>
-          ) : null}
+      {error ? (
+        <p className={`${fieldErrorClassName} px-4 py-1`}>{error}</p>
+      ) : null}
 
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3.5 py-4">
-            {messages.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-1.5 text-center">
-                <p className="text-[15px] font-medium text-[#cbbba0]">
-                  아직 메시지가 없어요
-                </p>
-                <p className="text-[13px] text-[#a89880]">
-                  같이 듣는 첫 말을 걸어 보세요
-                </p>
-              </div>
-            ) : (
-              messages.map((m, index) => {
-                const mine = m.senderId === user.id;
-                const senderIsOwner = m.senderId === room.ownerId;
-                const canDelete = mine || room.ownerId === user.id;
-                const prev = index > 0 ? messages[index - 1] : null;
-                const showDivider = shouldInsertMessageDivider(
-                  prev?.createdAt,
-                  m.createdAt,
-                );
-                return (
-                  <div key={m.id} className="flex w-full flex-col gap-3">
-                    {showDivider ? (
-                      <p className="py-1 text-center text-[11px] font-medium tabular-nums text-[#a89880]">
-                        {formatMessageTimeDivider(m.createdAt)}
-                      </p>
-                    ) : null}
-                    <div
-                      className={`group/msg relative flex max-w-[78%] flex-col ${mine ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
-                      {!mine ? (
-                        <span className="mb-1 flex items-center gap-1 px-1.5 text-[11px] font-medium text-[#a89880]">
-                          {senderIsOwner ? (
-                            <Crown
-                              className="size-3 shrink-0 text-brand-primary"
-                              aria-label="방장"
-                            />
-                          ) : null}
-                          @{displayAuthorNickname(m.sender.nickname)}
-                        </span>
-                      ) : null}
-
-                      {m.type === 'recommendation' && m.recommendation ? (
-                        <div
-                          className="max-w-[min(100%,20rem)] select-none touch-manipulation outline-none"
-                          onPointerDown={
-                            canDelete
-                              ? () => {
-                                  startLongPress(m.id);
-                                }
-                              : undefined
-                          }
-                          onPointerMove={
-                            canDelete
-                              ? (e) => {
-                                  if (
-                                    longPressTimerRef.current !== null &&
-                                    (Math.abs(e.movementX) > 6 ||
-                                      Math.abs(e.movementY) > 6)
-                                  ) {
-                                    clearLongPress();
-                                  }
-                                }
-                              : undefined
-                          }
-                          onPointerUp={canDelete ? clearLongPress : undefined}
-                          onPointerLeave={
-                            canDelete ? clearLongPress : undefined
-                          }
-                          onPointerCancel={
-                            canDelete ? clearLongPress : undefined
-                          }
-                          onContextMenu={
-                            canDelete
-                              ? (e) => {
-                                  e.preventDefault();
-                                  openMessageActions(m.id);
-                                }
-                              : undefined
-                          }>
-                          <RoomSongCard
-                            song={{
-                              title: m.recommendation.title,
-                              artist: m.recommendation.artist,
-                              embedUrl: m.recommendation.embedUrl,
-                            }}
-                            onPlay={() => {
-                              if (longPressFiredRef.current) {
-                                longPressFiredRef.current = false;
-                                return;
-                              }
-                              clearLongPress();
-                              openPlaying(
-                                {
-                                  title: m.recommendation!.title,
-                                  artist: m.recommendation!.artist,
-                                  embedUrl: m.recommendation!.embedUrl,
-                                },
-                                m.recommendation!.id,
-                              );
-                            }}
-                          />
-                        </div>
-                      ) : m.type === 'saved_card' && m.savedCard ? (
-                        <div
-                          className="max-w-[7.5rem] select-none touch-manipulation outline-none"
-                          onPointerDown={
-                            canDelete
-                              ? () => {
-                                  startLongPress(m.id);
-                                }
-                              : undefined
-                          }
-                          onPointerMove={
-                            canDelete
-                              ? (e) => {
-                                  if (
-                                    longPressTimerRef.current !== null &&
-                                    (Math.abs(e.movementX) > 6 ||
-                                      Math.abs(e.movementY) > 6)
-                                  ) {
-                                    clearLongPress();
-                                  }
-                                }
-                              : undefined
-                          }
-                          onPointerUp={canDelete ? clearLongPress : undefined}
-                          onPointerLeave={
-                            canDelete ? clearLongPress : undefined
-                          }
-                          onPointerCancel={
-                            canDelete ? clearLongPress : undefined
-                          }
-                          onContextMenu={
-                            canDelete
-                              ? (e) => {
-                                  e.preventDefault();
-                                  openMessageActions(m.id);
-                                }
-                              : undefined
-                          }>
-                          <button
-                            type="button"
-                            className="w-full text-left"
-                            onClick={() => {
-                              if (longPressFiredRef.current) {
-                                longPressFiredRef.current = false;
-                                return;
-                              }
-                              clearLongPress();
-                              setPreviewJacket(m.savedCard!);
-                            }}>
-                            <LpAlbumJacket
-                              size="sm"
-                              title={m.savedCard.recommendation.title}
-                              artist={m.savedCard.recommendation.artist}
-                              embedUrl={m.savedCard.recommendation.embedUrl}
-                              reason={m.savedCard.recommendation.reason}
-                              moods={m.savedCard.recommendation.moods}
-                              postedAt={m.savedCard.recommendation.createdAt}
-                              savedAt={m.savedCard.createdAt}
-                              customization={m.savedCard.customization}
-                              className="shadow-[0_2px_8px_rgba(0,0,0,0.18)] overflow-visible"
-                            />
-                          </button>
-                        </div>
-                      ) : m.type === 'lyric_quote' &&
-                        m.recommendation &&
-                        m.body ? (
-                        <div
-                          className="max-w-[min(100%,17.5rem)] select-none touch-manipulation outline-none"
-                          onPointerDown={
-                            canDelete
-                              ? () => {
-                                  startLongPress(m.id);
-                                }
-                              : undefined
-                          }
-                          onPointerMove={
-                            canDelete
-                              ? (e) => {
-                                  if (
-                                    longPressTimerRef.current !== null &&
-                                    (Math.abs(e.movementX) > 6 ||
-                                      Math.abs(e.movementY) > 6)
-                                  ) {
-                                    clearLongPress();
-                                  }
-                                }
-                              : undefined
-                          }
-                          onPointerUp={canDelete ? clearLongPress : undefined}
-                          onPointerLeave={
-                            canDelete ? clearLongPress : undefined
-                          }
-                          onPointerCancel={
-                            canDelete ? clearLongPress : undefined
-                          }
-                          onContextMenu={
-                            canDelete
-                              ? (e) => {
-                                  e.preventDefault();
-                                  openMessageActions(m.id);
-                                }
-                              : undefined
-                          }>
-                          <RoomLyricCard
-                            data={{
-                              title: m.recommendation.title,
-                              artist: m.recommendation.artist,
-                              embedUrl: m.recommendation.embedUrl,
-                              lyrics: m.body,
-                              startSec: m.lyricStartSec,
-                              endSec: m.lyricEndSec,
-                            }}
-                            onPlay={() => {
-                              if (longPressFiredRef.current) {
-                                longPressFiredRef.current = false;
-                                return;
-                              }
-                              clearLongPress();
-                              setPreviewJacket(m.savedCard!);
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          role={canDelete ? 'button' : undefined}
-                          tabIndex={canDelete ? 0 : undefined}
-                          onPointerDown={
-                            canDelete
-                              ? () => {
-                                  startLongPress(m.id);
-                                }
-                              : undefined
-                          }
-                          onPointerMove={
-                            canDelete
-                              ? (e) => {
-                                  if (
-                                    longPressTimerRef.current !== null &&
-                                    (Math.abs(e.movementX) > 6 ||
-                                      Math.abs(e.movementY) > 6)
-                                  ) {
-                                    clearLongPress();
-                                  }
-                                }
-                              : undefined
-                          }
-                          onPointerUp={canDelete ? clearLongPress : undefined}
-                          onPointerLeave={
-                            canDelete ? clearLongPress : undefined
-                          }
-                          onPointerCancel={
-                            canDelete ? clearLongPress : undefined
-                          }
-                          onClick={
-                            canDelete
-                              ? (e) => {
-                                  if (longPressFiredRef.current) {
-                                    e.preventDefault();
-                                    longPressFiredRef.current = false;
-                                  }
-                                }
-                              : undefined
-                          }
-                          onContextMenu={
-                            canDelete
-                              ? (e) => {
-                                  e.preventDefault();
-                                  openMessageActions(m.id);
-                                }
-                              : undefined
-                          }
-                          onKeyDown={
-                            canDelete
-                              ? (e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    openMessageActions(m.id);
-                                  }
-                                }
-                              : undefined
-                          }
-                          className={`select-none px-3.5 py-2 text-[15px] leading-snug outline-none touch-manipulation ${
-                            mine
-                              ? 'rounded-[1.25rem] rounded-br-md bg-brand-primary text-[color:var(--color-lp-ink)]'
-                              : 'rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.92)] text-[#ebe3d8] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
-                          }`}>
-                          {m.body}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-            <div ref={bottomRef} />
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3.5 py-4">
+        {messages.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 text-center">
+            <p className="text-[15px] font-medium text-[#cbbba0]">
+              아직 메시지가 없어요
+            </p>
+            <p className="text-[13px] text-[#a89880]">
+              같이 듣는 첫 말을 걸어 보세요
+            </p>
           </div>
-
-          {/* composer — Messages식 하단 바 · safe-area */}
-          <form
-            onSubmit={onSend}
-            className="relative z-20 flex shrink-0 items-center gap-1.5 overflow-visible border-t border-[rgb(201_166_107/0.18)] bg-[rgb(22_18_15/0.98)] px-2.5 pt-2"
-            style={{
-              paddingBottom: 'max(0.65rem, env(safe-area-inset-bottom, 0px))',
-            }}>
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                disabled={sending}
-                onClick={() => {
-                  setEmojiOpen(false);
-                  setAttachOpen((v) => !v);
-                }}
-                aria-label="첨부"
-                aria-expanded={attachOpen}
-                className="flex size-9 items-center justify-center rounded-full text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-[#ebe3d8] disabled:opacity-40">
-                <Plus className="size-5" strokeWidth={1.75} aria-hidden />
-              </button>
-              {attachOpen ? (
+        ) : (
+          messages.map((m, index) => {
+            const mine = m.senderId === user.id;
+            const senderIsOwner = m.senderId === room.ownerId;
+            const canDelete = mine || room.ownerId === user.id;
+            const prev = index > 0 ? messages[index - 1] : null;
+            const showDivider = shouldInsertMessageDivider(
+              prev?.createdAt,
+              m.createdAt,
+            );
+            return (
+              <div key={m.id} className="flex w-full flex-col gap-3">
+                {showDivider ? (
+                  <p className="py-1 text-center text-[11px] font-medium tabular-nums text-[#a89880]">
+                    {formatMessageTimeDivider(m.createdAt)}
+                  </p>
+                ) : null}
                 <div
-                  role="menu"
-                  aria-label="첨부"
-                  className="absolute bottom-full left-0 z-30 mb-2 w-44 overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.98)] py-1 shadow-[0_8px_28px_rgb(0_0_0/0.4)]">
-                  {ATTACH_ITEMS.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        role="menuitem"
-                        disabled={!item.enabled || sending}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (item.id === 'song') {
-                            setAttachOpen(false);
-                            window.setTimeout(() => setSongShareOpen(true), 50);
-                            return;
-                          }
-                          if (item.id === 'photocard') {
-                            setAttachOpen(false);
-                            window.setTimeout(
-                              () => setPhotocardShareOpen(true),
-                              50,
-                            );
-                            return;
-                          }
-                          if (item.id === 'lyric') {
-                            setAttachOpen(false);
-                            window.setTimeout(
-                              () => setLyricShareOpen(true),
-                              50,
-                            );
-                          }
+                  className={`group/msg relative flex max-w-[78%] flex-col ${mine ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
+                  {!mine ? (
+                    <span className="mb-1 flex items-center gap-1 px-1.5 text-[11px] font-medium text-[#a89880]">
+                      {senderIsOwner ? (
+                        <Crown
+                          className="size-3 shrink-0 text-brand-primary"
+                          aria-label="방장"
+                        />
+                      ) : null}
+                      @{displayAuthorNickname(m.sender.nickname)}
+                    </span>
+                  ) : null}
+
+                  {m.type === 'recommendation' && m.recommendation ? (
+                    <div
+                      className="max-w-[min(100%,20rem)] select-none touch-manipulation outline-none"
+                      onPointerDown={
+                        canDelete
+                          ? () => {
+                              startLongPress(m.id);
+                            }
+                          : undefined
+                      }
+                      onPointerMove={
+                        canDelete
+                          ? (e) => {
+                              if (
+                                longPressTimerRef.current !== null &&
+                                (Math.abs(e.movementX) > 6 ||
+                                  Math.abs(e.movementY) > 6)
+                              ) {
+                                clearLongPress();
+                              }
+                            }
+                          : undefined
+                      }
+                      onPointerUp={canDelete ? clearLongPress : undefined}
+                      onPointerLeave={canDelete ? clearLongPress : undefined}
+                      onPointerCancel={canDelete ? clearLongPress : undefined}
+                      onContextMenu={
+                        canDelete
+                          ? (e) => {
+                              e.preventDefault();
+                              openMessageActions(m.id);
+                            }
+                          : undefined
+                      }>
+                      <RoomSongCard
+                        song={{
+                          title: m.recommendation.title,
+                          artist: m.recommendation.artist,
+                          embedUrl: m.recommendation.embedUrl,
                         }}
-                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm ${
-                          item.enabled
-                            ? 'text-[#ebe3d8] hover:bg-[rgb(201_166_107/0.1)]'
-                            : 'cursor-not-allowed text-[#6b5c4c]'
-                        } disabled:opacity-40`}>
-                        <Icon className="size-4 shrink-0" strokeWidth={1.75} />
-                        <span className="min-w-0 flex-1 font-medium">
-                          {item.label}
-                        </span>
-                        {item.hint ? (
-                          <span className="text-[10px] text-[#8a8070]">
-                            {item.hint}
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
-            <CommentEmojiPicker
-              disabled={sending}
-              open={emojiOpen}
-              onOpenChange={(open) => {
-                setEmojiOpen(open);
-                if (open) setAttachOpen(false);
-              }}
-              onPick={(emoji) => setBody((prev) => prev + emoji)}
-            />
-            <input
-              ref={inputRef}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              onFocus={() => {
-                setEmojiOpen(false);
-                setAttachOpen(false);
-              }}
-              maxLength={2000}
-              placeholder="메시지"
-              className="min-w-0 flex-1 rounded-[1.25rem] border-0 bg-[rgb(42_36_30)] px-3.5 py-2 text-[15px] text-[#ebe3d8] outline-none placeholder:text-[#8a8070] focus:ring-2 focus:ring-brand-primary/25"
-            />
-            <button
-              type="submit"
-              disabled={sending || !body.trim()}
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-primary text-[color:var(--color-lp-ink)] transition-transform active:scale-95 disabled:opacity-30"
-              aria-label="보내기">
-              {sending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-3.5" aria-hidden />
-              )}
-            </button>
-          </form>
-
-          {typeof document !== 'undefined' && actionTargetId
-            ? createPortal(
-                <div
-                  className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-label="메시지 메뉴"
-                  onClick={() => setActionTargetId(null)}>
-                  <div
-                    className="w-full max-w-sm px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-0 sm:pb-0"
-                    onClick={(e) => e.stopPropagation()}>
-                    <div className="overflow-hidden rounded-[14px] border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.96)] shadow-[0_8px_32px_rgb(0_0_0/0.4)] backdrop-blur-md">
+                        onPlay={() => {
+                          if (longPressFiredRef.current) {
+                            longPressFiredRef.current = false;
+                            return;
+                          }
+                          clearLongPress();
+                          openPlaying(
+                            {
+                              title: m.recommendation!.title,
+                              artist: m.recommendation!.artist,
+                              embedUrl: m.recommendation!.embedUrl,
+                            },
+                            m.recommendation!.id,
+                          );
+                        }}
+                      />
+                    </div>
+                  ) : m.type === 'saved_card' && m.savedCard ? (
+                    <div
+                      className="max-w-[7.5rem] select-none touch-manipulation outline-none"
+                      onPointerDown={
+                        canDelete
+                          ? () => {
+                              startLongPress(m.id);
+                            }
+                          : undefined
+                      }
+                      onPointerMove={
+                        canDelete
+                          ? (e) => {
+                              if (
+                                longPressTimerRef.current !== null &&
+                                (Math.abs(e.movementX) > 6 ||
+                                  Math.abs(e.movementY) > 6)
+                              ) {
+                                clearLongPress();
+                              }
+                            }
+                          : undefined
+                      }
+                      onPointerUp={canDelete ? clearLongPress : undefined}
+                      onPointerLeave={canDelete ? clearLongPress : undefined}
+                      onPointerCancel={canDelete ? clearLongPress : undefined}
+                      onContextMenu={
+                        canDelete
+                          ? (e) => {
+                              e.preventDefault();
+                              openMessageActions(m.id);
+                            }
+                          : undefined
+                      }>
                       <button
                         type="button"
-                        disabled={deleting}
+                        className="w-full text-left"
                         onClick={() => {
-                          setDeleteTargetId(actionTargetId);
-                          setActionTargetId(null);
-                        }}
-                        className="w-full py-3.5 text-[17px] font-semibold text-red-400 transition-colors active:bg-[rgb(201_166_107/0.08)]">
-                        삭제
+                          if (longPressFiredRef.current) {
+                            longPressFiredRef.current = false;
+                            return;
+                          }
+                          clearLongPress();
+                          setPreviewJacket(m.savedCard!);
+                        }}>
+                        <LpAlbumJacket
+                          size="sm"
+                          title={m.savedCard.recommendation.title}
+                          artist={m.savedCard.recommendation.artist}
+                          embedUrl={m.savedCard.recommendation.embedUrl}
+                          reason={m.savedCard.recommendation.reason}
+                          moods={m.savedCard.recommendation.moods}
+                          postedAt={m.savedCard.recommendation.createdAt}
+                          savedAt={m.savedCard.createdAt}
+                          customization={m.savedCard.customization}
+                          className="shadow-[0_2px_8px_rgba(0,0,0,0.18)] overflow-visible"
+                        />
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setActionTargetId(null)}
-                      className="mt-2 w-full rounded-[14px] border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.96)] py-3.5 text-[17px] font-semibold text-brand-primary shadow-[0_4px_16px_rgb(0_0_0/0.3)] transition-colors active:bg-[rgb(201_166_107/0.08)]">
-                      취소
-                    </button>
-                  </div>
-                </div>,
-                document.body,
-              )
-            : null}
+                  ) : m.type === 'lyric_quote' && m.recommendation && m.body ? (
+                    <div
+                      className="max-w-[min(100%,17.5rem)] select-none touch-manipulation outline-none"
+                      onPointerDown={
+                        canDelete
+                          ? () => {
+                              startLongPress(m.id);
+                            }
+                          : undefined
+                      }
+                      onPointerMove={
+                        canDelete
+                          ? (e) => {
+                              if (
+                                longPressTimerRef.current !== null &&
+                                (Math.abs(e.movementX) > 6 ||
+                                  Math.abs(e.movementY) > 6)
+                              ) {
+                                clearLongPress();
+                              }
+                            }
+                          : undefined
+                      }
+                      onPointerUp={canDelete ? clearLongPress : undefined}
+                      onPointerLeave={canDelete ? clearLongPress : undefined}
+                      onPointerCancel={canDelete ? clearLongPress : undefined}
+                      onContextMenu={
+                        canDelete
+                          ? (e) => {
+                              e.preventDefault();
+                              openMessageActions(m.id);
+                            }
+                          : undefined
+                      }>
+                      <RoomLyricCard
+                        data={{
+                          title: m.recommendation.title,
+                          artist: m.recommendation.artist,
+                          embedUrl: m.recommendation.embedUrl,
+                          lyrics: m.body,
+                          startSec: m.lyricStartSec,
+                          endSec: m.lyricEndSec,
+                        }}
+                        onPlay={() => {
+                          if (longPressFiredRef.current) {
+                            longPressFiredRef.current = false;
+                            return;
+                          }
+                          clearLongPress();
+                          setPreviewJacket(m.savedCard!);
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      role={canDelete ? 'button' : undefined}
+                      tabIndex={canDelete ? 0 : undefined}
+                      onPointerDown={
+                        canDelete
+                          ? () => {
+                              startLongPress(m.id);
+                            }
+                          : undefined
+                      }
+                      onPointerMove={
+                        canDelete
+                          ? (e) => {
+                              if (
+                                longPressTimerRef.current !== null &&
+                                (Math.abs(e.movementX) > 6 ||
+                                  Math.abs(e.movementY) > 6)
+                              ) {
+                                clearLongPress();
+                              }
+                            }
+                          : undefined
+                      }
+                      onPointerUp={canDelete ? clearLongPress : undefined}
+                      onPointerLeave={canDelete ? clearLongPress : undefined}
+                      onPointerCancel={canDelete ? clearLongPress : undefined}
+                      onClick={
+                        canDelete
+                          ? (e) => {
+                              if (longPressFiredRef.current) {
+                                e.preventDefault();
+                                longPressFiredRef.current = false;
+                              }
+                            }
+                          : undefined
+                      }
+                      onContextMenu={
+                        canDelete
+                          ? (e) => {
+                              e.preventDefault();
+                              openMessageActions(m.id);
+                            }
+                          : undefined
+                      }
+                      onKeyDown={
+                        canDelete
+                          ? (e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                openMessageActions(m.id);
+                              }
+                            }
+                          : undefined
+                      }
+                      className={`room-bubble select-none px-3.5 py-2 text-[15px] leading-snug outline-none touch-manipulation ${
+                        mine
+                          ? 'room-bubble--mine rounded-[1.25rem] rounded-br-md bg-brand-primary text-[color:var(--color-lp-ink)]'
+                          : 'room-bubble--other rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.92)] text-[#ebe3d8] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
+                      }`}>
+                      {m.body}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={bottomRef} />
+      </div>
 
-          <FeedDialog
-            open={deleteTargetId !== null}
-            title="메시지를 삭제할까요?"
-            description="방의 모든 멤버에게서 삭제됩니다."
-            confirmLabel="삭제"
-            pendingLabel="삭제 중…"
-            isPending={deleting}
-            onClose={() => !deleting && setDeleteTargetId(null)}
-            onConfirm={() => void confirmDelete()}
-          />
+      {/* composer — Messages식 하단 바 · safe-area */}
+      <form
+        onSubmit={onSend}
+        className="room-composer relative z-20 flex shrink-0 items-center gap-1.5 overflow-visible border-t border-[rgb(201_166_107/0.18)] bg-[rgb(22_18_15/0.98)] px-2.5 pt-2"
+        style={{
+          paddingBottom: 'max(0.65rem, env(safe-area-inset-bottom, 0px))',
+        }}>
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            disabled={sending}
+            onClick={() => {
+              setEmojiOpen(false);
+              setAttachOpen((v) => !v);
+            }}
+            aria-label="첨부"
+            aria-expanded={attachOpen}
+            className="flex size-9 items-center justify-center rounded-full text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-[#ebe3d8] disabled:opacity-40">
+            <Plus className="size-5" strokeWidth={1.75} aria-hidden />
+          </button>
+          {attachOpen ? (
+            <div
+              role="menu"
+              aria-label="첨부"
+              className="absolute bottom-full left-0 z-30 mb-2 w-44 overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.98)] py-1 shadow-[0_8px_28px_rgb(0_0_0/0.4)]">
+              {ATTACH_ITEMS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="menuitem"
+                    disabled={!item.enabled || sending}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (item.id === 'song') {
+                        setAttachOpen(false);
+                        window.setTimeout(() => setSongShareOpen(true), 50);
+                        return;
+                      }
+                      if (item.id === 'photocard') {
+                        setAttachOpen(false);
+                        window.setTimeout(
+                          () => setPhotocardShareOpen(true),
+                          50,
+                        );
+                        return;
+                      }
+                      if (item.id === 'lyric') {
+                        setAttachOpen(false);
+                        window.setTimeout(() => setLyricShareOpen(true), 50);
+                      }
+                    }}
+                    className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm ${
+                      item.enabled
+                        ? 'text-[#ebe3d8] hover:bg-[rgb(201_166_107/0.1)]'
+                        : 'cursor-not-allowed text-[#6b5c4c]'
+                    } disabled:opacity-40`}>
+                    <Icon className="size-4 shrink-0" strokeWidth={1.75} />
+                    <span className="min-w-0 flex-1 font-medium">
+                      {item.label}
+                    </span>
+                    {item.hint ? (
+                      <span className="text-[10px] text-[#8a8070]">
+                        {item.hint}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+        <CommentEmojiPicker
+          disabled={sending}
+          open={emojiOpen}
+          onOpenChange={(open) => {
+            setEmojiOpen(open);
+            if (open) setAttachOpen(false);
+          }}
+          onPick={(emoji) => setBody((prev) => prev + emoji)}
+        />
+        <input
+          ref={inputRef}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          onFocus={() => {
+            setEmojiOpen(false);
+            setAttachOpen(false);
+          }}
+          maxLength={2000}
+          placeholder="메시지"
+          className="min-w-0 flex-1 rounded-[1.25rem] border-0 bg-[rgb(42_36_30)] px-3.5 py-2 text-[15px] text-[#ebe3d8] outline-none placeholder:text-[#8a8070] focus:ring-2 focus:ring-brand-primary/25"
+        />
+        <button
+          type="submit"
+          disabled={sending || !body.trim()}
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-primary text-[color:var(--color-lp-ink)] transition-transform active:scale-95 disabled:opacity-30"
+          aria-label="보내기">
+          {sending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Send className="size-3.5" aria-hidden />
+          )}
+        </button>
+      </form>
 
-          <FeedDialog
-            open={leaveConfirmOpen}
-            title="이 방에서 나갈까요?"
-            description="다시 들어오려면 목록에서 입장하면 됩니다."
-            confirmLabel="퇴장"
-            pendingLabel="나가는 중…"
-            isPending={leaving}
-            onClose={() => !leaving && setLeaveConfirmOpen(false)}
-            onConfirm={() => void confirmLeave()}
-          />
-          <RoomSongShareSheet
-            open={songShareOpen}
-            userId={user.id}
-            sending={sending}
-            onClose={() => setSongShareOpen(false)}
-            onPick={(id) => void shareSong(id)}
-          />
-          <RoomPhotocardShareSheet
-            open={photocardShareOpen}
-            sending={sending}
-            onClose={() => setPhotocardShareOpen(false)}
-            onPick={(id) => void sharePhotocard(id)}
-          />
-          <RoomLyricShareSheet
-            open={lyricShareOpen}
-            userId={user.id}
-            sending={sending}
-            onClose={() => setLyricShareOpen(false)}
-            onSubmit={(payload) => void shareLyric(payload)}
-          />
-          <RoomSongPlaySheet
-            song={playingSong}
-            startSec={playingStartSec ?? undefined}
-            onSaveLyric={
-              playingSong && playingRecId
-                ? () => {
-                    setLyricSavePreset({
-                      recommendationId: playingRecId,
-                      title: playingSong.title,
-                      artist: playingSong.artist,
-                      embedUrl: playingSong.embedUrl,
-                      startSec: playingStartSec ?? undefined,
-                    });
-                    clearPlaying();
-                    setLyricSaveOpen(true);
-                  }
-                : undefined
-            }
-            onClose={clearPlaying}
-          />
-          <SavedLyricSaveSheet
-            open={lyricSaveOpen}
-            userId={user.id}
-            saving={lyricSaving}
-            preset={lyricSavePreset}
-            onClose={() => {
+      {typeof document !== 'undefined' && actionTargetId
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label="메시지 메뉴"
+              onClick={() => setActionTargetId(null)}>
+              <div
+                className="w-full max-w-sm px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-0 sm:pb-0"
+                onClick={(e) => e.stopPropagation()}>
+                <div className="overflow-hidden rounded-[14px] border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.96)] shadow-[0_8px_32px_rgb(0_0_0/0.4)] backdrop-blur-md">
+                  <button
+                    type="button"
+                    disabled={deleting}
+                    onClick={() => {
+                      setDeleteTargetId(actionTargetId);
+                      setActionTargetId(null);
+                    }}
+                    className="w-full py-3.5 text-[17px] font-semibold text-red-400 transition-colors active:bg-[rgb(201_166_107/0.08)]">
+                    삭제
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActionTargetId(null)}
+                  className="mt-2 w-full rounded-[14px] border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.96)] py-3.5 text-[17px] font-semibold text-brand-primary shadow-[0_4px_16px_rgb(0_0_0/0.3)] transition-colors active:bg-[rgb(201_166_107/0.08)]">
+                  취소
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+
+      <FeedDialog
+        open={deleteTargetId !== null}
+        title="메시지를 삭제할까요?"
+        description="방의 모든 멤버에게서 삭제됩니다."
+        confirmLabel="삭제"
+        pendingLabel="삭제 중…"
+        isPending={deleting}
+        onClose={() => !deleting && setDeleteTargetId(null)}
+        onConfirm={() => void confirmDelete()}
+      />
+
+      <RoomSongShareSheet
+        open={songShareOpen}
+        userId={user.id}
+        sending={sending}
+        onClose={() => setSongShareOpen(false)}
+        onPick={(id) => void shareSong(id)}
+      />
+      <RoomPhotocardShareSheet
+        open={photocardShareOpen}
+        sending={sending}
+        onClose={() => setPhotocardShareOpen(false)}
+        onPick={(id) => void sharePhotocard(id)}
+      />
+      <RoomLyricShareSheet
+        open={lyricShareOpen}
+        userId={user.id}
+        sending={sending}
+        onClose={() => setLyricShareOpen(false)}
+        onSubmit={(payload) => void shareLyric(payload)}
+      />
+      <RoomSongPlaySheet
+        song={playingSong}
+        startSec={playingStartSec ?? undefined}
+        onSaveLyric={
+          playingSong && playingRecId
+            ? () => {
+                setLyricSavePreset({
+                  recommendationId: playingRecId,
+                  title: playingSong.title,
+                  artist: playingSong.artist,
+                  embedUrl: playingSong.embedUrl,
+                  startSec: playingStartSec ?? undefined,
+                });
+                clearPlaying();
+                setLyricSaveOpen(true);
+              }
+            : undefined
+        }
+        onClose={clearPlaying}
+      />
+      <SavedLyricSaveSheet
+        open={lyricSaveOpen}
+        userId={user.id}
+        saving={lyricSaving}
+        preset={lyricSavePreset}
+        onClose={() => {
+          setLyricSaveOpen(false);
+          setLyricSavePreset(null);
+        }}
+        onSubmit={(body) => {
+          void (async () => {
+            setLyricSaving(true);
+            try {
+              await createSavedLyric(body);
               setLyricSaveOpen(false);
               setLyricSavePreset(null);
-            }}
-            onSubmit={(body) => {
-              void (async () => {
-                setLyricSaving(true);
-                try {
-                  await createSavedLyric(body);
-                  setLyricSaveOpen(false);
-                  setLyricSavePreset(null);
-                } catch (e) {
-                  alert(e instanceof Error ? e.message : '저장에 실패했어요');
-                } finally {
-                  setLyricSaving(false);
-                }
-              })();
-            }}
-          />
-          <RoomMembersSheet
-            open={membersOpen}
-            onClose={() => setMembersOpen(false)}
-            roomId={room.id}
-            roomName={room.name}
-            myUserId={user.id}
-          />
-          <RoomNoticeSheet
-            open={noticeOpen}
-            body={room.description}
-            canEdit={room.ownerId === user.id}
-            saving={noticeSaving}
-            onClose={closeNotice}
-            onSave={async (text) => {
-              setNoticeSaving(true);
-              try {
-                const updated = await updateRoom(room.id, {
-                  description: text || null,
-                });
-                setRoom(updated);
-                markNoticeSeen(user.id, updated.id, updated.description);
-                setNoticeUnread(false);
-              } finally {
-                setNoticeSaving(false);
-              }
-            }}
-          />
-          <JacketPreviewModal
-            jacket={previewJacket}
-            onClose={() => setPreviewJacket(null)}
-          />
-        </main>
-      </AvatarActionProvider>
-    </FriendIdsProvider>
+            } catch (e) {
+              alert(e instanceof Error ? e.message : '저장에 실패했어요');
+            } finally {
+              setLyricSaving(false);
+            }
+          })();
+        }}
+      />
+      <RoomNoticeSheet
+        open={noticeOpen}
+        body={room.description}
+        canEdit={room.ownerId === user.id}
+        saving={noticeSaving}
+        onClose={closeNotice}
+        onSave={async (text) => {
+          setNoticeSaving(true);
+          try {
+            const updated = await updateRoom(room.id, {
+              description: text || null,
+            });
+            setRoom(updated);
+            markNoticeSeen(user.id, updated.id, updated.description);
+            setNoticeUnread(false);
+          } finally {
+            setNoticeSaving(false);
+          }
+        }}
+      />
+      <JacketPreviewModal
+        jacket={previewJacket}
+        onClose={() => setPreviewJacket(null)}
+      />
+    </main>
   );
 }

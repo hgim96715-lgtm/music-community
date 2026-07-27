@@ -974,6 +974,76 @@
   }
 }
 
+/* 방 채팅 · 나만 보는 테마 (localStorage preset)
+   background-color만 — 단축 background는 inline background-image를 덮음 */
+.room-theme--lp-bar {
+  background-color: #1a1612;
+}
+.room-theme--lp-bar > header {
+  background: rgb(26 22 18 / 0.92);
+  border-color: rgb(201 166 107 / 0.18);
+}
+
+.room-theme--cream-paper {
+  background-color: #f3ebe3;
+  background-image: linear-gradient(180deg, #f3ebe3 0%, #ebe3d8 100%);
+}
+.room-theme--cream-paper > header {
+  background: rgb(255 252 248 / 0.94);
+  border-color: rgb(31 26 22 / 0.12);
+}
+.room-theme--cream-paper > header h1 {
+  color: #1a1410;
+}
+.room-theme--cream-paper > header p {
+  color: #6b5c4c;
+}
+
+.room-theme--midnight {
+  background-color: #0c0a09;
+}
+.room-theme--midnight > header {
+  background: rgb(12 10 9 / 0.94);
+  border-color: rgb(201 166 107 / 0.14);
+}
+
+.room-theme--fan-pink {
+  background-color: #2a181c;
+  background-image: linear-gradient(180deg, #2a181c 0%, #1a1214 100%);
+}
+.room-theme--fan-pink > header {
+  background: rgb(42 24 28 / 0.94);
+  border-color: rgb(232 160 176 / 0.22);
+}
+.room-theme--fan-pink > header a:last-child {
+  color: #e8a0b0;
+}
+
+/* 크림 — 남 말풍선·입력창 */
+.room-theme--cream-paper .room-bubble--other {
+  border-color: rgb(31 26 22 / 0.12);
+  background: rgb(255 255 255 / 0.88);
+  color: #1a1410;
+  box-shadow: 0 1px 3px rgb(31 26 22 / 0.08);
+}
+.room-theme--cream-paper .room-composer {
+  border-color: rgb(31 26 22 / 0.12);
+  background: rgb(255 252 248 / 0.98);
+}
+.room-theme--cream-paper .room-composer input {
+  background: rgb(255 255 255 / 0.95);
+  color: #1a1410;
+}
+.room-theme--cream-paper .room-composer input::placeholder {
+  color: #8a8070;
+}
+
+/* 팬핑크 — composer만 soft */
+.room-theme--fan-pink .room-composer {
+  border-color: rgb(232 160 176 / 0.22);
+  background: rgb(36 20 24 / 0.98);
+}
+
 /* —— LP Bar AppHeader만 —— */
 .app-header {
   border-color: rgb(201 166 107 / 18%);
