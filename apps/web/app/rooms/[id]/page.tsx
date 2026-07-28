@@ -12,6 +12,7 @@ import {
   deleteRoomMessage,
   fetchRoom,
   fetchRoomMessages,
+  hideRoomMessage,
   joinRoom,
   loadRoomChatThemeCached,
   updateRoom,
@@ -115,6 +116,9 @@ const ATTACH_ITEMS = [
   },
 ] as const;
 
+/** 나에게서만 삭제 가능 시간 (5분) */
+const ROOM_MESSAGE_DELETE_EVERYONE_MS = 5 * 60 * 1000;
+
 export default function RoomPage() {
   const { id: roomId } = useParams<{ id: string }>();
   const router = useRouter();
@@ -168,6 +172,19 @@ export default function RoomPage() {
   const [themePreset, setThemePreset] = useState<RoomThemePresetId>('lp-bar');
   const pathname = usePathname();
   const [themeBgUrl, setThemeBgUrl] = useState<string | null>(null);
+
+  const [hideTargetId, setHideTargetId] = useState<string | null>(null);
+  const [hiding, setHiding] = useState(false);
+
+  const actionMsg = messages.find((m) => m.id === actionTargetId);
+  const canDeleteEveryone =
+    !!actionMsg &&
+    !!user &&
+    !!room &&
+    (room.ownerId === user.id ||
+      (actionMsg.senderId === user.id &&
+        Date.now() - new Date(actionMsg.createdAt).getTime() <=
+          ROOM_MESSAGE_DELETE_EVERYONE_MS));
 
   function clearPlaying() {
     setPlayingSong(null);
@@ -497,6 +514,21 @@ export default function RoomPage() {
     }
   }
 
+  async function confirmHide() {
+    if (!hideTargetId || !roomId) return;
+    setHiding(true);
+    setError('');
+    try {
+      await hideRoomMessage(roomId, hideTargetId);
+      setMessages((prev) => prev.filter((m) => m.id !== hideTargetId));
+      setHideTargetId(null);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : '숨김에 실패했습니다.');
+    } finally {
+      setHiding(false);
+    }
+  }
+
   async function confirmJoinWithPassword() {
     if (!roomId || !pendingRoom || joining) return;
     const pw = joinPassword.trim();
@@ -741,7 +773,7 @@ export default function RoomPage() {
               messages.map((m, index) => {
                 const mine = m.senderId === user.id;
                 const senderIsOwner = m.senderId === room.ownerId;
-                const canDelete = mine || room.ownerId === user.id;
+                const canOpenActions = true;
                 const prev = index > 0 ? messages[index - 1] : null;
                 const showDivider = shouldInsertMessageDivider(
                   prev?.createdAt,
@@ -776,14 +808,14 @@ export default function RoomPage() {
                         <div
                           className="max-w-[min(100%,20rem)] select-none touch-manipulation outline-none"
                           onPointerDown={
-                            canDelete
+                            canOpenActions
                               ? () => {
                                   startLongPress(m.id);
                                 }
                               : undefined
                           }
                           onPointerMove={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   if (
                                     longPressTimerRef.current !== null &&
@@ -795,15 +827,17 @@ export default function RoomPage() {
                                 }
                               : undefined
                           }
-                          onPointerUp={canDelete ? clearLongPress : undefined}
+                          onPointerUp={
+                            canOpenActions ? clearLongPress : undefined
+                          }
                           onPointerLeave={
-                            canDelete ? clearLongPress : undefined
+                            canOpenActions ? clearLongPress : undefined
                           }
                           onPointerCancel={
-                            canDelete ? clearLongPress : undefined
+                            canOpenActions ? clearLongPress : undefined
                           }
                           onContextMenu={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   e.preventDefault();
                                   openMessageActions(m.id);
@@ -837,14 +871,14 @@ export default function RoomPage() {
                         <div
                           className="max-w-[7.5rem] select-none touch-manipulation outline-none"
                           onPointerDown={
-                            canDelete
+                            canOpenActions
                               ? () => {
                                   startLongPress(m.id);
                                 }
                               : undefined
                           }
                           onPointerMove={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   if (
                                     longPressTimerRef.current !== null &&
@@ -856,15 +890,17 @@ export default function RoomPage() {
                                 }
                               : undefined
                           }
-                          onPointerUp={canDelete ? clearLongPress : undefined}
+                          onPointerUp={
+                            canOpenActions ? clearLongPress : undefined
+                          }
                           onPointerLeave={
-                            canDelete ? clearLongPress : undefined
+                            canOpenActions ? clearLongPress : undefined
                           }
                           onPointerCancel={
-                            canDelete ? clearLongPress : undefined
+                            canOpenActions ? clearLongPress : undefined
                           }
                           onContextMenu={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   e.preventDefault();
                                   openMessageActions(m.id);
@@ -902,14 +938,14 @@ export default function RoomPage() {
                         <div
                           className="max-w-[min(100%,17.5rem)] select-none touch-manipulation outline-none"
                           onPointerDown={
-                            canDelete
+                            canOpenActions
                               ? () => {
                                   startLongPress(m.id);
                                 }
                               : undefined
                           }
                           onPointerMove={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   if (
                                     longPressTimerRef.current !== null &&
@@ -921,15 +957,17 @@ export default function RoomPage() {
                                 }
                               : undefined
                           }
-                          onPointerUp={canDelete ? clearLongPress : undefined}
+                          onPointerUp={
+                            canOpenActions ? clearLongPress : undefined
+                          }
                           onPointerLeave={
-                            canDelete ? clearLongPress : undefined
+                            canOpenActions ? clearLongPress : undefined
                           }
                           onPointerCancel={
-                            canDelete ? clearLongPress : undefined
+                            canOpenActions ? clearLongPress : undefined
                           }
                           onContextMenu={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   e.preventDefault();
                                   openMessageActions(m.id);
@@ -957,17 +995,17 @@ export default function RoomPage() {
                         </div>
                       ) : (
                         <div
-                          role={canDelete ? 'button' : undefined}
-                          tabIndex={canDelete ? 0 : undefined}
+                          role={canOpenActions ? 'button' : undefined}
+                          tabIndex={canOpenActions ? 0 : undefined}
                           onPointerDown={
-                            canDelete
+                            canOpenActions
                               ? () => {
                                   startLongPress(m.id);
                                 }
                               : undefined
                           }
                           onPointerMove={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   if (
                                     longPressTimerRef.current !== null &&
@@ -979,15 +1017,17 @@ export default function RoomPage() {
                                 }
                               : undefined
                           }
-                          onPointerUp={canDelete ? clearLongPress : undefined}
+                          onPointerUp={
+                            canOpenActions ? clearLongPress : undefined
+                          }
                           onPointerLeave={
-                            canDelete ? clearLongPress : undefined
+                            canOpenActions ? clearLongPress : undefined
                           }
                           onPointerCancel={
-                            canDelete ? clearLongPress : undefined
+                            canOpenActions ? clearLongPress : undefined
                           }
                           onClick={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   if (longPressFiredRef.current) {
                                     e.preventDefault();
@@ -997,7 +1037,7 @@ export default function RoomPage() {
                               : undefined
                           }
                           onContextMenu={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   e.preventDefault();
                                   openMessageActions(m.id);
@@ -1005,7 +1045,7 @@ export default function RoomPage() {
                               : undefined
                           }
                           onKeyDown={
-                            canDelete
+                            canOpenActions
                               ? (e) => {
                                   if (e.key === 'Enter' || e.key === ' ') {
                                     e.preventDefault();
@@ -1155,14 +1195,26 @@ export default function RoomPage() {
                     <div className="overflow-hidden rounded-[14px] border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.96)] shadow-[0_8px_32px_rgb(0_0_0/0.4)] backdrop-blur-md">
                       <button
                         type="button"
-                        disabled={deleting}
+                        disabled={hiding}
                         onClick={() => {
-                          setDeleteTargetId(actionTargetId);
+                          setHideTargetId(actionTargetId);
                           setActionTargetId(null);
                         }}
-                        className="w-full py-3.5 text-[17px] font-semibold text-red-400 transition-colors active:bg-[rgb(201_166_107/0.08)]">
-                        삭제
+                        className="w-full py-3.5 text-[17px] font-semibold text-[#ebe4da] transition-colors active:bg-[rgb(201_166_107/0.08)]">
+                        나에게서만 삭제
                       </button>
+                      {canDeleteEveryone ? (
+                        <button
+                          type="button"
+                          disabled={deleting}
+                          onClick={() => {
+                            setDeleteTargetId(actionTargetId);
+                            setActionTargetId(null);
+                          }}
+                          className="w-full border-t border-[rgb(201_166_107/0.14)] py-3.5 text-[17px] font-semibold text-red-400 transition-colors active:bg-[rgb(201_166_107/0.08)]">
+                          전체에서 삭제
+                        </button>
+                      ) : null}
                     </div>
                     <button
                       type="button"
@@ -1186,7 +1238,16 @@ export default function RoomPage() {
             onClose={() => !deleting && setDeleteTargetId(null)}
             onConfirm={() => void confirmDelete()}
           />
-
+          <FeedDialog
+            open={hideTargetId !== null}
+            title="나에게서만 삭제할까요?"
+            description="다른 멤버 화면에는 그대로 남습니다."
+            confirmLabel="삭제"
+            pendingLabel="삭제 중…"
+            isPending={hiding}
+            onClose={() => !hiding && setHideTargetId(null)}
+            onConfirm={() => void confirmHide()}
+          />
           <RoomSongShareSheet
             open={songShareOpen}
             userId={user.id}

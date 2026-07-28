@@ -36,6 +36,9 @@ const roomMessageInclude = {
   },
 } as const;
 
+/** 전체에서 삭제 가능 시간 (5분) */
+const ROOM_MESSAGE_DELETE_EVERYONE_MS = 5 * 60 * 1000;
+
 @Injectable()
 export class RoomsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -343,6 +346,28 @@ export class RoomsService {
     });
   }
 
+  async hideMessage(roomId: string, messageId: string, userId: string) {
+    await this.findById(roomId);
+    const member = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+      select: { id: true },
+    });
+    if (!member)
+      throw new ForbiddenException('방 멤버만 메시지를 숨길 수 있습니다.');
+
+    const message = await this.prisma.roomMessage.findFirst({
+      where: { id: messageId, roomId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!message) throw new NotFoundException('메시지를 찾을 수 없습니다.');
+
+    await this.prisma.roomMessageHide.upsert({
+      where: { messageId_userId: { messageId, userId } },
+      create: { messageId, userId },
+      update: {},
+    });
+  }
+
   async listMessages(roomId: string, userId: string) {
     await this.findById(roomId);
     const member = await this.prisma.roomMember.findUnique({
@@ -353,7 +378,7 @@ export class RoomsService {
       throw new ForbiddenException('방 멤버만 메시지를 조회할 수 있습니다.');
     }
     const messages = await this.prisma.roomMessage.findMany({
-      where: { roomId, deletedAt: null },
+      where: { roomId, deletedAt: null, hides: { none: { userId } } },
       orderBy: { createdAt: 'desc' },
       include: roomMessageInclude,
     });
@@ -477,6 +502,15 @@ export class RoomsService {
     if (!isOwner && !isSender) {
       throw new ForbiddenException(
         '본인 메시지 또는 방장만 삭제할 수 있습니다.',
+      );
+    }
+    // 일반 멤버(내 글): 5분 창 · 방장은 시간 무관
+    if (
+      !isOwner &&
+      Date.now() - message.createdAt.getTime() > ROOM_MESSAGE_DELETE_EVERYONE_MS
+    ) {
+      throw new ForbiddenException(
+        '보낸 지 5분이 지난 메시지는 전체에서 삭제할 수 없습니다. 나에게서만 삭제를 사용해 주세요.',
       );
     }
     await this.prisma.roomMessage.update({

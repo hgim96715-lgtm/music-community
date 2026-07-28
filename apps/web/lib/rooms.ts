@@ -251,6 +251,16 @@ export function deleteRoomMessage(
   });
 }
 
+/** POST /rooms/:id/messages/:messageId/hide — 나에게서만 삭제 · 204 */
+export function hideRoomMessage(
+  roomId: string,
+  messageId: string,
+): Promise<void> {
+  return authFetchApiVoid(`/rooms/${roomId}/messages/${messageId}/hide`, {
+    method: 'POST',
+  });
+}
+
 export type ApiRoomChatTheme = RoomThemePrefs;
 export type UpdateRoomChatThemeBody = {
   presetId?: RoomThemePresetId;

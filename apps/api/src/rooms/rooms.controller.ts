@@ -181,6 +181,17 @@ export class RoomsController {
     this.roomsGateway.emitMessageDeleted(roomId, messageId);
   }
 
+  @ApiOperation({ summary: '메시지 나에게서만 삭제(멤버)' })
+  @Post(':id/messages/:messageId/hide')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async hideMessage(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+    @Param('messageId', ParseUUIDPipe) messageId: string,
+  ) {
+    await this.roomsService.hideMessage(roomId, messageId, userId);
+  }
+
   @ApiOperation({ summary: '방 채팅 테마 조회' })
   @AllowWithdrawing()
   @Get(':id/theme')

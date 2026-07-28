@@ -93,6 +93,8 @@ model User {
 
   roomChatThemes RoomChatTheme[]
 
+  messageHides RoomMessageHide[]
+
   @@index([deletedAt])
   @@index([withdrawScheduledAt])
 }
@@ -286,6 +288,7 @@ model RoomMessage {
   room           Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
   sender         User            @relation(fields: [senderId], references: [id], onDelete: Cascade)
   recommendation Recommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+  hides RoomMessageHide[]
 
   @@index([roomId, createdAt])
   @@index([senderId])
@@ -341,4 +344,18 @@ model SavedLyric{
 
     @@index([userId])
     @@index([recommendationId])
+}
+
+
+model RoomMessageHide {
+    id String @id @default(uuid(7)) @db.Uuid
+    messageId String @db.Uuid
+    userId String @db.Uuid
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+    message RoomMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([messageId, userId])
+    @@index([userId])
 }
