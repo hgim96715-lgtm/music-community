@@ -139,7 +139,7 @@ export default function AdminNoticesPage() {
     }
   }
 
-  const formBusy = pendingId === 'new' || pendingId === editingId;
+  const formBusy = pendingId !== null && pendingId === (editingId ?? 'new');
 
   return (
     <div className="space-y-6">
