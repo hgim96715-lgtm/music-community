@@ -1,3 +1,5 @@
+import { isRoomMuted } from './roomMuteStorage';
+
 const PREFIX = 'room-chat-seen:';
 
 function storageKey(userId: string, roomId: string) {
@@ -34,6 +36,7 @@ export function hasUnreadChat(
   roomId: string,
   lastMessageAt: string | null,
 ): boolean {
+  if (isRoomMuted(userId, roomId)) return false;
   const latest = lastMessageAt?.trim();
   if (!latest) return false;
   const seen = getSeenChatAt(userId, roomId);

@@ -13,7 +13,8 @@ export type RoomMessageType =
   | 'text'
   | 'recommendation'
   | 'saved_card'
-  | 'lyric_quote';
+  | 'lyric_quote'
+  | 'system';
 
 export type ApiRoomOwner = {
   id: string;

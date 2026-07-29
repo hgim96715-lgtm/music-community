@@ -85,6 +85,12 @@ import {
 import { AvatarActionProvider } from '@/components/friends/AvatarActionContext';
 import { FeedAuthorNickname } from '@/components/friends/FeedAuthorNickname';
 import { FriendIdsProvider } from '@/components/friends/FriendIdsContext';
+import {
+  CHAT_FONT_FAMILY,
+  CHAT_FONT_SCALE_VALUE,
+  ChatFontPrefs,
+  getChatFontPrefs,
+} from '@/lib/chatFontStorage';
 
 const ATTACH_ITEMS = [
   {
@@ -209,6 +215,11 @@ export default function RoomPage() {
     actionMsg.senderId !== user.id;
 
   const showHideForMe = !!actionMsg && !isOwnerModTarget;
+
+  const [chatFont, setChatFont] = useState<ChatFontPrefs>({
+    fontId: 'default',
+    scale: 'M',
+  });
 
   function applyDeletedMessage(m: ApiRoomMessage) {
     setMessages((prev) => {
@@ -401,6 +412,11 @@ export default function RoomPage() {
       cancelled = true;
     };
   }, [user, roomId, pathname]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setChatFont(getChatFontPrefs(user.id));
+  }, [user?.id, pathname]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -764,10 +780,15 @@ export default function RoomPage() {
     if (passwordOpen && pendingRoom) {
       return (
         <main
-          className={`room-theme--${themePreset} mx-auto flex h-[100dvh] w-full max-w-lg flex-col`}
+          className={`room-theme--${themePreset} room-chat-font mx-auto flex h-[100dvh] w-full max-w-lg flex-col`}
           style={{
             paddingBottom: keyboardInset,
             transition: 'padding-bottom 120ms ease-out',
+            ['--room-chat-font-family' as string]:
+              CHAT_FONT_FAMILY[chatFont.fontId],
+            ['--room-chat-font-scale' as string]: String(
+              CHAT_FONT_SCALE_VALUE[chatFont.scale],
+            ),
             ...(themeBgUrl
               ? {
                   backgroundImage: `linear-gradient(rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.55)), url("${themeBgUrl.replace(/"/g, '')}")`,
@@ -862,11 +883,16 @@ export default function RoomPage() {
     <FriendIdsProvider>
       <AvatarActionProvider>
         <main
-          className={`room-theme--${themePreset} mx-auto flex h-[100dvh] w-full max-w-lg flex-col`}
+          className={`room-theme--${themePreset} room-chat-font mx-auto flex h-[100dvh] w-full max-w-lg flex-col`}
           style={{
             // 키보드만큼 화면을 위로 — 메시지·composer가 가려지지 않게
             paddingBottom: keyboardInset,
             transition: 'padding-bottom 120ms ease-out',
+            ['--room-chat-font-family' as string]:
+              CHAT_FONT_FAMILY[chatFont.fontId],
+            ['--room-chat-font-scale' as string]: String(
+              CHAT_FONT_SCALE_VALUE[chatFont.scale],
+            ),
             ...(themeBgUrl
               ? {
                   backgroundImage: `linear-gradient(rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.55)), url("${themeBgUrl.replace(/"/g, '')}")`,
@@ -900,6 +926,8 @@ export default function RoomPage() {
                       <FeedAuthorNickname
                         userId={room.owner.id}
                         nickname={room.owner.nickname}
+                        roomId={room.id}
+                        roomOwnerId={room.ownerId}
                         className="text-[11px] font-medium text-[#a89880]"
                       />
                     </span>
@@ -965,381 +993,399 @@ export default function RoomPage() {
                         {formatMessageTimeDivider(m.createdAt)}
                       </p>
                     ) : null}
-                    <div
-                      className={`group/msg relative flex max-w-[78%] flex-col ${mine ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
-                      {!mine ? (
-                        <span className="mb-1 flex items-center gap-1 px-1.5 text-[11px] font-medium text-[#a89880]">
-                          {senderIsOwner ? (
-                            <Crown
-                              className="size-3 shrink-0 text-brand-primary"
-                              aria-label="방장"
+                    {m.type === 'system' ? (
+                      <p className="px-2 py-0.5 text-center text-[11px] leading-snug text-[#8a8070]">
+                        {m.body?.trim() || '멤버가 방장에 의해 나갔습니다'}
+                      </p>
+                    ) : (
+                      <div
+                        className={`group/msg relative flex max-w-[78%] flex-col ${mine ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
+                        {!mine ? (
+                          <span className="mb-1 flex items-center gap-1 px-1.5 text-[11px] font-medium text-[#a89880]">
+                            {senderIsOwner ? (
+                              <Crown
+                                className="size-3 shrink-0 text-brand-primary"
+                                aria-label="방장"
+                              />
+                            ) : null}
+                            <FeedAuthorNickname
+                              userId={m.senderId}
+                              nickname={m.sender.nickname}
+                              roomId={room.id}
+                              roomOwnerId={room.ownerId}
+                              className="text-[11px] font-medium text-[#a89880]"
                             />
-                          ) : null}
-                          <FeedAuthorNickname
-                            userId={m.senderId}
-                            nickname={m.sender.nickname}
-                            className="text-[11px] font-medium text-[#a89880]"
-                          />
-                        </span>
-                      ) : null}
-
-                      {m.deletedAt && m.deletedByOwner ? (
-                        <div
-                          className={`room-bubble select-none px-3.5 py-2 text-[15px] leading-snug ${
-                            mine
-                              ? 'room-bubble--mine rounded-[1.25rem] rounded-br-md bg-brand-primary/55 text-[color:var(--color-lp-ink)]/70'
-                              : 'room-bubble--other rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.72)] text-[#a89880] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
-                          }`}>
-                          <span className="italic">방장에 의해 삭제되었습니다</span>
-                        </div>
-                      ) : (
-                        <>
-                      {m.replyTo && m.type !== 'text' ? (
-                        <div
-                          className={`mb-1.5 max-w-full border-l-2 pl-2 ${
-                            mine
-                              ? 'self-end border-[rgb(201_166_107/0.55)]'
-                              : 'self-start border-brand-primary/55'
-                          }`}>
-                          <p className="truncate text-[10px] font-medium text-brand-primary">
-                            {m.replyTo.sender.nickname}
-                          </p>
-                          <p className="truncate text-[11px] leading-snug text-[#a89880]">
-                            {replySnippet(m.replyTo)}
-                          </p>
-                        </div>
-                      ) : null}
-
-                      {m.type === 'recommendation' && m.recommendation ? (
-                        <div
-                          className="max-w-[min(100%,20rem)] select-none touch-manipulation outline-none"
-                          onPointerDown={
-                            canOpenActions
-                              ? () => {
-                                  startLongPress(m.id);
-                                }
-                              : undefined
-                          }
-                          onPointerMove={
-                            canOpenActions
-                              ? (e) => {
-                                  if (
-                                    longPressTimerRef.current !== null &&
-                                    (Math.abs(e.movementX) > 6 ||
-                                      Math.abs(e.movementY) > 6)
-                                  ) {
-                                    clearLongPress();
-                                  }
-                                }
-                              : undefined
-                          }
-                          onPointerUp={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onPointerLeave={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onPointerCancel={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onContextMenu={
-                            canOpenActions
-                              ? (e) => {
-                                  e.preventDefault();
-                                  openMessageActions(m.id);
-                                }
-                              : undefined
-                          }>
-                          <RoomSongCard
-                            song={{
-                              title: m.recommendation.title,
-                              artist: m.recommendation.artist,
-                              embedUrl: m.recommendation.embedUrl,
-                            }}
-                            onPlay={() => {
-                              if (longPressFiredRef.current) {
-                                longPressFiredRef.current = false;
-                                return;
-                              }
-                              clearLongPress();
-                              openPlaying(
-                                {
-                                  title: m.recommendation!.title,
-                                  artist: m.recommendation!.artist,
-                                  embedUrl: m.recommendation!.embedUrl,
-                                },
-                                m.recommendation!.id,
-                              );
-                            }}
-                          />
-                        </div>
-                      ) : m.type === 'saved_card' && m.savedCard ? (
-                        <div
-                          className="max-w-[7.5rem] select-none touch-manipulation outline-none"
-                          onPointerDown={
-                            canOpenActions
-                              ? () => {
-                                  startLongPress(m.id);
-                                }
-                              : undefined
-                          }
-                          onPointerMove={
-                            canOpenActions
-                              ? (e) => {
-                                  if (
-                                    longPressTimerRef.current !== null &&
-                                    (Math.abs(e.movementX) > 6 ||
-                                      Math.abs(e.movementY) > 6)
-                                  ) {
-                                    clearLongPress();
-                                  }
-                                }
-                              : undefined
-                          }
-                          onPointerUp={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onPointerLeave={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onPointerCancel={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onContextMenu={
-                            canOpenActions
-                              ? (e) => {
-                                  e.preventDefault();
-                                  openMessageActions(m.id);
-                                }
-                              : undefined
-                          }>
-                          <button
-                            type="button"
-                            className="w-full text-left"
-                            onClick={() => {
-                              if (longPressFiredRef.current) {
-                                longPressFiredRef.current = false;
-                                return;
-                              }
-                              clearLongPress();
-                              setPreviewJacket(m.savedCard!);
-                            }}>
-                            <LpAlbumJacket
-                              size="sm"
-                              title={m.savedCard.recommendation.title}
-                              artist={m.savedCard.recommendation.artist}
-                              embedUrl={m.savedCard.recommendation.embedUrl}
-                              reason={m.savedCard.recommendation.reason}
-                              moods={m.savedCard.recommendation.moods}
-                              postedAt={m.savedCard.recommendation.createdAt}
-                              savedAt={m.savedCard.createdAt}
-                              customization={m.savedCard.customization}
-                              className="shadow-[0_2px_8px_rgba(0,0,0,0.18)] overflow-visible"
-                            />
-                          </button>
-                        </div>
-                      ) : m.type === 'lyric_quote' &&
-                        m.recommendation &&
-                        m.body ? (
-                        <div
-                          className="max-w-[min(100%,17.5rem)] select-none touch-manipulation outline-none"
-                          onPointerDown={
-                            canOpenActions
-                              ? () => {
-                                  startLongPress(m.id);
-                                }
-                              : undefined
-                          }
-                          onPointerMove={
-                            canOpenActions
-                              ? (e) => {
-                                  if (
-                                    longPressTimerRef.current !== null &&
-                                    (Math.abs(e.movementX) > 6 ||
-                                      Math.abs(e.movementY) > 6)
-                                  ) {
-                                    clearLongPress();
-                                  }
-                                }
-                              : undefined
-                          }
-                          onPointerUp={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onPointerLeave={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onPointerCancel={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onContextMenu={
-                            canOpenActions
-                              ? (e) => {
-                                  e.preventDefault();
-                                  openMessageActions(m.id);
-                                }
-                              : undefined
-                          }>
-                          <RoomLyricCard
-                            data={{
-                              title: m.recommendation.title,
-                              artist: m.recommendation.artist,
-                              embedUrl: m.recommendation.embedUrl,
-                              lyrics: m.body,
-                              startSec: m.lyricStartSec,
-                              endSec: m.lyricEndSec,
-                            }}
-                            onPlay={() => {
-                              if (longPressFiredRef.current) {
-                                longPressFiredRef.current = false;
-                                return;
-                              }
-                              clearLongPress();
-                              setPreviewJacket(m.savedCard!);
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          role={canOpenActions ? 'button' : undefined}
-                          tabIndex={canOpenActions ? 0 : undefined}
-                          onPointerDown={
-                            canOpenActions
-                              ? () => {
-                                  startLongPress(m.id);
-                                }
-                              : undefined
-                          }
-                          onPointerMove={
-                            canOpenActions
-                              ? (e) => {
-                                  if (
-                                    longPressTimerRef.current !== null &&
-                                    (Math.abs(e.movementX) > 6 ||
-                                      Math.abs(e.movementY) > 6)
-                                  ) {
-                                    clearLongPress();
-                                  }
-                                }
-                              : undefined
-                          }
-                          onPointerUp={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onPointerLeave={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onPointerCancel={
-                            canOpenActions ? clearLongPress : undefined
-                          }
-                          onClick={
-                            canOpenActions
-                              ? (e) => {
-                                  if (longPressFiredRef.current) {
-                                    e.preventDefault();
-                                    longPressFiredRef.current = false;
-                                  }
-                                }
-                              : undefined
-                          }
-                          onContextMenu={
-                            canOpenActions
-                              ? (e) => {
-                                  e.preventDefault();
-                                  openMessageActions(m.id);
-                                }
-                              : undefined
-                          }
-                          onKeyDown={
-                            canOpenActions
-                              ? (e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    openMessageActions(m.id);
-                                  }
-                                }
-                              : undefined
-                          }
-                          className={`room-bubble select-none px-3.5 py-2 text-[15px] leading-snug outline-none touch-manipulation ${
-                            mine
-                              ? 'room-bubble--mine rounded-[1.25rem] rounded-br-md bg-brand-primary text-[color:var(--color-lp-ink)]'
-                              : 'room-bubble--other rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.92)] text-[#ebe3d8] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
-                          }`}>
-                          {m.replyTo ? (
-                            <div
-                              className={`mb-1.5 border-l-2 pl-2 ${
-                                mine
-                                  ? 'border-[color:var(--color-lp-ink)]/28'
-                                  : 'border-[rgb(201_166_107/0.5)]'
-                              }`}>
-                              <p
-                                className={`truncate text-[10px] font-semibold ${
-                                  mine
-                                    ? 'text-[color:var(--color-lp-ink)]/65'
-                                    : 'text-brand-primary'
-                                }`}>
-                                {m.replyTo.sender.nickname}
-                              </p>
-                              <p
-                                className={`truncate text-[11px] leading-snug ${
-                                  mine
-                                    ? 'text-[color:var(--color-lp-ink)]/48'
-                                    : 'text-[#a89880]'
-                                }`}>
-                                {replySnippet(m.replyTo)}
-                              </p>
-                            </div>
-                          ) : null}
-                          <span className="whitespace-pre-wrap break-words">
-                            {m.body}
                           </span>
-                        </div>
-                      )}
-                        </>
-                      )}
-                      {!(m.deletedAt && m.deletedByOwner) &&
-                      reactionChips(m).length > 0 ? (
-                        <div
-                          className={`mt-1 flex flex-wrap gap-1 ${mine ? 'justify-end' : 'justify-start'}`}>
-                          {reactionChips(m).map((chip) => (
-                            <button
-                              key={chip.emoji}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (
-                                  Date.now() < suppressChipClickUntilRef.current
-                                ) {
-                                  return;
+                        ) : null}
+
+                        {m.deletedAt && m.deletedByOwner ? (
+                          <div
+                            className={`room-bubble select-none px-3.5 py-2 text-[15px] leading-snug ${
+                              mine
+                                ? 'room-bubble--mine rounded-[1.25rem] rounded-br-md bg-brand-primary/55 text-[color:var(--color-lp-ink)]/70'
+                                : 'room-bubble--other rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.72)] text-[#a89880] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
+                            }`}>
+                            <span className="italic">
+                              방장에 의해 삭제되었습니다
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            {m.replyTo && m.type !== 'text' ? (
+                              <div
+                                className={`mb-1.5 max-w-full border-l-2 pl-2 ${
+                                  mine
+                                    ? 'self-end border-[rgb(201_166_107/0.55)]'
+                                    : 'self-start border-brand-primary/55'
+                                }`}>
+                                <p className="truncate text-[10px] font-medium text-brand-primary">
+                                  {m.replyTo.sender.nickname}
+                                </p>
+                                <p className="truncate text-[11px] leading-snug text-[#a89880]">
+                                  {replySnippet(m.replyTo)}
+                                </p>
+                              </div>
+                            ) : null}
+
+                            {m.type === 'recommendation' && m.recommendation ? (
+                              <div
+                                className="max-w-[min(100%,20rem)] select-none touch-manipulation outline-none"
+                                onPointerDown={
+                                  canOpenActions
+                                    ? () => {
+                                        startLongPress(m.id);
+                                      }
+                                    : undefined
                                 }
-                                void (async () => {
-                                  try {
-                                    await toggleTapback(m.id, chip.emoji);
-                                  } catch (err) {
-                                    setError(
-                                      err instanceof Error
-                                        ? err.message
-                                        : '탭백에 실패했습니다.',
+                                onPointerMove={
+                                  canOpenActions
+                                    ? (e) => {
+                                        if (
+                                          longPressTimerRef.current !== null &&
+                                          (Math.abs(e.movementX) > 6 ||
+                                            Math.abs(e.movementY) > 6)
+                                        ) {
+                                          clearLongPress();
+                                        }
+                                      }
+                                    : undefined
+                                }
+                                onPointerUp={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onPointerLeave={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onPointerCancel={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onContextMenu={
+                                  canOpenActions
+                                    ? (e) => {
+                                        e.preventDefault();
+                                        openMessageActions(m.id);
+                                      }
+                                    : undefined
+                                }>
+                                <RoomSongCard
+                                  song={{
+                                    title: m.recommendation.title,
+                                    artist: m.recommendation.artist,
+                                    embedUrl: m.recommendation.embedUrl,
+                                  }}
+                                  onPlay={() => {
+                                    if (longPressFiredRef.current) {
+                                      longPressFiredRef.current = false;
+                                      return;
+                                    }
+                                    clearLongPress();
+                                    openPlaying(
+                                      {
+                                        title: m.recommendation!.title,
+                                        artist: m.recommendation!.artist,
+                                        embedUrl: m.recommendation!.embedUrl,
+                                      },
+                                      m.recommendation!.id,
                                     );
-                                  }
-                                })();
-                              }}
-                              className={`inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[12px] leading-none ${
-                                chip.mine
-                                  ? 'border-brand-primary/50 bg-brand-primary/15 text-[#ebe3d8]'
-                                  : 'border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.9)] text-[#ebe3d8]'
-                              }`}>
-                              <span>{chip.emoji}</span>
-                              {chip.count > 1 ? (
-                                <span className="tabular-nums text-[10px] text-[#a89880]">
-                                  {chip.count}
+                                  }}
+                                />
+                              </div>
+                            ) : m.type === 'saved_card' && m.savedCard ? (
+                              <div
+                                className="max-w-[7.5rem] select-none touch-manipulation outline-none"
+                                onPointerDown={
+                                  canOpenActions
+                                    ? () => {
+                                        startLongPress(m.id);
+                                      }
+                                    : undefined
+                                }
+                                onPointerMove={
+                                  canOpenActions
+                                    ? (e) => {
+                                        if (
+                                          longPressTimerRef.current !== null &&
+                                          (Math.abs(e.movementX) > 6 ||
+                                            Math.abs(e.movementY) > 6)
+                                        ) {
+                                          clearLongPress();
+                                        }
+                                      }
+                                    : undefined
+                                }
+                                onPointerUp={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onPointerLeave={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onPointerCancel={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onContextMenu={
+                                  canOpenActions
+                                    ? (e) => {
+                                        e.preventDefault();
+                                        openMessageActions(m.id);
+                                      }
+                                    : undefined
+                                }>
+                                <button
+                                  type="button"
+                                  className="w-full text-left"
+                                  onClick={() => {
+                                    if (longPressFiredRef.current) {
+                                      longPressFiredRef.current = false;
+                                      return;
+                                    }
+                                    clearLongPress();
+                                    setPreviewJacket(m.savedCard!);
+                                  }}>
+                                  <LpAlbumJacket
+                                    size="sm"
+                                    title={m.savedCard.recommendation.title}
+                                    artist={m.savedCard.recommendation.artist}
+                                    embedUrl={
+                                      m.savedCard.recommendation.embedUrl
+                                    }
+                                    reason={m.savedCard.recommendation.reason}
+                                    moods={m.savedCard.recommendation.moods}
+                                    postedAt={
+                                      m.savedCard.recommendation.createdAt
+                                    }
+                                    savedAt={m.savedCard.createdAt}
+                                    customization={m.savedCard.customization}
+                                    className="shadow-[0_2px_8px_rgba(0,0,0,0.18)] overflow-visible"
+                                  />
+                                </button>
+                              </div>
+                            ) : m.type === 'lyric_quote' &&
+                              m.recommendation &&
+                              m.body ? (
+                              <div
+                                className="max-w-[min(100%,17.5rem)] select-none touch-manipulation outline-none"
+                                onPointerDown={
+                                  canOpenActions
+                                    ? () => {
+                                        startLongPress(m.id);
+                                      }
+                                    : undefined
+                                }
+                                onPointerMove={
+                                  canOpenActions
+                                    ? (e) => {
+                                        if (
+                                          longPressTimerRef.current !== null &&
+                                          (Math.abs(e.movementX) > 6 ||
+                                            Math.abs(e.movementY) > 6)
+                                        ) {
+                                          clearLongPress();
+                                        }
+                                      }
+                                    : undefined
+                                }
+                                onPointerUp={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onPointerLeave={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onPointerCancel={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onContextMenu={
+                                  canOpenActions
+                                    ? (e) => {
+                                        e.preventDefault();
+                                        openMessageActions(m.id);
+                                      }
+                                    : undefined
+                                }>
+                                <RoomLyricCard
+                                  data={{
+                                    title: m.recommendation.title,
+                                    artist: m.recommendation.artist,
+                                    embedUrl: m.recommendation.embedUrl,
+                                    lyrics: m.body,
+                                    startSec: m.lyricStartSec,
+                                    endSec: m.lyricEndSec,
+                                  }}
+                                  onPlay={() => {
+                                    if (longPressFiredRef.current) {
+                                      longPressFiredRef.current = false;
+                                      return;
+                                    }
+                                    clearLongPress();
+                                    setPreviewJacket(m.savedCard!);
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div
+                                role={canOpenActions ? 'button' : undefined}
+                                tabIndex={canOpenActions ? 0 : undefined}
+                                onPointerDown={
+                                  canOpenActions
+                                    ? () => {
+                                        startLongPress(m.id);
+                                      }
+                                    : undefined
+                                }
+                                onPointerMove={
+                                  canOpenActions
+                                    ? (e) => {
+                                        if (
+                                          longPressTimerRef.current !== null &&
+                                          (Math.abs(e.movementX) > 6 ||
+                                            Math.abs(e.movementY) > 6)
+                                        ) {
+                                          clearLongPress();
+                                        }
+                                      }
+                                    : undefined
+                                }
+                                onPointerUp={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onPointerLeave={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onPointerCancel={
+                                  canOpenActions ? clearLongPress : undefined
+                                }
+                                onClick={
+                                  canOpenActions
+                                    ? (e) => {
+                                        if (longPressFiredRef.current) {
+                                          e.preventDefault();
+                                          longPressFiredRef.current = false;
+                                        }
+                                      }
+                                    : undefined
+                                }
+                                onContextMenu={
+                                  canOpenActions
+                                    ? (e) => {
+                                        e.preventDefault();
+                                        openMessageActions(m.id);
+                                      }
+                                    : undefined
+                                }
+                                onKeyDown={
+                                  canOpenActions
+                                    ? (e) => {
+                                        if (
+                                          e.key === 'Enter' ||
+                                          e.key === ' '
+                                        ) {
+                                          e.preventDefault();
+                                          openMessageActions(m.id);
+                                        }
+                                      }
+                                    : undefined
+                                }
+                                className={`room-bubble select-none px-3.5 py-2 text-[15px] leading-snug outline-none touch-manipulation ${
+                                  mine
+                                    ? 'room-bubble--mine rounded-[1.25rem] rounded-br-md bg-brand-primary text-[color:var(--color-lp-ink)]'
+                                    : 'room-bubble--other rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.92)] text-[#ebe3d8] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
+                                }`}>
+                                {m.replyTo ? (
+                                  <div
+                                    className={`mb-1.5 border-l-2 pl-2 ${
+                                      mine
+                                        ? 'border-[color:var(--color-lp-ink)]/28'
+                                        : 'border-[rgb(201_166_107/0.5)]'
+                                    }`}>
+                                    <p
+                                      className={`truncate text-[10px] font-semibold ${
+                                        mine
+                                          ? 'text-[color:var(--color-lp-ink)]/65'
+                                          : 'text-brand-primary'
+                                      }`}>
+                                      {m.replyTo.sender.nickname}
+                                    </p>
+                                    <p
+                                      className={`truncate text-[11px] leading-snug ${
+                                        mine
+                                          ? 'text-[color:var(--color-lp-ink)]/48'
+                                          : 'text-[#a89880]'
+                                      }`}>
+                                      {replySnippet(m.replyTo)}
+                                    </p>
+                                  </div>
+                                ) : null}
+                                <span className="whitespace-pre-wrap break-words">
+                                  {m.body}
                                 </span>
-                              ) : null}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        {!(m.deletedAt && m.deletedByOwner) &&
+                        reactionChips(m).length > 0 ? (
+                          <div
+                            className={`mt-1 flex flex-wrap gap-1 ${mine ? 'justify-end' : 'justify-start'}`}>
+                            {reactionChips(m).map((chip) => (
+                              <button
+                                key={chip.emoji}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (
+                                    Date.now() <
+                                    suppressChipClickUntilRef.current
+                                  ) {
+                                    return;
+                                  }
+                                  void (async () => {
+                                    try {
+                                      await toggleTapback(m.id, chip.emoji);
+                                    } catch (err) {
+                                      setError(
+                                        err instanceof Error
+                                          ? err.message
+                                          : '탭백에 실패했습니다.',
+                                      );
+                                    }
+                                  })();
+                                }}
+                                className={`inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[12px] leading-none ${
+                                  chip.mine
+                                    ? 'border-brand-primary/50 bg-brand-primary/15 text-[#ebe3d8]'
+                                    : 'border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.9)] text-[#ebe3d8]'
+                                }`}>
+                                <span>{chip.emoji}</span>
+                                {chip.count > 1 ? (
+                                  <span className="tabular-nums text-[10px] text-[#a89880]">
+                                    {chip.count}
+                                  </span>
+                                ) : null}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
                   </div>
                 );
               })

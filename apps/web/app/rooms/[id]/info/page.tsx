@@ -10,6 +10,7 @@ import {
   authTitleClassName,
   fieldErrorClassName,
 } from '@/lib/form';
+import { isRoomMuted, setRoomMuted } from '@/lib/roomMuteStorage';
 import { fetchRoom, leaveRoom, type ApiRoom } from '@/lib/rooms';
 import { socketLeaveRoom } from '@/lib/roomsSocket';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
@@ -31,6 +32,12 @@ export default function RoomInfoPage() {
   const [membersOpen, setMembersOpen] = useState(false);
 
   const isOwner = Boolean(user && room && room.ownerId === user.id);
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id || !roomId) return;
+    setMuted(isRoomMuted(user.id, roomId));
+  }, [user?.id, roomId]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -62,6 +69,13 @@ export default function RoomInfoPage() {
       cancelled = true;
     };
   }, [user, roomId]);
+
+  function toggleMuted() {
+    if (!user?.id || !roomId) return;
+    const next = !muted;
+    setRoomMuted(user.id, roomId, next);
+    setMuted(next);
+  }
 
   async function confirmLeave() {
     if (!roomId || leaving) return;
@@ -134,6 +148,38 @@ export default function RoomInfoPage() {
                   />
                 </Link>
 
+                <Link
+                  href="/users/me/settings#chat-display"
+                  className="flex items-center justify-between gap-3 border-b border-[rgb(201_166_107/0.14)] px-4 py-3.5 text-[14px] text-[#ebe4da] transition-colors hover:bg-[rgb(201_166_107/0.08)]">
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span>글꼴 수정</span>
+                    <span className="text-[11px] font-normal text-[#8a8070]">
+                      글꼴을 바꾸려면 · 나에게만 · 모든 방
+                    </span>
+                  </span>
+                  <ChevronRight
+                    className="size-4 shrink-0 text-[#a89880]"
+                    aria-hidden
+                  />
+                </Link>
+                <button
+                  type="button"
+                  onClick={toggleMuted}
+                  className="flex w-full items-center justify-between gap-3 border-b border-[rgb(201_166_107/0.14)] px-4 py-3.5 text-left text-[14px] text-[#ebe4da] transition-colors hover:bg-[rgb(201_166_107/0.08)]">
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span>알림 뮤트</span>
+                    <span className="text-[11px] font-normal text-[#8a8070]">
+                      이 방 soft 점 끄기 · 나에게만
+                    </span>
+                  </span>
+                  <span
+                    className={`text-[12px] font-semibold ${
+                      muted ? 'text-brand-primary' : 'text-[#8a8070]'
+                    }`}>
+                    {muted ? '켜짐' : '꺼짐'}
+                  </span>
+                </button>
+
                 {isOwner ? (
                   <Link
                     href={`/rooms/${roomId}/settings`}
@@ -173,6 +219,7 @@ export default function RoomInfoPage() {
             roomId={roomId}
             roomName={room?.name ?? ''}
             myUserId={user.id}
+            roomOwnerId={room?.ownerId ?? ''}
           />
         </main>
       </AvatarActionProvider>
