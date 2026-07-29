@@ -105,8 +105,9 @@ export class RoomsController {
     @Param('id', ParseUUIDPipe) roomId: string,
     @Param('userId', ParseUUIDPipe) targetUserId: string,
   ) {
-    await this.roomsService.kick(roomId, userId, targetUserId);
+    const message = await this.roomsService.kick(roomId, userId, targetUserId);
     this.roomsGateway.emitMemberKicked(roomId, targetUserId);
+    this.roomsGateway.emitMessage(roomId, message);
   }
   @ApiOperation({ summary: '방 설정 수정(방장)' })
   @Patch(':id')

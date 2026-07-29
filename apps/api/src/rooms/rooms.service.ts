@@ -749,18 +749,35 @@ export class RoomsService {
     if (target.role === RoomMemberRole.owner) {
       throw new BadRequestException('방장은 강퇴할 수 없습니다.');
     }
-    await this.prisma.$transaction([
-      this.prisma.roomBan.upsert({
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { nickname: true },
+    });
+    const nick = targetUser?.nickname ?? '멤버';
+    const body = `@${nick}님이 방장에 의해 나갔습니다`;
+
+    // array $transaction + include → pg client.query 중첩 경고
+    return this.prisma.$transaction(async (tx) => {
+      await tx.roomBan.upsert({
         where: { roomId_userId: { roomId, userId: targetUserId } },
         create: { roomId, userId: targetUserId, kickedBy: actorId },
         update: { kickedBy: actorId },
-      }),
-      this.prisma.roomMember.delete({ where: { id: target.id } }),
-      this.prisma.room.update({
+      });
+      await tx.roomMember.delete({ where: { id: target.id } });
+      await tx.room.update({
         where: { id: roomId },
         data: { memberCount: { decrement: 1 } },
-      }),
-    ]);
+      });
+      return tx.roomMessage.create({
+        data: {
+          roomId,
+          senderId: actorId,
+          type: RoomMessageType.system,
+          body,
+        },
+        include: roomMessageInclude,
+      });
+    });
   }
 
   async getChatTheme(roomId: string, userId: string) {

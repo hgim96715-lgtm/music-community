@@ -54,6 +54,7 @@ enum RoomMessageType {
     recommendation
     saved_card
     lyric_quote
+    system
 }
 
 model User {

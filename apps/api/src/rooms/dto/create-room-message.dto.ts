@@ -1,5 +1,5 @@
 import {
-  IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -10,9 +10,16 @@ import {
 } from 'class-validator';
 import { RoomMessageType } from 'src/generated/prisma/enums';
 
+const CLIENT_MESSAGE_TYPES = [
+  RoomMessageType.text,
+  RoomMessageType.recommendation,
+  RoomMessageType.saved_card,
+  RoomMessageType.lyric_quote,
+] as const;
+
 export class CreateRoomMessageDto {
-  @IsEnum(RoomMessageType)
-  type: RoomMessageType;
+  @IsIn(CLIENT_MESSAGE_TYPES)
+  type: (typeof CLIENT_MESSAGE_TYPES)[number];
 
   @ValidateIf(
     (o: CreateRoomMessageDto) =>
