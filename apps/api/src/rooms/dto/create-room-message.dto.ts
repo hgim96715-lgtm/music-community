@@ -46,4 +46,8 @@ export class CreateRoomMessageDto {
   @IsInt()
   @Min(0)
   lyricEndSec?: number;
+
+  @IsOptional()
+  @IsUUID()
+  replyToId?: string;
 }

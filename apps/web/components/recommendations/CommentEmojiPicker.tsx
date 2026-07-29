@@ -10,7 +10,7 @@ import {
 import { createPortal } from 'react-dom';
 
 /** Smile 탭 → 카테고리 그리드 (댓글·방 채팅 공용) */
-const EMOJI_GROUPS = [
+export const EMOJI_GROUPS = [
   {
     label: '표정',
     emojis: [

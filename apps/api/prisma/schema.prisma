@@ -94,6 +94,7 @@ model User {
   roomChatThemes RoomChatTheme[]
 
   messageHides RoomMessageHide[]
+  messageReactions RoomMessageReaction[]
 
   @@index([deletedAt])
   @@index([withdrawScheduledAt])
@@ -283,17 +284,38 @@ model RoomMessage {
   savedCardId      String?         @db.Uuid
   lyricStartSec Int?
   lyricEndSec  Int?
+  replyToId      String?         @db.Uuid
   createdAt        DateTime        @default(now()) @db.Timestamptz(3)
   deletedAt        DateTime?       @db.Timestamptz(3)
   room           Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
   sender         User            @relation(fields: [senderId], references: [id], onDelete: Cascade)
   recommendation Recommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
   hides RoomMessageHide[]
+  reactions RoomMessageReaction[]
+  replyTo        RoomMessage?     @relation("RoomMessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies        RoomMessage[]    @relation("RoomMessageReplies")
 
   @@index([roomId, createdAt])
   @@index([senderId])
   @@index([recommendationId])
   @@index([savedCardId])
+  @@index([replyToId])
+}
+
+model RoomMessageReaction{
+    id String @id @default(uuid(7)) @db.Uuid
+    messageId String @db.Uuid
+    userId String @db.Uuid
+    emoji String
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+    message RoomMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    /// 같은 유저가 여러 이모지 OK · 같은 이모지 다시 누르면 취소
+    @@unique([messageId, userId, emoji])
+    @@index([userId])
+    @@index([messageId])
 }
 
 

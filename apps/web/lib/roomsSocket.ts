@@ -1,7 +1,7 @@
 import { io, type Socket } from 'socket.io-client';
 import { getApiAccessToken } from './authToken';
 import { getApiBaseUrl } from './fetchApi';
-import type { ApiRoomMessage } from './rooms';
+import type { ApiRoomMessage, ToogleRoomMessageReactionResult } from './rooms';
 
 let socket: Socket | null = null;
 
@@ -99,5 +99,15 @@ export function onRoomUpdated(
   s.on('room:updated', handler);
   return () => {
     s.off('room:updated', handler);
+  };
+}
+
+export function onRoomMessageReaction(
+  handler: (payload: ToogleRoomMessageReactionResult) => void,
+): () => void {
+  const s = getRoomSocket();
+  s.on('message:reaction', handler);
+  return () => {
+    s.off('message:reaction', handler);
   };
 }

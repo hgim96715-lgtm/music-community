@@ -107,4 +107,17 @@ export class RoomsGateway implements OnGatewayConnection {
   ) {
     this.server.to(`room:${roomId}`).emit('room:updated', { roomId, ...patch });
   }
+
+  /** 댓글 및 반응 추가 및 삭제 — 채팅 중인 멤버에 전파 */
+  emitMessageReaction(
+    roomId: string,
+    payload: {
+      messageId: string;
+      userId: string;
+      emoji: string;
+      removed: boolean;
+    },
+  ) {
+    this.server.to(`room:${roomId}`).emit('message:reaction', payload);
+  }
 }

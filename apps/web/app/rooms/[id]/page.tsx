@@ -15,6 +15,9 @@ import {
   hideRoomMessage,
   joinRoom,
   loadRoomChatThemeCached,
+  ROOM_TAPBACK_EMOJIS,
+  toggleRoomMessageReaction,
+  ToogleRoomMessageReactionResult,
   updateRoom,
   type ApiRoom,
   type ApiRoomMessage,
@@ -23,6 +26,7 @@ import {
   onRoomKicked,
   onRoomMessage,
   onRoomMessageDeleted,
+  onRoomMessageReaction,
   onRoomSocketConnect,
   onRoomUpdated,
   socketJoinRoom,
@@ -41,13 +45,17 @@ import {
   Quote,
   Send,
   Settings,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FeedDialog } from '@/components/recommendations/FeedDialog';
-import { CommentEmojiPicker } from '@/components/recommendations/CommentEmojiPicker';
+import {
+  CommentEmojiPicker,
+  EMOJI_GROUPS,
+} from '@/components/recommendations/CommentEmojiPicker';
 import {
   RoomSongCard,
   type RoomSongCardData,
@@ -152,9 +160,12 @@ export default function RoomPage() {
   /** OS 키보드가 가린 높이(px) — visualViewport */
   const [keyboardInset, setKeyboardInset] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
+  /** 탭백 메뉴 닫힌 직후 칩으로 클릭 穿透 방지 */
+  const suppressChipClickUntilRef = useRef(0);
+  const tapbackInFlightRef = useRef<string | null>(null);
 
   /** 강퇴(ban) 등으로 입장 불가 — 방 UI 없이 모달 */
   const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
@@ -175,6 +186,7 @@ export default function RoomPage() {
 
   const [hideTargetId, setHideTargetId] = useState<string | null>(null);
   const [hiding, setHiding] = useState(false);
+  const [tapbackMoreOpen, setTapbackMoreOpen] = useState(false);
 
   const actionMsg = messages.find((m) => m.id === actionTargetId);
   const canDeleteEveryone =
@@ -185,6 +197,24 @@ export default function RoomPage() {
       (actionMsg.senderId === user.id &&
         Date.now() - new Date(actionMsg.createdAt).getTime() <=
           ROOM_MESSAGE_DELETE_EVERYONE_MS));
+
+  const [replyToId, setReplyToId] = useState<string | null>(null);
+  const replyTarget = messages.find((m) => m.id === replyToId) ?? null;
+
+  function replySnippet(m: {
+    type: ApiRoomMessage['type'];
+    body: string | null;
+    deletedAt: string | null;
+    recommendation?: { title: string } | null;
+  }) {
+    if (m.deletedAt) return '삭제된 메시지';
+    if (m.type === 'text') return m.body?.trim() || '메시지';
+    if (m.type === 'recommendation')
+      return m.recommendation?.title?.trim() || m.body?.trim() || '곡';
+    if (m.type === 'saved_card') return '자켓';
+    if (m.type === 'lyric_quote') return m.body?.trim() || '가사';
+    return m.body?.trim() || '메시지';
+  }
 
   function clearPlaying() {
     setPlayingSong(null);
@@ -214,6 +244,7 @@ export default function RoomPage() {
     longPressFiredRef.current = true;
     setEmojiOpen(false);
     setAttachOpen(false);
+    setTapbackMoreOpen(false);
     setActionTargetId(messageId);
     try {
       navigator.vibrate?.(12);
@@ -355,6 +386,10 @@ export default function RoomPage() {
     const offDeleted = onRoomMessageDeleted(({ messageId }) => {
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
     });
+    const offReaction = onRoomMessageReaction((payload) => {
+      applyReactionLocal(payload);
+    });
+
     const offKicked = onRoomKicked(({ roomId: kickedRoomId }) => {
       if (kickedRoomId !== roomId) return;
       void socketLeaveRoom(roomId);
@@ -380,6 +415,7 @@ export default function RoomPage() {
       offConnect();
       offMessage();
       offDeleted();
+      offReaction();
       offKicked();
       offUpdated();
       void socketLeaveRoom(roomId);
@@ -418,9 +454,14 @@ export default function RoomPage() {
       const message = await createRoomMessage(roomId, {
         type: 'text',
         body: text,
+        ...(replyToId ? { replyToId } : {}),
       });
       appendMessage(message);
       setBody('');
+      setReplyToId(null);
+      if (inputRef.current) {
+        inputRef.current.style.height = 'auto';
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : '전송에 실패했습니다.');
     } finally {
@@ -527,6 +568,83 @@ export default function RoomPage() {
     } finally {
       setHiding(false);
     }
+  }
+
+  function applyReactionLocal(payload: ToogleRoomMessageReactionResult) {
+    if (!payload.messageId || !payload.userId || !payload.emoji) return;
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== payload.messageId) return m;
+        const reactions = m.reactions ?? [];
+        const withoutMineEmoji = reactions.filter(
+          (r) => !(r.userId === payload.userId && r.emoji === payload.emoji),
+        );
+        if (payload.removed) {
+          return { ...m, reactions: withoutMineEmoji };
+        }
+        return {
+          ...m,
+          reactions: [
+            ...withoutMineEmoji,
+            {
+              emoji: payload.emoji,
+              userId: payload.userId,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        };
+      }),
+    );
+  }
+
+  async function toggleTapback(messageId: string, emoji: string) {
+    if (!roomId) return;
+    const lockKey = `${messageId}:${emoji}`;
+    if (tapbackInFlightRef.current === lockKey) return;
+    tapbackInFlightRef.current = lockKey;
+    try {
+      const result = await toggleRoomMessageReaction(roomId, messageId, emoji);
+      applyReactionLocal(result);
+    } finally {
+      window.setTimeout(() => {
+        if (tapbackInFlightRef.current === lockKey) {
+          tapbackInFlightRef.current = null;
+        }
+      }, 350);
+    }
+  }
+
+  async function onTapback(emoji: string) {
+    if (!actionTargetId || !roomId) return;
+    const messageId = actionTargetId;
+    // 메뉴가 먼저 사라지면 아래 칩으로 같은 클릭이 새어 추가→즉시 취소됨
+    suppressChipClickUntilRef.current = Date.now() + 500;
+    setActionTargetId(null);
+    setTapbackMoreOpen(false);
+
+    try {
+      await toggleTapback(messageId, emoji);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : '반응에 실패했습니다.');
+    }
+  }
+
+  function reactionChips(m: ApiRoomMessage) {
+    const map = new Map<
+      string,
+      { emoji: string; count: number; mine: boolean }
+    >();
+    for (const r of m.reactions ?? []) {
+      const cur = map.get(r.emoji) ?? {
+        emoji: r.emoji,
+        count: 0,
+        mine: false,
+      };
+      cur.count += 1;
+      if (user && r.userId === user.id) cur.mine = true;
+      map.set(r.emoji, cur);
+    }
+    return [...map.values()];
   }
 
   async function confirmJoinWithPassword() {
@@ -804,6 +922,22 @@ export default function RoomPage() {
                         </span>
                       ) : null}
 
+                      {m.replyTo && m.type !== 'text' ? (
+                        <div
+                          className={`mb-1.5 max-w-full border-l-2 pl-2 ${
+                            mine
+                              ? 'self-end border-[rgb(201_166_107/0.55)]'
+                              : 'self-start border-brand-primary/55'
+                          }`}>
+                          <p className="truncate text-[10px] font-medium text-brand-primary">
+                            {m.replyTo.sender.nickname}
+                          </p>
+                          <p className="truncate text-[11px] leading-snug text-[#a89880]">
+                            {replySnippet(m.replyTo)}
+                          </p>
+                        </div>
+                      ) : null}
+
                       {m.type === 'recommendation' && m.recommendation ? (
                         <div
                           className="max-w-[min(100%,20rem)] select-none touch-manipulation outline-none"
@@ -1059,9 +1193,77 @@ export default function RoomPage() {
                               ? 'room-bubble--mine rounded-[1.25rem] rounded-br-md bg-brand-primary text-[color:var(--color-lp-ink)]'
                               : 'room-bubble--other rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.92)] text-[#ebe3d8] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
                           }`}>
-                          {m.body}
+                          {m.replyTo ? (
+                            <div
+                              className={`mb-1.5 border-l-2 pl-2 ${
+                                mine
+                                  ? 'border-[color:var(--color-lp-ink)]/28'
+                                  : 'border-[rgb(201_166_107/0.5)]'
+                              }`}>
+                              <p
+                                className={`truncate text-[10px] font-semibold ${
+                                  mine
+                                    ? 'text-[color:var(--color-lp-ink)]/65'
+                                    : 'text-brand-primary'
+                                }`}>
+                                {m.replyTo.sender.nickname}
+                              </p>
+                              <p
+                                className={`truncate text-[11px] leading-snug ${
+                                  mine
+                                    ? 'text-[color:var(--color-lp-ink)]/48'
+                                    : 'text-[#a89880]'
+                                }`}>
+                                {replySnippet(m.replyTo)}
+                              </p>
+                            </div>
+                          ) : null}
+                          <span className="whitespace-pre-wrap break-words">
+                            {m.body}
+                          </span>
                         </div>
                       )}
+                      {reactionChips(m).length > 0 ? (
+                        <div
+                          className={`mt-1 flex flex-wrap gap-1 ${mine ? 'justify-end' : 'justify-start'}`}>
+                          {reactionChips(m).map((chip) => (
+                            <button
+                              key={chip.emoji}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (
+                                  Date.now() < suppressChipClickUntilRef.current
+                                ) {
+                                  return;
+                                }
+                                void (async () => {
+                                  try {
+                                    await toggleTapback(m.id, chip.emoji);
+                                  } catch (err) {
+                                    setError(
+                                      err instanceof Error
+                                        ? err.message
+                                        : '탭백에 실패했습니다.',
+                                    );
+                                  }
+                                })();
+                              }}
+                              className={`inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[12px] leading-none ${
+                                chip.mine
+                                  ? 'border-brand-primary/50 bg-brand-primary/15 text-[#ebe3d8]'
+                                  : 'border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.9)] text-[#ebe3d8]'
+                              }`}>
+                              <span>{chip.emoji}</span>
+                              {chip.count > 1 ? (
+                                <span className="tabular-nums text-[10px] text-[#a89880]">
+                                  {chip.count}
+                                </span>
+                              ) : null}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 );
@@ -1073,134 +1275,241 @@ export default function RoomPage() {
           {/* composer — Messages식 하단 바 · safe-area */}
           <form
             onSubmit={onSend}
-            className="room-composer relative z-20 flex shrink-0 items-center gap-1.5 overflow-visible border-t border-[rgb(201_166_107/0.18)] bg-[rgb(22_18_15/0.98)] px-2.5 pt-2"
+            className="room-composer relative z-20 flex shrink-0 flex-col overflow-visible border-t border-[rgb(201_166_107/0.18)] bg-[rgb(22_18_15/0.98)] px-2.5 pt-2"
             style={{
               paddingBottom: 'max(0.65rem, env(safe-area-inset-bottom, 0px))',
             }}>
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                disabled={sending}
-                onClick={() => {
-                  setEmojiOpen(false);
-                  setAttachOpen((v) => !v);
-                }}
-                aria-label="첨부"
-                aria-expanded={attachOpen}
-                className="flex size-9 items-center justify-center rounded-full text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-[#ebe3d8] disabled:opacity-40">
-                <Plus className="size-5" strokeWidth={1.75} aria-hidden />
-              </button>
-              {attachOpen ? (
-                <div
-                  role="menu"
-                  aria-label="첨부"
-                  className="absolute bottom-full left-0 z-30 mb-2 w-44 overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.98)] py-1 shadow-[0_8px_28px_rgb(0_0_0/0.4)]">
-                  {ATTACH_ITEMS.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        role="menuitem"
-                        disabled={!item.enabled || sending}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (item.id === 'song') {
-                            setAttachOpen(false);
-                            window.setTimeout(() => setSongShareOpen(true), 50);
-                            return;
-                          }
-                          if (item.id === 'photocard') {
-                            setAttachOpen(false);
-                            window.setTimeout(
-                              () => setPhotocardShareOpen(true),
-                              50,
-                            );
-                            return;
-                          }
-                          if (item.id === 'lyric') {
-                            setAttachOpen(false);
-                            window.setTimeout(
-                              () => setLyricShareOpen(true),
-                              50,
-                            );
-                          }
-                        }}
-                        className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm ${
-                          item.enabled
-                            ? 'text-[#ebe3d8] hover:bg-[rgb(201_166_107/0.1)]'
-                            : 'cursor-not-allowed text-[#6b5c4c]'
-                        } disabled:opacity-40`}>
-                        <Icon className="size-4 shrink-0" strokeWidth={1.75} />
-                        <span className="min-w-0 flex-1 font-medium">
-                          {item.label}
-                        </span>
-                        {item.hint ? (
-                          <span className="text-[10px] text-[#8a8070]">
-                            {item.hint}
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
+            {replyTarget ? (
+              <div className="mb-1.5 flex items-center gap-2 border-l-2 border-brand-primary/65 pl-2.5">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[11px] font-medium text-brand-primary">
+                    {replyTarget.sender.nickname}
+                  </p>
+                  <p className="truncate text-[12px] leading-snug text-[#a89880]">
+                    {replySnippet(replyTarget)}
+                  </p>
                 </div>
-              ) : null}
+                <button
+                  type="button"
+                  onClick={() => setReplyToId(null)}
+                  aria-label="답글 취소"
+                  className="rounded-full p-1 text-[#a89880] hover:text-[#ebe3d8]">
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            ) : null}
+            <div className="flex items-end gap-1.5">
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  disabled={sending}
+                  onClick={() => {
+                    setEmojiOpen(false);
+                    setAttachOpen((v) => !v);
+                  }}
+                  aria-label="첨부"
+                  aria-expanded={attachOpen}
+                  className="flex size-9 items-center justify-center rounded-full text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-[#ebe3d8] disabled:opacity-40">
+                  <Plus className="size-5" strokeWidth={1.75} aria-hidden />
+                </button>
+                {attachOpen ? (
+                  <div
+                    role="menu"
+                    aria-label="첨부"
+                    className="absolute bottom-full left-0 z-30 mb-2 w-44 overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.98)] py-1 shadow-[0_8px_28px_rgb(0_0_0/0.4)]">
+                    {ATTACH_ITEMS.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          role="menuitem"
+                          disabled={!item.enabled || sending}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (item.id === 'song') {
+                              setAttachOpen(false);
+                              window.setTimeout(
+                                () => setSongShareOpen(true),
+                                50,
+                              );
+                              return;
+                            }
+                            if (item.id === 'photocard') {
+                              setAttachOpen(false);
+                              window.setTimeout(
+                                () => setPhotocardShareOpen(true),
+                                50,
+                              );
+                              return;
+                            }
+                            if (item.id === 'lyric') {
+                              setAttachOpen(false);
+                              window.setTimeout(
+                                () => setLyricShareOpen(true),
+                                50,
+                              );
+                            }
+                          }}
+                          className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm ${
+                            item.enabled
+                              ? 'text-[#ebe3d8] hover:bg-[rgb(201_166_107/0.1)]'
+                              : 'cursor-not-allowed text-[#6b5c4c]'
+                          } disabled:opacity-40`}>
+                          <Icon
+                            className="size-4 shrink-0"
+                            strokeWidth={1.75}
+                          />
+                          <span className="min-w-0 flex-1 font-medium">
+                            {item.label}
+                          </span>
+                          {item.hint ? (
+                            <span className="text-[10px] text-[#8a8070]">
+                              {item.hint}
+                            </span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+              <CommentEmojiPicker
+                disabled={sending}
+                open={emojiOpen}
+                onOpenChange={(open) => {
+                  setEmojiOpen(open);
+                  if (open) setAttachOpen(false);
+                }}
+                onPick={(emoji) => setBody((prev) => prev + emoji)}
+              />
+              <textarea
+                ref={inputRef}
+                value={body}
+                rows={1}
+                maxLength={2000}
+                placeholder="메시지"
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+                }}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === 'Enter' &&
+                    !e.shiftKey &&
+                    !e.nativeEvent.isComposing
+                  ) {
+                    e.preventDefault();
+                    e.currentTarget.form?.requestSubmit();
+                  }
+                }}
+                onFocus={() => {
+                  setEmojiOpen(false);
+                  setAttachOpen(false);
+                }}
+                className="max-h-[7.5rem] min-w-0 flex-1 resize-none overflow-y-auto rounded-[1.25rem] border-0 bg-[rgb(42_36_30)] px-3.5 py-2 text-[15px] leading-snug text-[#ebe3d8] outline-none placeholder:text-[#8a8070] focus:ring-2 focus:ring-brand-primary/25"
+              />
+              <button
+                type="submit"
+                disabled={sending || !body.trim()}
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-primary text-[color:var(--color-lp-ink)] transition-transform active:scale-95 disabled:opacity-30"
+                aria-label="보내기">
+                {sending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Send className="size-3.5" aria-hidden />
+                )}
+              </button>
             </div>
-            <CommentEmojiPicker
-              disabled={sending}
-              open={emojiOpen}
-              onOpenChange={(open) => {
-                setEmojiOpen(open);
-                if (open) setAttachOpen(false);
-              }}
-              onPick={(emoji) => setBody((prev) => prev + emoji)}
-            />
-            <input
-              ref={inputRef}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              onFocus={() => {
-                setEmojiOpen(false);
-                setAttachOpen(false);
-              }}
-              maxLength={2000}
-              placeholder="메시지"
-              className="min-w-0 flex-1 rounded-[1.25rem] border-0 bg-[rgb(42_36_30)] px-3.5 py-2 text-[15px] text-[#ebe3d8] outline-none placeholder:text-[#8a8070] focus:ring-2 focus:ring-brand-primary/25"
-            />
-            <button
-              type="submit"
-              disabled={sending || !body.trim()}
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-primary text-[color:var(--color-lp-ink)] transition-transform active:scale-95 disabled:opacity-30"
-              aria-label="보내기">
-              {sending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-3.5" aria-hidden />
-              )}
-            </button>
           </form>
 
           {typeof document !== 'undefined' && actionTargetId
             ? createPortal(
                 <div
-                  className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgb(10_8_6/0.45)] px-4 backdrop-blur-[2px]"
                   role="dialog"
                   aria-modal="true"
                   aria-label="메시지 메뉴"
-                  onClick={() => setActionTargetId(null)}>
+                  onClick={() => {
+                    setActionTargetId(null);
+                    setTapbackMoreOpen(false);
+                  }}>
                   <div
-                    className="w-full max-w-sm px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-0 sm:pb-0"
+                    className="flex w-full max-w-sm flex-col items-center gap-3"
                     onClick={(e) => e.stopPropagation()}>
-                    <div className="overflow-hidden rounded-[14px] border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.96)] shadow-[0_8px_32px_rgb(0_0_0/0.4)] backdrop-blur-md">
+                    <div className="flex w-full items-center gap-1 rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.94)] py-1.5 pl-2 pr-1.5 shadow-[0_8px_32px_rgb(0_0_0/0.45)] backdrop-blur-md">
+                      <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {ROOM_TAPBACK_EMOJIS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => void onTapback(emoji)}
+                            className="flex size-9 shrink-0 items-center justify-center rounded-full text-[20px] transition-transform active:scale-90"
+                            aria-label={`${emoji} 탭백`}>
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setTapbackMoreOpen((v) => !v)}
+                        aria-label="이모지 더보기"
+                        aria-expanded={tapbackMoreOpen}
+                        className={`flex size-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                          tapbackMoreOpen
+                            ? 'bg-brand-primary/20 text-brand-primary'
+                            : 'text-[#a89880] hover:bg-[rgb(201_166_107/0.12)] hover:text-[#ebe3d8]'
+                        }`}>
+                        <Plus className="size-4" strokeWidth={2} aria-hidden />
+                      </button>
+                    </div>
+
+                    {tapbackMoreOpen ? (
+                      <div className="max-h-[min(14rem,40vh)] w-full overflow-y-auto overscroll-contain rounded-2xl border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.96)] p-2 shadow-[0_8px_28px_rgb(0_0_0/0.4)] backdrop-blur-md">
+                        {EMOJI_GROUPS.map((group) => (
+                          <div key={group.label} className="mb-2.5 last:mb-0">
+                            <p className="px-1.5 pb-1 pt-0.5 text-[10px] font-medium text-[#a89880]">
+                              {group.label}
+                            </p>
+                            <div className="grid grid-cols-8 gap-0.5">
+                              {group.emojis.map((emoji, i) => (
+                                <button
+                                  key={`${group.label}-${i}-${emoji}`}
+                                  type="button"
+                                  onClick={() => void onTapback(emoji)}
+                                  className="flex aspect-square items-center justify-center rounded-lg text-lg transition-colors hover:bg-[rgb(201_166_107/0.12)] active:bg-[rgb(201_166_107/0.2)]">
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReplyToId(actionTargetId);
+                          setActionTargetId(null);
+                          setTapbackMoreOpen(false);
+                          inputRef.current?.focus();
+                        }}
+                        className="rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.94)] px-3.5 py-2 text-[13px] font-semibold text-[#ebe4da] shadow-[0_4px_16px_rgb(0_0_0/0.3)] backdrop-blur-md transition-transform active:scale-95">
+                        답글
+                      </button>
                       <button
                         type="button"
                         disabled={hiding}
                         onClick={() => {
                           setHideTargetId(actionTargetId);
                           setActionTargetId(null);
+                          setTapbackMoreOpen(false);
                         }}
-                        className="w-full py-3.5 text-[17px] font-semibold text-[#ebe4da] transition-colors active:bg-[rgb(201_166_107/0.08)]">
+                        className="rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.94)] px-3.5 py-2 text-[13px] font-semibold text-[#ebe4da] shadow-[0_4px_16px_rgb(0_0_0/0.3)] backdrop-blur-md transition-transform active:scale-95 disabled:opacity-40">
                         나에게서만 삭제
                       </button>
                       {canDeleteEveryone ? (
@@ -1210,18 +1519,13 @@ export default function RoomPage() {
                           onClick={() => {
                             setDeleteTargetId(actionTargetId);
                             setActionTargetId(null);
+                            setTapbackMoreOpen(false);
                           }}
-                          className="w-full border-t border-[rgb(201_166_107/0.14)] py-3.5 text-[17px] font-semibold text-red-400 transition-colors active:bg-[rgb(201_166_107/0.08)]">
+                          className="rounded-full border border-red-400/30 bg-[rgb(28_24_20/0.94)] px-3.5 py-2 text-[13px] font-semibold text-red-300 shadow-[0_4px_16px_rgb(0_0_0/0.3)] backdrop-blur-md transition-transform active:scale-95 disabled:opacity-40">
                           전체에서 삭제
                         </button>
                       ) : null}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setActionTargetId(null)}
-                      className="mt-2 w-full rounded-[14px] border border-[rgb(201_166_107/0.22)] bg-[rgb(28_24_20/0.96)] py-3.5 text-[17px] font-semibold text-brand-primary shadow-[0_4px_16px_rgb(0_0_0/0.3)] transition-colors active:bg-[rgb(201_166_107/0.08)]">
-                      취소
-                    </button>
                   </div>
                 </div>,
                 document.body,

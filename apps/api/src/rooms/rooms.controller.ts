@@ -28,6 +28,7 @@ import {
 } from 'src/auth/active-account.guard';
 import { ListRoomMemberQueryDto } from './dto/list-room-members-query.dto';
 import { UpdateRoomChatThemeDto } from './dto/update-room-chat-theme.dto';
+import { ToggleRoomMessageReactioinDto } from './dto/toggle-room-message-reaction.dto';
 
 @ApiTags('Rooms')
 @Controller('rooms')
@@ -211,5 +212,23 @@ export class RoomsController {
     @Body() dto: UpdateRoomChatThemeDto,
   ) {
     return await this.roomsService.upsertChatTheme(roomId, userId, dto);
+  }
+
+  @ApiOperation({ summary: '메시지 탭백 토글(멤버)' })
+  @Post(':id/messages/:messageId/reactions')
+  async toggleReaction(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+    @Param('messageId', ParseUUIDPipe) messageId: string,
+    @Body() dto: ToggleRoomMessageReactioinDto,
+  ) {
+    const result = await this.roomsService.toggleReaction(
+      roomId,
+      messageId,
+      userId,
+      dto.emoji,
+    );
+    this.roomsGateway.emitMessageReaction(roomId, result);
+    return result;
   }
 }

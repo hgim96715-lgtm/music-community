@@ -34,6 +34,19 @@ const roomMessageInclude = {
       moods: true,
     },
   },
+  reactions: {
+    select: { emoji: true, userId: true, createdAt: true },
+    orderBy: { createdAt: 'asc' as const },
+  },
+  replyTo: {
+    select: {
+      id: true,
+      type: true,
+      body: true,
+      deletedAt: true,
+      sender: { select: { id: true, nickname: true } },
+    },
+  },
 } as const;
 
 /** 전체에서 삭제 가능 시간 (5분) */
@@ -221,6 +234,16 @@ export class RoomsService {
     dto: CreateRoomMessageDto,
   ) {
     await this.findById(roomId);
+    let replyToId: string | null = null;
+    if (dto.replyToId) {
+      const target = await this.prisma.roomMessage.findFirst({
+        where: { id: dto.replyToId, roomId, deletedAt: null },
+        select: { id: true },
+      });
+      if (!target)
+        throw new BadRequestException('댓글을 달 메시지를 찾을 수 없습니다.');
+      replyToId = target.id;
+    }
     const member = await this.prisma.roomMember.findUnique({
       where: { roomId_userId: { roomId, userId: senderId } },
     });
@@ -241,6 +264,7 @@ export class RoomsService {
           senderId,
           type: RoomMessageType.text,
           body,
+          replyToId,
         },
         include: roomMessageInclude,
       });
@@ -755,5 +779,45 @@ export class RoomsService {
       presetId: row.presetId,
       backgroundUrl: row.backgroundUrl,
     };
+  }
+
+  async toggleReaction(
+    roomId: string,
+    messageId: string,
+    userId: string,
+    emoji: string,
+  ) {
+    await this.findById(roomId);
+    const member = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+      select: { id: true },
+    });
+    if (!member)
+      throw new ForbiddenException(
+        '방 멤버만 댓글 및 반응을 추가할 수 있습니다.',
+      );
+    const message = await this.prisma.roomMessage.findFirst({
+      where: { id: messageId, roomId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!message) throw new NotFoundException('메시지를 찾을 수 없습니다.');
+
+    const existing = await this.prisma.roomMessageReaction.findUnique({
+      where: {
+        messageId_userId_emoji: { messageId, userId, emoji },
+      },
+    });
+    if (existing) {
+      await this.prisma.roomMessageReaction.delete({
+        where: {
+          messageId_userId_emoji: { messageId, userId, emoji },
+        },
+      });
+      return { messageId, userId, emoji, removed: true as const };
+    }
+    await this.prisma.roomMessageReaction.create({
+      data: { messageId, userId, emoji },
+    });
+    return { messageId, userId, emoji, removed: false as const };
   }
 }

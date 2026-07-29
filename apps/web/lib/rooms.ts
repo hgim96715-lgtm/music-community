@@ -108,6 +108,8 @@ export type ApiRoomMessage = {
   savedCard: ApiRoomSavedCard | null;
   lyricStartSec: number | null;
   lyricEndSec: number | null;
+  reactions?: ApiRoomMessageReaction[];
+  replyTo?: ApiRoomMessageReplyTo | null;
 };
 
 /** 공백·쉼표 구분 · 레거시 `#` 제거 · 최대 8개 */
@@ -138,11 +140,12 @@ export type UpdateRoomBody = {
 };
 
 export type CreateRoomMessageBody =
-  | { type: 'text'; body: string }
-  | { type: 'recommendation'; recommendationId: string }
-  | { type: 'saved_card'; savedCardId: string }
+  | { type: 'text'; body: string; replyToId?: string }
+  | { type: 'recommendation'; recommendationId: string; replyToId?: string }
+  | { type: 'saved_card'; savedCardId: string; replyToId?: string }
   | {
       type: 'lyric_quote';
+      replyToId?: string;
       body: string;
       recommendationId: string;
       lyricStartSec?: number;
@@ -307,4 +310,54 @@ export async function saveRoomChatThemeCached(
   const remote = await updateRoomChatTheme(roomId, body);
   setRoomThemePrefs(userId, roomId, remote);
   return remote;
+}
+
+/** 퀵 탭백 바 (더보기는 CommentEmojiPicker 그리드) */
+export const ROOM_TAPBACK_EMOJIS = [
+  '♥',
+  '😂',
+  '🎵',
+  '🔥',
+  '😭',
+  '👏',
+  '🥹',
+  '😮',
+  '👍',
+] as const;
+
+export type ApiRoomMessageReaction = {
+  emoji: string;
+  userId: string;
+  createdAt: string;
+};
+
+export type ApiRoomMessageReplyTo = {
+  id: string;
+  type: RoomMessageType;
+  body: string | null;
+  deletedAt: string | null;
+  sender: { id: string; nickname: string };
+};
+
+export type ToogleRoomMessageReactionResult = {
+  messageId: string;
+  userId: string;
+  emoji: string;
+  removed: boolean;
+};
+
+/** POST /rooms/:id/messages/:messageId/reactions */
+export function toggleRoomMessageReaction(
+  roomId: string,
+  messageId: string,
+  emoji: string,
+): Promise<ToogleRoomMessageReactionResult> {
+  return authFetchApi<ToogleRoomMessageReactionResult>(
+    `/rooms/${roomId}/messages/${messageId}/reactions`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emoji }),
+    },
+  );
 }
