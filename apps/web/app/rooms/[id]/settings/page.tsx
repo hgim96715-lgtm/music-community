@@ -13,13 +13,9 @@ import {
 } from '@/lib/form';
 import { napkinTopicInputClassName } from '@/lib/napkinFont';
 import {
-  ApiRoomMemberWithUser,
   closeRoom,
   fetchRoom,
-  fetchRoomMembers,
-  kickRoomMember,
   parseTopicTags,
-  transferRoom,
   updateRoom,
   type ApiRoom,
   type RoomVisibility,
@@ -44,16 +40,6 @@ export default function RoomSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-
-  const [members, setMembers] = useState<ApiRoomMemberWithUser[]>([]);
-  const [kickTarget, setKickTarget] = useState<ApiRoomMemberWithUser | null>(
-    null,
-  );
-  const [kicking, setKicking] = useState(false);
-  const [transferTarget, setTransferTarget] =
-    useState<ApiRoomMemberWithUser | null>(null);
-  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
-  const [transferring, setTransferring] = useState(false);
 
   const [closeOpen, setCloseOpen] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -80,7 +66,7 @@ export default function RoomSettingsPage() {
     setLoading(true);
     setError('');
     fetchRoom(roomId)
-      .then(async (room) => {
+      .then((room) => {
         if (cancelled) return;
         if (room.ownerId !== user.id) {
           router.replace(`/rooms/${roomId}`);
@@ -92,8 +78,6 @@ export default function RoomSettingsPage() {
         setVisibility(room.visibility === 'private' ? 'private' : 'public');
         setTopicTagsText(room.topicTags.join(' '));
         setPasswordHint(room.passwordHint ?? '');
-        const list = await fetchRoomMembers(roomId, { limit: 50 });
-        if (!cancelled) setMembers(list.items);
       })
       .catch((error) => {
         if (!cancelled) {
@@ -167,47 +151,6 @@ export default function RoomSettingsPage() {
       );
     } finally {
       setClosing(false);
-    }
-  }
-
-  async function confirmKick() {
-    if (!kickTarget || kicking) return;
-    setKicking(true);
-    setError('');
-    try {
-      await kickRoomMember(roomId, kickTarget.userId);
-      setMembers((prev) => prev.filter((m) => m.userId !== kickTarget.userId));
-      if (room) {
-        setRoom({ ...room, memberCount: Math.max(0, room.memberCount - 1) });
-      }
-      setKickTarget(null);
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : '멤버 강퇴에 실패했습니다.',
-      );
-    } finally {
-      setKicking(false);
-    }
-  }
-  const transferCandidates = members.filter(
-    (m) => m.role !== 'owner' && m.userId !== user?.id,
-  );
-
-  async function confirmTransfer() {
-    if (!transferTarget || transferring) return;
-    setTransferring(true);
-    setError('');
-    try {
-      await transferRoom(roomId, transferTarget.userId);
-      setTransferDialogOpen(false);
-      setTransferTarget(null);
-      router.replace(`/rooms/${roomId}`);
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : '방장 넘기기에 실패했습니다.',
-      );
-    } finally {
-      setTransferring(false);
     }
   }
 
@@ -345,46 +288,9 @@ export default function RoomSettingsPage() {
           <h2 className="px-1 text-[12px] font-semibold text-neutral-400">
             멤버
           </h2>
-          {members.length === 0 ? (
-            <p className="rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.45)] px-4 py-6 text-center text-sm text-[#a89880]">
-              다른 멤버가 없어요
-            </p>
-          ) : (
-            <ul className="overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.55)] divide-y divide-[rgb(201_166_107/0.12)]">
-              {members.map((m) => {
-                const owner = m.role === 'owner';
-                const mine = m.userId === user.id;
-                return (
-                  <li
-                    key={m.id}
-                    className="flex items-center justify-between gap-3 px-3.5 py-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-[15px] font-medium text-[#ebe3d8]">
-                        @{m.user.nickname}
-                        {mine ? (
-                          <span className="ml-1 text-[12px] text-[#a89880]">
-                            나
-                          </span>
-                        ) : null}
-                      </p>
-                      {owner ? (
-                        <p className="text-[11px] text-brand-primary">방장</p>
-                      ) : null}
-                    </div>
-                    {!owner && !mine ? (
-                      <button
-                        type="button"
-                        disabled={kicking}
-                        onClick={() => setKickTarget(m)}
-                        className="shrink-0 rounded-full border border-red-400/35 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-[rgb(208_128_112/0.12)] disabled:opacity-50">
-                        보내기
-                      </button>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <p className="rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.45)] px-4 py-3 text-[13px] leading-relaxed text-[#a89880]">
+            내보내기·방장 넘기기는 채팅이나 멤버 목록에서 닉을 탭하세요.
+          </p>
         </section>
         <button
           type="submit"
@@ -396,65 +302,12 @@ export default function RoomSettingsPage() {
 
       <section className="flex w-full flex-col gap-2">
         <h2 className="px-1 text-[12px] font-semibold text-neutral-400">
-          방장 넘기기
-        </h2>
-        {transferCandidates.length === 0 ? (
-          <p className="px-1 text-[12px] text-neutral-400">
-            넘길 멤버가 없어요. 혼자면 아래 「방 닫기」를 쓰세요.
-          </p>
-        ) : (
-          <>
-            <ul className="overflow-hidden rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.55)] divide-y divide-[rgb(201_166_107/0.12)]">
-              {transferCandidates.map((m) => {
-                const on = transferTarget?.userId === m.userId;
-                return (
-                  <li key={m.id}>
-                    <button
-                      type="button"
-                      onClick={() => setTransferTarget(m)}
-                      className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors ${
-                        on
-                          ? 'bg-brand-primary-soft/60'
-                          : 'hover:bg-[rgb(201_166_107/0.08)]'
-                      }`}>
-                      <span
-                        className={`flex size-5 shrink-0 items-center justify-center rounded-full border ${
-                          on
-                            ? 'border-brand-primary bg-brand-primary'
-                            : 'border-[rgb(201_166_107/0.35)]'
-                        }`}
-                        aria-hidden>
-                        {on ? (
-                          <span className="size-2 rounded-full bg-[color:var(--color-lp-ink)]" />
-                        ) : null}
-                      </span>
-                      <span className="truncate text-[15px] font-medium text-[#ebe3d8]">
-                        @{m.user.nickname}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            <button
-              type="button"
-              disabled={!transferTarget || transferring}
-              onClick={() => setTransferDialogOpen(true)}
-              className="rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(42_36_30/0.65)] px-4 py-2.5 text-sm font-semibold text-brand-primary hover:bg-[rgb(201_166_107/0.12)] disabled:opacity-50">
-              선택한 멤버에게 넘기기
-            </button>
-          </>
-        )}
-      </section>
-
-      <section className="flex w-full flex-col gap-2">
-        <h2 className="px-1 text-[12px] font-semibold text-neutral-400">
           위험 구역
         </h2>
         <p className="px-1 text-[12px] text-neutral-400">
           {room.memberCount <= 1
             ? '혼자 있는 방은 닫으면 목록에서 사라져요.'
-            : '방을 닫으면 멤버도 더 이상 들어올 수 없어요. 다른 멤버가 있으면 방장 넘기기를 먼저 고려하세요.'}
+            : '방을 닫으면 멤버도 더 이상 들어올 수 없어요. 다른 멤버에게 방장을 넘기려면 닉을 탭하세요.'}
         </p>
         <button
           type="button"
@@ -474,34 +327,6 @@ export default function RoomSettingsPage() {
         isPending={closing}
         onClose={() => !closing && setCloseOpen(false)}
         onConfirm={() => void confirmClose()}
-      />
-      <FeedDialog
-        open={kickTarget !== null}
-        title={
-          kickTarget
-            ? `@${kickTarget.user.nickname}님을보낼까요?`
-            : '멤버를보낼까요?'
-        }
-        description="이 방에서 더 이상 채팅할 수 없어요."
-        confirmLabel="보내기"
-        pendingLabel="보내는 중…"
-        isPending={kicking}
-        onClose={() => !kicking && setKickTarget(null)}
-        onConfirm={() => void confirmKick()}
-      />
-      <FeedDialog
-        open={transferDialogOpen && transferTarget !== null}
-        title={
-          transferTarget
-            ? `@${transferTarget.user.nickname}님에게 방장을 넘길까요?`
-            : '방장을 넘길까요?'
-        }
-        description="넘기면 이 설정 페이지는 더 이상 열 수 없어요. 본인은 일반 멤버가 됩니다."
-        confirmLabel="방장 넘기기"
-        pendingLabel="넘기는 중…"
-        isPending={transferring}
-        onClose={() => !transferring && setTransferDialogOpen(false)}
-        onConfirm={() => void confirmTransfer()}
       />
     </main>
   );

@@ -13,6 +13,8 @@ type FeedAuthorNicknameProps = {
   nickname: string;
   className?: string;
   showFriendChip?: boolean;
+  roomId?: string;
+  roomOwnerId?: string;
 };
 
 /** 피드·댓글 @닉 — soft pill · 탭하면 AvatarActionSheet */
@@ -21,6 +23,8 @@ export function FeedAuthorNickname({
   nickname,
   className = '',
   showFriendChip = true,
+  roomId,
+  roomOwnerId,
 }: FeedAuthorNicknameProps) {
   const isFriend = useIsFriend(userId);
   const { openSheet } = useAvatarAction();
@@ -40,7 +44,9 @@ export function FeedAuthorNickname({
     <span className="inline-flex min-w-0 max-w-full items-center gap-1">
       <button
         type="button"
-        onClick={() => openSheet({ id: userId, nickname: label })}
+        onClick={() =>
+          openSheet({ id: userId, nickname: label, roomId, roomOwnerId })
+        }
         className={`${feedNicknameLinkClassName} ${className} text-left`}>
         @{label}
       </button>

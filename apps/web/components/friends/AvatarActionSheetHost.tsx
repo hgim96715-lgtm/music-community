@@ -22,12 +22,15 @@ import {
   friendRelationWith,
   type FriendRelation,
 } from '@/lib/friendsUtils';
+import { kickRoomMember, transferRoom } from '@/lib/rooms';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 export type AvatarActionTarget = {
   id: string;
   nickname: string;
+  roomId?: string;
+  roomOwnerId?: string;
 };
 
 type Props = {
@@ -56,6 +59,9 @@ export function AvatarActionSheetHost({
   const [error, setError] = useState('');
   const [unfriendOpen, setUnfriendOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
+
+  const [kickOpen, setKickOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!target || !user) {
@@ -125,6 +131,14 @@ export function AvatarActionSheetHost({
   }
 
   if (!target) return null;
+
+  const canOwnerActions = Boolean(
+    user &&
+      target.roomId &&
+      target.roomOwnerId &&
+      user.id === target.roomOwnerId &&
+      target.id !== user.id,
+  );
 
   return (
     <>
@@ -206,6 +220,19 @@ export function AvatarActionSheetHost({
             />
           </>
         ) : null}
+        {canOwnerActions ? (
+          <>
+            <AvatarActionRow
+              label="방장 넘기기"
+              onClick={() => setTransferOpen(true)}
+            />
+            <AvatarActionRow
+              label="내보내기"
+              danger
+              onClick={() => setKickOpen(true)}
+            />
+          </>
+        ) : null}
 
         {!blockedByMe && relation !== 'guest' && relation !== 'self' ? (
           <AvatarActionRow
@@ -266,6 +293,64 @@ export function AvatarActionSheetHost({
             } catch (error) {
               setError(
                 error instanceof Error ? error.message : '차단에 실패했습니다.',
+              );
+            } finally {
+              setBusy(false);
+            }
+          })();
+        }}
+      />
+      <FeedDialog
+        open={kickOpen}
+        title={`@${target.nickname}님을 내보낼까요?`}
+        description="이 방에 다시 들어올 수 없어요."
+        confirmLabel="내보내기"
+        pendingLabel="내보내는 중…"
+        isPending={busy}
+        onClose={() => !busy && setKickOpen(false)}
+        onConfirm={() => {
+          void (async () => {
+            if (!target.roomId) return;
+            setBusy(true);
+            setError('');
+            try {
+              await kickRoomMember(target.roomId, target.id);
+              setKickOpen(false);
+              onClose();
+              onChanged?.();
+            } catch (err) {
+              setError(
+                err instanceof Error ? err.message : '내보내기에 실패했습니다.',
+              );
+            } finally {
+              setBusy(false);
+            }
+          })();
+        }}
+      />
+      <FeedDialog
+        open={transferOpen}
+        title={`@${target.nickname}님에게 방장을 넘길까요?`}
+        description="넘기면 이 방 방장 권한이 상대에게 갑니다."
+        confirmLabel="방장 넘기기"
+        pendingLabel="넘기는 중…"
+        isPending={busy}
+        onClose={() => !busy && setTransferOpen(false)}
+        onConfirm={() => {
+          void (async () => {
+            if (!target.roomId) return;
+            setBusy(true);
+            setError('');
+            try {
+              await transferRoom(target.roomId, target.id);
+              setTransferOpen(false);
+              onClose();
+              onChanged?.();
+            } catch (err) {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : '방장 넘기기에 실패했습니다.',
               );
             } finally {
               setBusy(false);

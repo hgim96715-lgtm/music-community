@@ -13,6 +13,7 @@ type Props = {
   roomId: string;
   roomName: string;
   myUserId: string;
+  roomOwnerId: string;
 };
 
 export function RoomMembersSheet({
@@ -21,6 +22,7 @@ export function RoomMembersSheet({
   roomId,
   roomName,
   myUserId,
+  roomOwnerId,
 }: Props) {
   const { openSheet } = useAvatarAction();
   const friendIds = useFriendIdSet();
@@ -183,6 +185,8 @@ export function RoomMembersSheet({
                           openSheet({
                             id: m.user.id,
                             nickname: m.user.nickname,
+                            roomId,
+                            roomOwnerId,
                           });
                         }}
                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors active:bg-[rgb(201_166_107/0.1)]">
