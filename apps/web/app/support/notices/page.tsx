@@ -1,3 +1,4 @@
+import { MarkSupportNoticesSeen } from '@/components/support/MarkSupportNoticesSeen';
 import { SupportTopNav } from '@/components/support/SupportTopNav';
 import { fetchPublishedNotices } from '@/lib/api';
 import { formatDisplayDate } from '@/lib/date';
@@ -24,6 +25,7 @@ export default async function SupportNoticesPage() {
 
   return (
     <main className={authPageClassName}>
+      <MarkSupportNoticesSeen />
       <SupportTopNav backHref="/support" backLabel="고객지원" />
       <div className="mb-6">
         <h1 className={`${authTitleClassName} flex items-center gap-2`}>

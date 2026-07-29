@@ -1,3 +1,4 @@
+import { MarkSupportNoticesSeen } from '@/components/support/MarkSupportNoticesSeen';
 import { SupportTopNav } from '@/components/support/SupportTopNav';
 import { fetchPublishedNotice } from '@/lib/api';
 import { formatDisplayDate } from '@/lib/date';
@@ -24,6 +25,7 @@ export default async function SupportNoticeDetailPage({
 
   return (
     <main className={authPageClassName}>
+      <MarkSupportNoticesSeen publishedAt={notice.publishedAt} />
       <SupportTopNav backHref="/support/notices" backLabel="공지사항" />
 
       <article>
@@ -33,7 +35,9 @@ export default async function SupportNoticeDetailPage({
               <Megaphone className="size-4" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
-              <h1 className={`${authTitleClassName} text-xl`}>{notice.title}</h1>
+              <h1 className={`${authTitleClassName} text-xl`}>
+                {notice.title}
+              </h1>
               {notice.publishedAt ? (
                 <p className="mt-1 text-xs text-neutral-500">
                   {formatDisplayDate(notice.publishedAt)}

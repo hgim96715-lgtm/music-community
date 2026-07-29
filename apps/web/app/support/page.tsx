@@ -6,6 +6,7 @@ import {
 } from '@/lib/form';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { SupportNoticesNavLink } from '@/components/support/SupportNoticesNavLink';
 
 /** 고객지원 허브 (비로그인 OK) */
 export default function SupportPage() {
@@ -21,10 +22,7 @@ export default function SupportPage() {
         </p>
       </div>
       <div className="flex flex-col gap-3">
-        <Link href="/support/notices" className={itemClassName}>
-          공지사항
-          <ChevronRight className="size-4 text-neutral-500" aria-hidden />
-        </Link>
+        <SupportNoticesNavLink className={itemClassName} />
         <Link href="/support/faq" className={itemClassName}>
           자주 묻는 질문
           <ChevronRight className="size-4 text-neutral-500" aria-hidden />

@@ -4,14 +4,19 @@ import { MyHomeSubShell } from '@/components/saved-cards/MyHomeSubShell';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { PillInput } from '@/components/auth/PillInput';
 import { FeedDialog } from '@/components/recommendations/FeedDialog';
-import { cancelWithdraw, fetchFriendRequests, withdrawMe } from '@/lib/api';
+import {
+  cancelWithdraw,
+  fetchFriendRequests,
+  fetchPublishedNotices,
+  withdrawMe,
+} from '@/lib/api';
 import {
   appNavLinkClassName,
   authPageClassName,
   fieldErrorClassName,
 } from '@/lib/form';
 import { brandPillBtn, dialogPanel } from '@/lib/neobrutal';
-import { fetchMyRooms, type ApiRoom } from '@/lib/rooms';
+import { fetchMyRooms, fetchPublicRooms, type ApiRoom } from '@/lib/rooms';
 import { ChevronLeft, KeyRound, Loader2, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -26,6 +31,7 @@ import {
   setChatFontPrefs,
   type ChatFontPrefs,
 } from '@/lib/chatFontStorage';
+import { hasUnseenSupportNotice } from '@/lib/supportNoticeSeenStorage';
 
 const WITHDRAW_GRACE_DAYS = 7;
 
@@ -54,6 +60,8 @@ export default function MySettingsPage() {
   const [welcomeBackOpen, setWelcomeBackOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  const [supportNew, setSupportNew] = useState(false);
+
   const [chatFont, setChatFont] = useState<ChatFontPrefs>({
     fontId: 'default',
     scale: 'M',
@@ -68,6 +76,23 @@ export default function MySettingsPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    fetchPublishedNotices()
+      .then((notices) => {
+        if (!cancelled) {
+          setSupportNew(hasUnseenSupportNotice(user.id, notices));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setSupportNew(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!isLoading && !user) router.replace('/login?next=/users/me/settings');
@@ -259,7 +284,14 @@ export default function MySettingsPage() {
         <ul className="flex flex-col gap-1.5">
           <li>
             <Link href="/support" className={itemClassName}>
-              고객지원
+              <span className="flex min-w-0 items-center gap-2">
+                고객지원
+                {supportNew ? (
+                  <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-brand-primary bg-brand-primary-soft">
+                    NEW
+                  </span>
+                ) : null}
+              </span>
               <span className="text-[11px] font-medium text-[#8a8070]">
                 공지 · FAQ · 약관
               </span>
