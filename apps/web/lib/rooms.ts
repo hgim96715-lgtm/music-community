@@ -103,6 +103,8 @@ export type ApiRoomMessage = {
   recommendationId: string | null;
   createdAt: string;
   deletedAt: string | null;
+  deletedByOwner: boolean;
+  deletedById?: string | null;
   sender: ApiRoomOwner;
   recommendation: ApiRoomRecommendation | null;
   savedCard: ApiRoomSavedCard | null;

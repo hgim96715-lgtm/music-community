@@ -95,6 +95,7 @@ model User {
 
   messageHides RoomMessageHide[]
   messageReactions RoomMessageReaction[]
+  messagesDeleted RoomMessage[] @relation("RoomMessageDeletedBy")
 
   @@index([deletedAt])
   @@index([withdrawScheduledAt])
@@ -287,6 +288,10 @@ model RoomMessage {
   replyToId      String?         @db.Uuid
   createdAt        DateTime        @default(now()) @db.Timestamptz(3)
   deletedAt        DateTime?       @db.Timestamptz(3)
+  deletedByOwner Boolean @default(false)
+  deletedById String? @db.Uuid
+
+  deletedBy      User?    @relation("RoomMessageDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
   room           Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
   sender         User            @relation(fields: [senderId], references: [id], onDelete: Cascade)
   recommendation Recommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
@@ -300,6 +305,7 @@ model RoomMessage {
   @@index([recommendationId])
   @@index([savedCardId])
   @@index([replyToId])
+  @@index([deletedById])
 }
 
 model RoomMessageReaction{

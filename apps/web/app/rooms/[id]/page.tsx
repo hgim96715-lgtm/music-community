@@ -201,6 +201,51 @@ export default function RoomPage() {
   const [replyToId, setReplyToId] = useState<string | null>(null);
   const replyTarget = messages.find((m) => m.id === replyToId) ?? null;
 
+  const isOwnerModTarget =
+    !!actionMsg &&
+    !!user &&
+    !!room &&
+    room.ownerId === user.id &&
+    actionMsg.senderId !== user.id;
+
+  const showHideForMe = !!actionMsg && !isOwnerModTarget;
+
+  function applyDeletedMessage(m: ApiRoomMessage) {
+    setMessages((prev) => {
+      // 방장 tombstone — 유지·교체 (사라지면 안 됨)
+      if (m.deletedByOwner === true) {
+        const tombstone: ApiRoomMessage = {
+          ...m,
+          deletedByOwner: true,
+          deletedAt:
+            typeof m.deletedAt === 'string'
+              ? m.deletedAt
+              : m.deletedAt
+                ? new Date(m.deletedAt).toISOString()
+                : new Date().toISOString(),
+          body: null,
+          recommendationId: null,
+          recommendation: null,
+          savedCard: null,
+          lyricStartSec: null,
+          lyricEndSec: null,
+          reactions: [],
+        };
+        const exists = prev.some((x) => x.id === m.id);
+        if (exists) {
+          return prev.map((x) => (x.id === m.id ? { ...x, ...tombstone } : x));
+        }
+        return [...prev, tombstone].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+      }
+
+      // 작성자 본인 삭제(구멍). 이미 tombstone이면 WS 오탐으로 지우지 않음
+      return prev.filter((x) => x.id !== m.id || x.deletedByOwner === true);
+    });
+  }
+
   function replySnippet(m: {
     type: ApiRoomMessage['type'];
     body: string | null;
@@ -383,8 +428,8 @@ export default function RoomPage() {
       markChatSeen(userId, roomId, message.createdAt);
     });
 
-    const offDeleted = onRoomMessageDeleted(({ messageId }) => {
-      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    const offDeleted = onRoomMessageDeleted((message) => {
+      applyDeletedMessage(message);
     });
     const offReaction = onRoomMessageReaction((payload) => {
       applyReactionLocal(payload);
@@ -541,12 +586,28 @@ export default function RoomPage() {
   }
 
   async function confirmDelete() {
-    if (!deleteTargetId || !roomId) return;
+    if (!deleteTargetId || !roomId || !user) return;
+    const target = messages.find((m) => m.id === deleteTargetId);
+    if (!target) return;
+    const asOwnerMod =
+      !!room && room.ownerId === user.id && target.senderId !== user.id;
     setDeleting(true);
     setError('');
     try {
       await deleteRoomMessage(roomId, deleteTargetId);
-      setMessages((prev) => prev.filter((m) => m.id !== deleteTargetId));
+      applyDeletedMessage({
+        ...target,
+        deletedAt: new Date().toISOString(),
+        deletedByOwner: asOwnerMod,
+        deletedById: user.id,
+        body: null,
+        recommendationId: null,
+        recommendation: null,
+        savedCard: null,
+        lyricStartSec: null,
+        lyricEndSec: null,
+        reactions: [],
+      });
       setDeleteTargetId(null);
     } catch (error) {
       setError(error instanceof Error ? error.message : '삭제에 실패했습니다.');
@@ -891,7 +952,7 @@ export default function RoomPage() {
               messages.map((m, index) => {
                 const mine = m.senderId === user.id;
                 const senderIsOwner = m.senderId === room.ownerId;
-                const canOpenActions = true;
+                const canOpenActions = !(m.deletedAt && m.deletedByOwner);
                 const prev = index > 0 ? messages[index - 1] : null;
                 const showDivider = shouldInsertMessageDivider(
                   prev?.createdAt,
@@ -922,6 +983,17 @@ export default function RoomPage() {
                         </span>
                       ) : null}
 
+                      {m.deletedAt && m.deletedByOwner ? (
+                        <div
+                          className={`room-bubble select-none px-3.5 py-2 text-[15px] leading-snug ${
+                            mine
+                              ? 'room-bubble--mine rounded-[1.25rem] rounded-br-md bg-brand-primary/55 text-[color:var(--color-lp-ink)]/70'
+                              : 'room-bubble--other rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.72)] text-[#a89880] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
+                          }`}>
+                          <span className="italic">방장에 의해 삭제되었습니다</span>
+                        </div>
+                      ) : (
+                        <>
                       {m.replyTo && m.type !== 'text' ? (
                         <div
                           className={`mb-1.5 max-w-full border-l-2 pl-2 ${
@@ -1223,7 +1295,10 @@ export default function RoomPage() {
                           </span>
                         </div>
                       )}
-                      {reactionChips(m).length > 0 ? (
+                        </>
+                      )}
+                      {!(m.deletedAt && m.deletedByOwner) &&
+                      reactionChips(m).length > 0 ? (
                         <div
                           className={`mt-1 flex flex-wrap gap-1 ${mine ? 'justify-end' : 'justify-start'}`}>
                           {reactionChips(m).map((chip) => (
@@ -1501,17 +1576,19 @@ export default function RoomPage() {
                         className="rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.94)] px-3.5 py-2 text-[13px] font-semibold text-[#ebe4da] shadow-[0_4px_16px_rgb(0_0_0/0.3)] backdrop-blur-md transition-transform active:scale-95">
                         답글
                       </button>
-                      <button
-                        type="button"
-                        disabled={hiding}
-                        onClick={() => {
-                          setHideTargetId(actionTargetId);
-                          setActionTargetId(null);
-                          setTapbackMoreOpen(false);
-                        }}
-                        className="rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.94)] px-3.5 py-2 text-[13px] font-semibold text-[#ebe4da] shadow-[0_4px_16px_rgb(0_0_0/0.3)] backdrop-blur-md transition-transform active:scale-95 disabled:opacity-40">
-                        나에게서만 삭제
-                      </button>
+                      {showHideForMe ? (
+                        <button
+                          type="button"
+                          disabled={hiding}
+                          onClick={() => {
+                            setHideTargetId(actionTargetId);
+                            setActionTargetId(null);
+                            setTapbackMoreOpen(false);
+                          }}
+                          className="rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.94)] px-3.5 py-2 text-[13px] font-semibold text-[#ebe4da] shadow-[0_4px_16px_rgb(0_0_0/0.3)] backdrop-blur-md transition-transform active:scale-95 disabled:opacity-40">
+                          나에게서만 삭제
+                        </button>
+                      ) : null}
                       {canDeleteEveryone ? (
                         <button
                           type="button"

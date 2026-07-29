@@ -178,8 +178,12 @@ export class RoomsController {
     @Param('id', ParseUUIDPipe) roomId: string,
     @Param('messageId', ParseUUIDPipe) messageId: string,
   ) {
-    await this.roomsService.deleteMessage(roomId, messageId, userId);
-    this.roomsGateway.emitMessageDeleted(roomId, messageId);
+    const message = await this.roomsService.deleteMessage(
+      roomId,
+      messageId,
+      userId,
+    );
+    this.roomsGateway.emitMessageDeleted(roomId, message);
   }
 
   @ApiOperation({ summary: '메시지 나에게서만 삭제(멤버)' })

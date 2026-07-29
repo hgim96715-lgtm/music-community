@@ -402,7 +402,11 @@ export class RoomsService {
       throw new ForbiddenException('방 멤버만 메시지를 조회할 수 있습니다.');
     }
     const messages = await this.prisma.roomMessage.findMany({
-      where: { roomId, deletedAt: null, hides: { none: { userId } } },
+      where: {
+        roomId,
+        hides: { none: { userId } },
+        OR: [{ deletedAt: null }, { deletedByOwner: true }],
+      },
       orderBy: { createdAt: 'desc' },
       include: roomMessageInclude,
     });
@@ -523,6 +527,8 @@ export class RoomsService {
     });
     const isOwner = room?.ownerId === userId;
     const isSender = message.senderId === userId;
+    // 방장이 내 메시지 삭제
+    const asOwnerMod = isOwner && !isSender;
     if (!isOwner && !isSender) {
       throw new ForbiddenException(
         '본인 메시지 또는 방장만 삭제할 수 있습니다.',
@@ -537,10 +543,42 @@ export class RoomsService {
         '보낸 지 5분이 지난 메시지는 전체에서 삭제할 수 없습니다. 나에게서만 삭제를 사용해 주세요.',
       );
     }
-    await this.prisma.roomMessage.update({
+    const updated = await this.prisma.roomMessage.update({
       where: { id: messageId },
-      data: { deletedAt: new Date() },
+      data: {
+        deletedAt: new Date(),
+        deletedByOwner: asOwnerMod,
+        deletedById: userId,
+        body: null,
+        recommendationId: null,
+        savedCardId: null,
+        lyricStartSec: null,
+        lyricEndSec: null,
+      },
+      include: roomMessageInclude,
     });
+    // WS/JSON용 plain 객체 — deletedByOwner 누락되면 클라이언트가 구멍으로 지움
+    return {
+      id: updated.id,
+      roomId: updated.roomId,
+      senderId: updated.senderId,
+      type: updated.type,
+      body: null,
+      recommendationId: null,
+      savedCardId: null,
+      lyricStartSec: null,
+      lyricEndSec: null,
+      replyToId: updated.replyToId,
+      createdAt: updated.createdAt,
+      deletedAt: updated.deletedAt,
+      deletedByOwner: updated.deletedByOwner === true,
+      deletedById: updated.deletedById,
+      sender: updated.sender,
+      recommendation: null,
+      savedCard: null,
+      reactions: [],
+      replyTo: updated.replyTo,
+    };
   }
 
   async listMine(userId: string) {

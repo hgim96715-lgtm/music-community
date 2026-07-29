@@ -87,8 +87,8 @@ export class RoomsGateway implements OnGatewayConnection {
   }
 
   /** 전체에서 삭제된 메시지 */
-  emitMessageDeleted(roomId: string, messageId: string) {
-    this.server.to(`room:${roomId}`).emit('message:deleted', { messageId });
+  emitMessageDeleted(roomId: string, message: unknown) {
+    this.server.to(`room:${roomId}`).emit('message:deleted', message);
   }
   /** 강퇴 — 대상 유저 소켓만 (방 전체에 뿌리지 않음) */
   emitMemberKicked(roomId: string, targetUserId: string) {

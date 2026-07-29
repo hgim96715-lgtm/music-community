@@ -65,7 +65,7 @@ export function onRoomMessage(
 }
 
 export function onRoomMessageDeleted(
-  handler: (payload: { messageId: string }) => void,
+  handler: (payload: ApiRoomMessage) => void,
 ): () => void {
   const s = getRoomSocket();
   s.on('message:deleted', handler);
