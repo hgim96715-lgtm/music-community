@@ -17,6 +17,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import {
+  CHAT_FONT_IDS,
+  CHAT_FONT_LABELS,
+  CHAT_FONT_SCALE_LABELS,
+  CHAT_FONT_SCALES,
+  getChatFontPrefs,
+  setChatFontPrefs,
+  type ChatFontPrefs,
+} from '@/lib/chatFontStorage';
 
 const WITHDRAW_GRACE_DAYS = 7;
 
@@ -44,6 +53,11 @@ export default function MySettingsPage() {
   const [cancelPending, setCancelPending] = useState(false);
   const [welcomeBackOpen, setWelcomeBackOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const [chatFont, setChatFont] = useState<ChatFontPrefs>({
+    fontId: 'default',
+    scale: 'M',
+  });
 
   const itemClassName =
     'w-full flex items-center justify-between rounded-xl border border-dashed border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.35)] px-3.5 py-3 text-sm text-[#cbbba0]';
@@ -73,6 +87,17 @@ export default function MySettingsPage() {
       cancelled = true;
     };
   }, [user]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setChatFont(getChatFontPrefs(user.id));
+  }, [user?.id]);
+
+  function updateChatFont(next: ChatFontPrefs) {
+    if (!user?.id) return;
+    setChatFontPrefs(user.id, next);
+    setChatFont(next);
+  }
 
   function closeWithdraw() {
     if (pending) return;
@@ -166,7 +191,7 @@ export default function MySettingsPage() {
       <MyHomeSubShell
         nickname={user.nickname}
         title="설정"
-        subtitle="계정 · 약관 · 고객지원 · 로그아웃"
+        subtitle="채팅 · 고객지원 · 계정"
         active="settings"
         requestCount={requestCount}>
         {isWithdrawing ? (
@@ -184,21 +209,60 @@ export default function MySettingsPage() {
             {error}
           </p>
         ) : null}
+        <section id="chat-display" className="mb-4 scroll-mt-4">
+          <h2 className="mb-2 px-0.5 text-[12px] font-semibold tracking-wide text-[#a89880]">
+            채팅 표시
+          </h2>
+          <div className="flex flex-col gap-3 rounded-xl border border-dashed border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.35)] px-3.5 py-3">
+            <div>
+              <p className="mb-1.5 text-[12px] text-[#a89880]">글꼴</p>
+              <div className="flex flex-wrap gap-1.5">
+                {CHAT_FONT_IDS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => updateChatFont({ ...chatFont, fontId: id })}
+                    className={`rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                      chatFont.fontId === id
+                        ? 'bg-brand-primary text-[color:var(--color-lp-ink)]'
+                        : 'bg-[rgb(26_22_18/0.55)] text-[#cbbba0] hover:bg-[rgb(201_166_107/0.12)]'
+                    }`}>
+                    {CHAT_FONT_LABELS[id]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-1.5 text-[12px] text-[#a89880]">크기</p>
+              <div className="flex flex-wrap gap-1.5">
+                {CHAT_FONT_SCALES.map((scale) => (
+                  <button
+                    key={scale}
+                    type="button"
+                    onClick={() => updateChatFont({ ...chatFont, scale })}
+                    className={`rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                      chatFont.scale === scale
+                        ? 'bg-brand-primary text-[color:var(--color-lp-ink)]'
+                        : 'bg-[rgb(26_22_18/0.55)] text-[#cbbba0] hover:bg-[rgb(201_166_107/0.12)]'
+                    }`}>
+                    {CHAT_FONT_SCALE_LABELS[scale]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] leading-snug text-[#8a8070]">
+              모든 채팅방에 동일하게 적용돼요.
+            </p>
+          </div>
+        </section>
 
         <ul className="flex flex-col gap-1.5">
           <li>
             <Link href="/support" className={itemClassName}>
               고객지원
-            </Link>
-          </li>
-          <li>
-            <Link href="/legal/terms" className={itemClassName}>
-              이용약관
-            </Link>
-          </li>
-          <li>
-            <Link href="/legal/privacy" className={itemClassName}>
-              개인정보 처리방침
+              <span className="text-[11px] font-medium text-[#8a8070]">
+                공지 · FAQ · 약관
+              </span>
             </Link>
           </li>
           <li>
@@ -261,7 +325,7 @@ export default function MySettingsPage() {
               <div
                 className="relative w-full max-w-sm"
                 onClick={(e) => e.stopPropagation()}>
-                        <div className={`${dialogPanel} p-6`}>
+                <div className={`${dialogPanel} p-6`}>
                   {withdrawStep === 'loading' ? (
                     <>
                       <h2
@@ -288,8 +352,8 @@ export default function MySettingsPage() {
                       <p className="mt-2 text-center text-sm leading-relaxed text-neutral-600">
                         탈퇴를 예약하면 유예 동안 방장 넘기기가 막혀요.
                         <br />
-                        지금 넘기거나 방을 닫아 주세요. 안 하면 유예 끝에
-                        다른 멤버에게 자동으로 넘어가고, 혼자인 방만 닫혀요.
+                        지금 넘기거나 방을 닫아 주세요. 안 하면 유예 끝에 다른
+                        멤버에게 자동으로 넘어가고, 혼자인 방만 닫혀요.
                       </p>
                       <ul className="mt-4 max-h-40 space-y-1.5 overflow-y-auto">
                         {ownedRooms.map((room) => (

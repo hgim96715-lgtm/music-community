@@ -1,5 +1,5 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@400;600&display=swap');
 @import 'tailwindcss';
 
 @theme {
@@ -1440,4 +1440,11 @@
   .lyric-sticky-inner {
     transition: none;
   }
+}
+
+/* unlayered — Tailwind text-[15px]보다 우선 (Room-Theme-Font) */
+.room-chat-font .room-bubble,
+.room-chat-font .room-composer textarea {
+  font-family: var(--room-chat-font-family, inherit);
+  font-size: calc(15px * var(--room-chat-font-scale, 1));
 }
