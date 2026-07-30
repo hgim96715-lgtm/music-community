@@ -7,8 +7,9 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
 import { normalizeEmbedUrl } from './normalize-embed-url';
-import { toKstDateKey } from 'src/common/kst-date';
+import { startOfKstDay, toKstDateKey } from 'src/common/kst-date';
 import { UpdateRecommendationDto } from './dto/update-recommendation.dto';
+import { ListRecommendationsQueryDto } from './dto/list-recommendations-query.dto';
 
 @Injectable()
 export class RecommendationsService {
@@ -41,16 +42,66 @@ export class RecommendationsService {
     }
   }
 
-  findAll() {
-    return this.prisma.recommendation.findMany({
-      where: { hidden: false },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        reactions: true,
-        author: true,
-        _count: { select: { comments: true } },
+  /** KST 오늘 포함 7일 창 시작 (오늘 00:00 − 6일) */
+  private recentFeedWindowStart(reference = new Date()): Date {
+    return new Date(startOfKstDay(reference).getTime() - 6 * 86_400_000);
+  }
+
+  async findAll(query: ListRecommendationsQueryDto = {}) {
+    const scope = query.scope ?? 'all';
+    const paginate = query.limit != null || query.cursor != null;
+    const take = paginate
+      ? Math.min(Math.max(query.limit ?? 20, 1), 50)
+      : undefined;
+    const recentStart = this.recentFeedWindowStart();
+    const scopeWhere =
+      scope === 'recent'
+        ? { createdAt: { gte: recentStart } }
+        : scope === 'older'
+          ? { createdAt: { lt: recentStart } }
+          : {};
+
+    let cursorWhere: object = {};
+    if (query.cursor) {
+      const cursorRow = await this.prisma.recommendation.findFirst({
+        where: { id: query.cursor, hidden: false },
+        select: { id: true, createdAt: true },
+      });
+      if (cursorRow) {
+        cursorWhere = {
+          OR: [
+            { createdAt: { lt: cursorRow.createdAt } },
+            { createdAt: cursorRow.createdAt, id: { lt: cursorRow.id } },
+          ],
+        };
+      }
+    }
+    const include = {
+      reactions: true,
+      author: true,
+      _count: { select: { comments: true } },
+    } as const;
+
+    const rows = await this.prisma.recommendation.findMany({
+      where: {
+        hidden: false,
+        ...scopeWhere,
+        ...cursorWhere,
       },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      ...(take != null ? { take: take + 1 } : {}),
+      include,
     });
+
+    if (take == null) {
+      return { items: rows, nextCursor: null as string | null };
+    }
+    const hasMore = rows.length > take;
+    const items = hasMore ? rows.slice(0, take) : rows;
+    return {
+      items,
+      nextCursor: hasMore ? (items[items.length - 1]?.id ?? null) : null,
+    };
   }
 
   create(dto: CreateRecommendationDto, authorId: string) {

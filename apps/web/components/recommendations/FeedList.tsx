@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchRecommendations } from '@/lib/api';
+import { fetchRecommendationsPage } from '@/lib/api';
 import { useAuth } from '@/components/auth/AuthProvider';
 import type { Recommendation } from '@/lib/types';
 import { useEffect, useState } from 'react';
@@ -16,9 +16,12 @@ export function FeedList() {
   const [items, setItems] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [olderCursor, setOlderCursor] = useState<string | null>(null);
+  const [hasOlder, setHasOlder] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const handleDeleted = (id: string) => {
-    setItems((items) => items.filter((item) => item.id !== id));
+    setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   useEffect(() => {
@@ -27,9 +30,21 @@ export function FeedList() {
     async function load() {
       setIsLoading(true);
       setLoadError(null);
+      setOlderCursor(null);
       try {
-        const data = await fetchRecommendations(user?.id);
-        if (!cancelled) setItems(data);
+        const recent = await fetchRecommendationsPage({
+          currentUserId: user?.id,
+          scope: 'recent',
+        });
+        if (cancelled) return;
+        setItems(recent.items);
+
+        const peek = await fetchRecommendationsPage({
+          currentUserId: user?.id,
+          scope: 'older',
+          limit: 1,
+        });
+        if (!cancelled) setHasOlder(peek.items.length > 0);
       } catch (error) {
         if (!cancelled) {
           setLoadError(
@@ -42,17 +57,42 @@ export function FeedList() {
         if (!cancelled) setIsLoading(false);
       }
     }
-    load();
+    void load();
     return () => {
       cancelled = true;
     };
   }, [authLoading, user?.id]);
 
+  async function loadMoreOlder() {
+    if (loadingMore || !hasOlder) return;
+    setLoadingMore(true);
+    try {
+      const page = await fetchRecommendationsPage({
+        currentUserId: user?.id,
+        scope: 'older',
+        limit: 20,
+        cursor: olderCursor ?? undefined,
+      });
+      setItems((prev) => {
+        const seen = new Set(prev.map((i) => i.id));
+        return [...prev, ...page.items.filter((i) => !seen.has(i.id))];
+      });
+      setOlderCursor(page.nextCursor);
+      if (!page.nextCursor) setHasOlder(false);
+    } catch {
+      /* 하단만 실패 — 조용히 */
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
   if (authLoading || isLoading) {
     return (
       <>
         <FeedHeader />
-        <p className="text-center text-brand-primary/60">불러오는 중입니다...</p>
+        <p className="text-center text-brand-primary/60">
+          불러오는 중입니다...
+        </p>
       </>
     );
   }
@@ -74,7 +114,7 @@ export function FeedList() {
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !hasOlder) {
     return (
       <>
         <FeedHeader />
@@ -96,20 +136,36 @@ export function FeedList() {
     );
   }
 
-  // 카드 있을때만 SavedCardsFeedProvider 제공
   return (
     <FriendIdsProvider>
       <AvatarActionProvider>
         <SavedCardsFeedProvider>
           <FeedHeader />
-          <ul className="flex flex-col gap-5 pb-2">
-            {items.map((item, index) => (
-              <li key={item.id} className="flex flex-col gap-5">
-                {index > 0 ? <FeedNoteDivider /> : null}
-                <FeedCard recommendation={item} onDeleted={handleDeleted} />
-              </li>
-            ))}
-          </ul>
+          {items.length === 0 ? (
+            <p className="mb-6 text-center text-sm text-brand-primary/55">
+              요즘 올라온 곡이 없어요. 아래에서 지난 추천을 볼 수 있어요.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-5 pb-2">
+              {items.map((item, index) => (
+                <li key={item.id} className="flex flex-col gap-5">
+                  {index > 0 ? <FeedNoteDivider /> : null}
+                  <FeedCard recommendation={item} onDeleted={handleDeleted} />
+                </li>
+              ))}
+            </ul>
+          )}
+          {hasOlder ? (
+            <div className="mt-8 flex justify-center pb-4">
+              <button
+                type="button"
+                onClick={() => void loadMoreOlder()}
+                disabled={loadingMore}
+                className="text-sm font-medium text-brand-primary underline-offset-4 hover:underline disabled:opacity-50">
+                {loadingMore ? '불러오는 중…' : '더 보기 · 지난 추천'}
+              </button>
+            </div>
+          ) : null}
         </SavedCardsFeedProvider>
       </AvatarActionProvider>
     </FriendIdsProvider>

@@ -20,15 +20,47 @@ import { fetchApi } from './fetchApi';
 import { mapRecommendations } from './mapRecommendation';
 import { Recommendation } from './types';
 
-/** 공개 피드 — Bearer 없음 */
+export type RecommendationsPage = {
+  items: Recommendation[];
+  nextCursor: string | null;
+};
+
+type FetchRecommendationsOpts = {
+  currentUserId?: string;
+  scope?: 'recent' | 'older' | 'all';
+  cursor?: string;
+  limit?: number;
+};
+
+/** 공개 피드 — Bearer 없음 · 기본은 전체(공유 시트·수정 폼 호환) */
 export async function fetchRecommendations(
   currentUserId?: string,
 ): Promise<Recommendation[]> {
-  const data = await fetchApi<ApiRecommendation[]>('/recommendations', {
+  const page = await fetchRecommendationsPage({ currentUserId });
+  return page.items;
+}
+
+export async function fetchRecommendationsPage(
+  opts: FetchRecommendationsOpts = {},
+): Promise<RecommendationsPage> {
+  const params = new URLSearchParams();
+  if (opts.scope) params.set('scope', opts.scope);
+  if (opts.cursor) params.set('cursor', opts.cursor);
+  if (opts.limit != null) params.set('limit', opts.limit.toString());
+  const qs = params.toString();
+  const path = qs ? `/recommendations?${qs}` : '/recommendations';
+
+  const data = await fetchApi<{
+    items: ApiRecommendation[];
+    nextCursor: string | null;
+  }>(path, {
     credentials: 'include',
     cache: 'no-store',
   });
-  return mapRecommendations(data, currentUserId);
+  return {
+    items: mapRecommendations(data.items, opts.currentUserId),
+    nextCursor: data.nextCursor,
+  };
 }
 
 async function postAuth(

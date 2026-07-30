@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { RecommendationsService } from './recommendations.service';
@@ -21,6 +22,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ActiveAccountGuard } from 'src/auth/active-account.guard';
 import { UpdateRecommendationDto } from './dto/update-recommendation.dto';
+import { ListRecommendationsQueryDto } from './dto/list-recommendations-query.dto';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
@@ -29,10 +31,12 @@ export class RecommendationsController {
     private readonly recommendationsService: RecommendationsService,
   ) {}
 
-  @ApiOperation({ summary: '피드 목록 (공개)' })
+  @ApiOperation({
+    summary: '피드 목록 (공개) · cursor·scope 선택',
+  })
   @Get()
-  async findAll() {
-    return await this.recommendationsService.findAll();
+  async findAll(@Query() query: ListRecommendationsQueryDto) {
+    return await this.recommendationsService.findAll(query);
   }
 
   @ApiOperation({ summary: '댓글 목록(공개)' })
