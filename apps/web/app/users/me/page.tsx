@@ -4,10 +4,11 @@ import { MyHomeDashboard } from '@/components/saved-cards/MyHomeDashboard';
 import { useAuth } from '@/components/auth/AuthProvider';
 import {
   fetchFriendRequests,
+  fetchMyStats,
   fetchSavedCards,
   fetchSavedLyrics,
 } from '@/lib/api';
-import type { ApiSavedCard } from '@/lib/apiTypes';
+import type { ApiMyStats, ApiSavedCard } from '@/lib/apiTypes';
 import { authPageClassName } from '@/lib/form';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -24,9 +25,31 @@ export default function MyHomePage() {
   const [albumLoading, setAlbumLoading] = useState(true);
   const [requestCount, setRequestCount] = useState(0);
 
+  const [stats, setStats] = useState<ApiMyStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
   useEffect(() => {
     if (!isLoading && !user) router.replace('/login?next=/users/me');
   }, [isLoading, user, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    setStatsLoading(true);
+    fetchMyStats()
+      .then((data) => {
+        if (!cancelled) setStats(data);
+      })
+      .catch(() => {
+        if (!cancelled) setStats(null);
+      })
+      .finally(() => {
+        if (!cancelled) setStatsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -95,6 +118,8 @@ export default function MyHomePage() {
         lyricPreview={lyricPreview}
         loading={albumLoading}
         requestCount={requestCount}
+        stats={stats}
+        statsLoading={statsLoading}
       />
     </main>
   );

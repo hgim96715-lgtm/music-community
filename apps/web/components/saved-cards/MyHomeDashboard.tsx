@@ -1,9 +1,13 @@
 'use client';
 
-import type { ApiSavedCard } from '@/lib/apiTypes';
+import type { ApiMyStats, ApiSavedCard } from '@/lib/apiTypes';
 import { ChevronRight, Disc3, Quote } from 'lucide-react';
 import Link from 'next/link';
-import { LpAlbumJacket, TOP3_JACKET_CLASS, TOP3_TITLE_MAX_CLASS } from './LpAlbumJacket';
+import {
+  LpAlbumJacket,
+  TOP3_JACKET_CLASS,
+  TOP3_TITLE_MAX_CLASS,
+} from './LpAlbumJacket';
 import { LpAlbumDisc } from './LpAlbumDisc';
 import { MyHomeNav } from './MyHomeNav';
 
@@ -16,6 +20,8 @@ type MyHomeDashboardProps = {
   lyricPreview?: string | null;
   loading: boolean;
   requestCount?: number;
+  stats?: ApiMyStats | null;
+  statsLoading?: boolean;
 };
 
 function topCards(cards: ApiSavedCard[]): ApiSavedCard[] {
@@ -45,6 +51,23 @@ function greetingLabel() {
   return '좋은 저녁';
 }
 
+/** `YYYY-MM-DD` weekStart → `7/24–7/30` (KST 7일 창) */
+function formatWeekRange(weekStart: string) {
+  const toMd = (key: string) => {
+    const [, m, d] = key.split('-');
+    return `${Number(m)}/${Number(d)}`;
+  };
+  const end = new Date(`${weekStart}T12:00:00+09:00`);
+  end.setTime(end.getTime() + 6 * 86_400_000);
+  const endKey = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(end);
+  return `${toMd(weekStart)}–${toMd(endKey)}`;
+}
+
 const doorClassName =
   'group flex min-h-[7.5rem] flex-col gap-1.5 rounded-xl border border-[rgb(201_166_107/0.22)] bg-[rgb(42_36_30/0.65)] p-2.5 text-left shadow-[0_2px_8px_rgb(0_0_0/0.28)] transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 hover:border-[rgb(201_166_107/0.38)] hover:shadow-[0_4px_12px_rgb(0_0_0/0.35)] active:translate-y-px';
 
@@ -57,6 +80,8 @@ export function MyHomeDashboard({
   lyricPreview = null,
   loading,
   requestCount = 0,
+  stats = null,
+  statsLoading = false,
 }: MyHomeDashboardProps) {
   const preview = albumPreview(cards);
   const tops = topCards(cards);
@@ -135,13 +160,36 @@ export function MyHomeDashboard({
           )}
         </section>
 
-        {/* 나중 통계 자리 힌트 — 공간 확보 */}
-        <div
-          className="my-home-stats-slot"
-          aria-hidden
-          title="나중에 주·월 저장 통계">
-          <span>통계 · 곧</span>
-        </div>
+        <Link
+          href="/users/me/stats"
+          className="my-home-stats-slot group block no-underline"
+          aria-label="통계 전체 보기">
+          {statsLoading || !stats ? (
+            <span>통계 불러오는 중…</span>
+          ) : (
+            <span className="flex w-full items-center justify-between gap-2 px-3 py-2">
+              <span className="min-w-0 text-left">
+                <span className="block text-[10px] font-semibold tracking-wide text-[#cbbba0]">
+                  이번 주
+                  <span className="ml-1 font-medium text-[#8f806c]">
+                    ({formatWeekRange(stats.period.weekStart)})
+                  </span>
+                </span>
+                <span className="mt-0.5 block text-[12px] font-medium text-[#ebe3d8]">
+                  카드 {stats.savedCards.week} · 가사 {stats.savedLyrics.week} ·
+                  추천 {stats.recommendations.week}
+                </span>
+              </span>
+              <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-brand-primary">
+                통계 전체
+                <ChevronRight
+                  className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden
+                />
+              </span>
+            </span>
+          )}
+        </Link>
 
         <section className="mt-4" aria-label="컬렉션">
           <h2 className="mb-2.5 text-[12px] font-bold tracking-wide text-[#ebe3d8]">

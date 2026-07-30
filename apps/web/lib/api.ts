@@ -13,6 +13,7 @@ import {
   ApiPublicNotice,
   CreateSavedCardBody,
   UpdateSavedLyricBody,
+  ApiMyStats,
 } from './apiTypes';
 import { authFetchApi, authFetchApiVoid } from './authFetch';
 import { removeApiAccessToken, setApiAccessToken } from './authToken';
@@ -154,6 +155,11 @@ export async function patchUserProfile(body: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+}
+
+/** GET /users/me/stats — 주·월·누적 */
+export async function fetchMyStats(): Promise<ApiMyStats> {
+  return authFetchApi<ApiMyStats>('/users/me/stats');
 }
 
 // saved-cards

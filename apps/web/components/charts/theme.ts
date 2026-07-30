@@ -20,9 +20,12 @@ export const nivoTheme: PartialTheme = {
     container: {
       background: '#f3ebe3',
       color: '#1a1410',
-      borderRadius: '12px',
+      padding: '6px 8px',
+      fontSize: '11px',
+      lineHeight: 1.25,
+      borderRadius: '8px',
       border: '1px solid rgba(31,26,22,0.15)',
-      boxShadow: '2px 2px 0 #2e261f',
+      boxShadow: '0 4px 12px rgb(0 0 0 / 28%)',
     },
   },
 };

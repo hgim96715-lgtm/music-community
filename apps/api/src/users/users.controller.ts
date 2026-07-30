@@ -36,6 +36,14 @@ export class UsersController {
   }
 
   @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '내 활동 통계 조회' })
+  @Get('me/stats')
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard)
+  async getMyStats(@UserId() userId: string) {
+    return await this.usersService.getMyStats(userId);
+  }
+
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '내 프로필 수정' })
   @Patch('me')
   @UseGuards(JwtAuthGuard, ActiveAccountGuard)

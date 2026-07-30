@@ -1,9 +1,21 @@
 'use client';
 
-import { Home, Settings, UserRound, Users } from 'lucide-react';
+import {
+  BarChart3,
+  Home,
+  LucideIcon,
+  Settings,
+  UserRound,
+  Users,
+} from 'lucide-react';
 import Link from 'next/link';
 
-export type MyHomeNavKey = 'home' | 'profile' | 'friends' | 'settings';
+export type MyHomeNavKey =
+  | 'home'
+  | 'stats'
+  | 'profile'
+  | 'friends'
+  | 'settings';
 
 type MyHomeNavProps = {
   /** 없으면 하이라이트 없음 (앨범·가사 안쪽) */
@@ -15,12 +27,23 @@ const ITEMS: {
   key: MyHomeNavKey;
   href: string;
   label: string;
-  icon: typeof Home;
+  icon: LucideIcon;
 }[] = [
   { key: 'home', href: '/users/me', label: '홈', icon: Home },
-  { key: 'profile', href: '/users/me/profile', label: '프로필', icon: UserRound },
+  { key: 'stats', href: '/users/me/stats', label: '통계', icon: BarChart3 },
+  {
+    key: 'profile',
+    href: '/users/me/profile',
+    label: '프로필',
+    icon: UserRound,
+  },
   { key: 'friends', href: '/friends', label: '친구', icon: Users },
-  { key: 'settings', href: '/users/me/settings', label: '설정', icon: Settings },
+  {
+    key: 'settings',
+    href: '/users/me/settings',
+    label: '설정',
+    icon: Settings,
+  },
 ];
 
 /** 마이 홈 — 가로 chip nav (앨범·가사는 아래 문 · 탭 중복 ❌) */

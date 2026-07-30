@@ -12,6 +12,11 @@ import { FriendshipStatus } from 'src/generated/prisma/enums';
 import { WithdrawUserDto } from './dto/withdraw-user.dto';
 import * as bcrypt from 'bcrypt';
 import { Logger } from '@nestjs/common';
+import {
+  getKstMonthKey,
+  startOfKstDay,
+  toKstDateKey,
+} from 'src/common/kst-date';
 
 const userSelect = {
   id: true,
@@ -358,5 +363,143 @@ export class UsersService {
       });
       return true;
     });
+  }
+
+  async getMyStats(userId: string) {
+    const now = new Date();
+    const startOfToday = startOfKstDay(now);
+    const startOfWeek = new Date(startOfToday.getTime() - 6 * 86_400_000);
+    const monthKey = getKstMonthKey(now);
+    const startOfMonth = new Date(`${monthKey}-01T00:00:00+09:00`);
+
+    const periodCounts = async (count: (gte?: Date) => Promise<number>) => {
+      const [week, month, total] = await Promise.all([
+        count(startOfWeek),
+        count(startOfMonth),
+        count(),
+      ]);
+      return { week, month, total };
+    };
+
+    const emptyDail = () => {
+      const map = new Map<string, number>();
+      for (let i = 6; i >= 0; i--) {
+        const day = new Date(startOfToday.getTime() - i * 86_400_000);
+        map.set(toKstDateKey(day), 0);
+      }
+      return map;
+    };
+    const fillDaily = (
+      rows: { createdAt: Date }[],
+      buckets: Map<string, number>,
+    ) => {
+      for (const row of rows) {
+        const key = toKstDateKey(row.createdAt);
+        if (buckets.has(key)) {
+          buckets.set(key, (buckets.get(key) ?? 0) + 1);
+        }
+      }
+    };
+    const [
+      savedCards,
+      savedLyrics,
+      recommendations,
+      cardRows,
+      lyricRows,
+      recoRows,
+      moodRows,
+      artistGroups,
+    ] = await Promise.all([
+      periodCounts((gte) =>
+        this.prisma.savedCard.count({
+          where: { userId, ...(gte ? { createdAt: { gte } } : {}) },
+        }),
+      ),
+      periodCounts((gte) =>
+        this.prisma.savedLyric.count({
+          where: { userId, ...(gte ? { createdAt: { gte } } : {}) },
+        }),
+      ),
+      periodCounts((gte) =>
+        this.prisma.recommendation.count({
+          where: {
+            authorId: userId,
+            hidden: false,
+            ...(gte ? { createdAt: { gte } } : {}),
+          },
+        }),
+      ),
+      this.prisma.savedCard.findMany({
+        where: { userId, createdAt: { gte: startOfWeek } },
+        select: { createdAt: true },
+      }),
+      this.prisma.savedLyric.findMany({
+        where: { userId, createdAt: { gte: startOfWeek } },
+        select: { createdAt: true },
+      }),
+      this.prisma.recommendation.findMany({
+        where: {
+          authorId: userId,
+          hidden: false,
+          createdAt: { gte: startOfWeek },
+        },
+        select: { createdAt: true },
+      }),
+      this.prisma.recommendation.findMany({
+        where: { authorId: userId, hidden: false },
+        select: {moods: true },
+      }),
+      this.prisma.recommendation.groupBy({
+        by: ['artist'],
+        where: { authorId: userId, hidden: false },
+        _count: { _all: true },
+        orderBy: { _count: { artist: 'desc' } },
+        take: 8,
+      }),
+    ]);
+
+    const cardDaily = emptyDail();
+    const lyricDaily = emptyDail();
+    const recoDaily = emptyDail();
+    fillDaily(cardRows, cardDaily);
+    fillDaily(lyricRows, lyricDaily);
+    fillDaily(recoRows, recoDaily);
+
+    const daily = Array.from(cardDaily.keys()).map((date) => ({
+      date,
+      savedCards: cardDaily.get(date) ?? 0,
+      savedLyrics: lyricDaily.get(date) ?? 0,
+      recommendations: recoDaily.get(date) ?? 0,
+    }));
+
+    const moodCounts = new Map<string, number>();
+    for (const row of moodRows) {
+      for (const mood of row.moods) {
+        moodCounts.set(mood, (moodCounts.get(mood) ?? 0) + 1);
+      }
+    }
+    const moods = Array.from(moodCounts.entries())
+      .map(([mood, count]) => ({
+        mood,
+        count,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    const artists = artistGroups.map((g) => ({
+      artist: g.artist,
+      count: g._count._all,
+    }));
+    return {
+      period: {
+        weekStart: toKstDateKey(startOfWeek),
+        monthKey,
+      },
+      savedCards,
+      savedLyrics,
+      recommendations,
+      daily,
+      moods,
+      artists,
+    };
   }
 }

@@ -263,3 +263,29 @@ export type ApiFriendRequests = {
   received: ApiFriendship[];
   sent: ApiFriendship[];
 };
+
+export type ApiPeriodCounts = {
+  week: number;
+  month: number;
+  total: number;
+};
+
+export type ApiMyStatsDaily = {
+  date: string;
+  savedCards: number;
+  savedLyrics: number;
+  recommendations: number;
+};
+
+export type ApiMyStats = {
+  period: {
+    weekStart: string;
+    monthKey: string;
+  };
+  savedCards: ApiPeriodCounts;
+  savedLyrics: ApiPeriodCounts;
+  recommendations: ApiPeriodCounts;
+  daily: ApiMyStatsDaily[];
+  moods: { mood: string; count: number }[];
+  artists: { artist: string; count: number }[];
+};
