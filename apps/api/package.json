@@ -12,6 +12,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "seed:room-members": "npx tsx scripts/seed-room-members.ts",
+    "seed:feed": "npx tsx scripts/seed-feed-recommendations.ts",
     "seed:cleanup": "npx tsx scripts/cleanup-seed-users.ts"
   },
   "dependencies": {
