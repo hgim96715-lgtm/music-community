@@ -169,7 +169,7 @@ export default function RoomInfoPage() {
                   <span className="flex min-w-0 flex-col gap-0.5">
                     <span>알림 뮤트</span>
                     <span className="text-[11px] font-normal text-[#8a8070]">
-                      이 방 soft 점 끄기 · 나에게만
+                      헤더·탭 점 끄기 · 카드 점은 흐리게 · 나에게만
                     </span>
                   </span>
                   <span

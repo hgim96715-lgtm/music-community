@@ -15,6 +15,7 @@ import {
   hideRoomMessage,
   joinRoom,
   loadRoomChatThemeCached,
+  markRoomRead,
   ROOM_TAPBACK_EMOJIS,
   toggleRoomMessageReaction,
   ToogleRoomMessageReactionResult,
@@ -65,7 +66,6 @@ import { RoomSongShareSheet } from '@/components/rooms/RoomSongShareSheet';
 import { RoomNoticeSheet } from '@/components/rooms/RoomNoticeSheet';
 import { JacketPreviewModal } from '@/components/saved-cards/JacketPreviewModal';
 import { LpAlbumJacket } from '@/components/saved-cards/LpAlbumJacket';
-import { markChatSeen } from '@/lib/roomChatUnreadStorage';
 import { RoomPhotocardShareSheet } from '@/components/rooms/RoomPhotocardShareSheet';
 import { RoomLyricCard } from '@/components/rooms/RoomLyricCard';
 import {
@@ -77,11 +77,7 @@ import {
   type SavedLyricPreset,
 } from '@/components/saved-cards/SavedLyricSaveSheet';
 import { createSavedLyric } from '@/lib/api';
-import {
-  getRoomThemePrefs,
-  getRoomThemePreset,
-  RoomThemePresetId,
-} from '@/lib/roomThemeStorage';
+import { RoomThemePresetId } from '@/lib/roomThemeStorage';
 import { AvatarActionProvider } from '@/components/friends/AvatarActionContext';
 import { FeedAuthorNickname } from '@/components/friends/FeedAuthorNickname';
 import { FriendIdsProvider } from '@/components/friends/FriendIdsContext';
@@ -379,7 +375,7 @@ export default function RoomPage() {
       setRoom(roomData);
       setMessages(sorted);
       if (user?.id) {
-        markChatSeen(user.id, roomId, sorted.at(-1)?.createdAt ?? '');
+        void markRoomRead(roomId);
       }
       await socketJoinRoom(roomId);
     } catch (error) {
@@ -441,7 +437,7 @@ export default function RoomPage() {
         if (prev.some((m) => m.id === message.id)) return prev;
         return [...prev, message];
       });
-      markChatSeen(userId, roomId, message.createdAt);
+      void markRoomRead(roomId);
     });
 
     const offDeleted = onRoomMessageDeleted((message) => {
@@ -743,7 +739,7 @@ export default function RoomPage() {
       setRoom(pendingRoom);
       setMessages(sorted);
       if (user?.id) {
-        markChatSeen(user.id, roomId, sorted.at(-1)?.createdAt ?? '');
+        void markRoomRead(roomId);
       }
       setPasswordOpen(false);
       setPendingRoom(null);

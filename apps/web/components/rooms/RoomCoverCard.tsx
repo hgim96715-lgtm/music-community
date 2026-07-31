@@ -9,6 +9,8 @@ type RoomCoverCardProps = {
   room: ApiRoom;
   /** 「내 방」만 soft 점 */
   unread?: boolean;
+  /** 뮤트면 점은 남기되 저채도 (헤더·탭 점은 제외) */
+  muted?: boolean;
 };
 
 function roomInitial(room: ApiRoom) {
@@ -21,7 +23,11 @@ function roomInitial(room: ApiRoom) {
  * 커버 URL 없음 → 비닐 + 종이 라벨(이니셜 각인)
  * 태그 = # ❌ · 무드와 같은 손글씨
  */
-export function RoomCoverCard({ room, unread = false }: RoomCoverCardProps) {
+export function RoomCoverCard({
+  room,
+  unread = false,
+  muted = false,
+}: RoomCoverCardProps) {
   const tags = room.topicTags
     .slice(0, 2)
     .map((t) => t.replace(/^#/, '').trim())
@@ -48,7 +54,11 @@ export function RoomCoverCard({ room, unread = false }: RoomCoverCardProps) {
           ) : null}
           {unread ? (
             <span
-              className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-brand-primary ring-2 ring-[color:var(--color-brand-bg)]"
+              className={`absolute -right-0.5 -top-0.5 size-2.5 rounded-full ring-2 ring-[color:var(--color-brand-bg)] ${
+                muted
+                  ? 'bg-brand-primary/35'
+                  : 'bg-brand-primary'
+              }`}
               aria-hidden
             />
           ) : null}

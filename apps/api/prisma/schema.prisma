@@ -270,6 +270,7 @@ model RoomMember {
   role       RoomMemberRole @default(member)
   mutedUntil DateTime?      @db.Timestamptz(3)
   joinedAt   DateTime       @default(now()) @db.Timestamptz(3)
+  lastReadAt DateTime       @default(now()) @db.Timestamptz(3)
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([roomId, userId])

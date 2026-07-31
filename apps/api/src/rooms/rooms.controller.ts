@@ -87,6 +87,15 @@ export class RoomsController {
     return await this.roomsService.join(roomId, userId, dto.password);
   }
 
+  @ApiOperation({ summary: '방 메시지 읽음 처리' })
+  @Post(':id/read')
+  async markRead(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) roomId: string,
+  ) {
+    return await this.roomsService.markRead(roomId, userId);
+  }
+
   @ApiOperation({ summary: '방 퇴장' })
   @Post(':id/leave')
   @HttpCode(HttpStatus.NO_CONTENT)

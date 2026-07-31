@@ -7,13 +7,13 @@ import {
   appNavLinkClassName,
   authLinkClassName,
 } from '@/lib/form';
-import { hasUnreadChat } from '@/lib/roomChatUnreadStorage';
 import { fetchMyRooms } from '@/lib/rooms';
 import { User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
+import { isRoomMuted } from '@/lib/roomMuteStorage';
 
 export default function AppHeader() {
   const { user, isLoading } = useAuth();
@@ -29,8 +29,8 @@ export default function AppHeader() {
     try {
       const mine = await fetchMyRooms();
       setRoomsUnread(
-        mine.some((room) =>
-          hasUnreadChat(user.id, room.id, room.lastMessageAt ?? null),
+        mine.some(
+          (room) => Boolean(room.unread) && !isRoomMuted(user.id, room.id),
         ),
       );
     } catch {

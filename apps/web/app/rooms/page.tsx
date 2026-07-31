@@ -3,7 +3,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { RoomCoverCard } from '@/components/rooms/RoomCoverCard';
 import { authPageClassName } from '@/lib/form';
 import { brandPillBtn } from '@/lib/neobrutal';
-import { hasUnreadChat } from '@/lib/roomChatUnreadStorage';
+import { isRoomMuted } from '@/lib/roomMuteStorage';
 import { fetchMyRooms, fetchPublicRooms, type ApiRoom } from '@/lib/rooms';
 import { ChevronLeft, Loader2, Plus, Search, X } from 'lucide-react';
 import Link from 'next/link';
@@ -41,17 +41,17 @@ function RoomGrid({
   }
   return (
     <ul className="grid grid-cols-3 gap-x-2 gap-y-5">
-      {rooms.map((room) => (
-        <RoomCoverCard
-          key={room.id}
-          room={room}
-          unread={
-            showUnread && userId
-              ? hasUnreadChat(userId, room.id, room.lastMessageAt ?? null)
-              : false
-          }
-        />
-      ))}
+      {rooms.map((room) => {
+        const muted = Boolean(userId && isRoomMuted(userId, room.id));
+        return (
+          <RoomCoverCard
+            key={room.id}
+            room={room}
+            unread={showUnread ? Boolean(room.unread) : false}
+            muted={muted}
+          />
+        );
+      })}
     </ul>
   );
 }
@@ -105,9 +105,7 @@ export default function RoomsPage() {
   );
   const mineHasUnread = useMemo(() => {
     if (!user) return false;
-    return mine.some((r) =>
-      hasUnreadChat(user.id, r.id, r.lastMessageAt ?? null),
-    );
+    return mine.some((r) => Boolean(r.unread) && !isRoomMuted(user.id, r.id));
   }, [mine, user]);
 
   if (authLoading || !user || loading) {
@@ -195,9 +193,7 @@ export default function RoomsPage() {
             showUnread
           />
           {mine.length === 0 ? (
-            <Link
-              href="/rooms/new"
-              className={`${brandPillBtn} text-center`}>
+            <Link href="/rooms/new" className={`${brandPillBtn} text-center`}>
               첫 방 만들기
             </Link>
           ) : null}
@@ -231,9 +227,7 @@ export default function RoomsPage() {
           <RoomGrid
             rooms={filteredDiscover}
             empty={
-              discover.length === 0
-                ? '새 방이 없어요'
-                : '그런 방은 아직 없어요'
+              discover.length === 0 ? '새 방이 없어요' : '그런 방은 아직 없어요'
             }
           />
         </div>

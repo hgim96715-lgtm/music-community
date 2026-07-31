@@ -592,6 +592,11 @@ export class RoomsService {
         owner: {
           select: { id: true, nickname: true, image: true },
         },
+        members: {
+          where: { userId },
+          select: { lastReadAt: true },
+          take: 1,
+        },
         messages: {
           where: { deletedAt: null },
           orderBy: { createdAt: 'desc' },
@@ -601,14 +606,47 @@ export class RoomsService {
       },
     });
     return rooms.map((room) => {
-      const { messages, ...rest } = this.toClientRoom(room);
+      const { messages, members, ...rest } = this.toClientRoom(room);
       const at = messages[0]?.createdAt;
+      const lastMessageAt =
+        at instanceof Date ? at.toISOString() : at ? String(at) : null;
+      const readAt = members[0]?.lastReadAt;
+      const lastReadAt =
+        readAt instanceof Date
+          ? readAt.toISOString()
+          : readAt
+            ? String(readAt)
+            : null;
+      const unread =
+        lastMessageAt != null &&
+        lastReadAt != null &&
+        new Date(lastMessageAt).getTime() > new Date(lastReadAt).getTime();
       return {
         ...rest,
-        lastMessageAt:
-          at instanceof Date ? at.toISOString() : at ? String(at) : null,
+        lastMessageAt,
+        lastReadAt,
+        unread,
       };
     });
+  }
+
+  async markRead(roomId: string, userId: string) {
+    await this.findById(roomId);
+    const member = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+      select: { id: true },
+    });
+    if (!member)
+      throw new ForbiddenException('방 멤버만 읽음 처리를 할 수 있습니다.');
+    const updated = await this.prisma.roomMember.update({
+      where: { roomId_userId: { roomId, userId } },
+      data: { lastReadAt: new Date() },
+      select: { lastReadAt: true },
+    });
+    return {
+      lastReadAt: updated.lastReadAt.toISOString(),
+      unread: false,
+    };
   }
 
   async listMembers(

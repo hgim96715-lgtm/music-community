@@ -5,7 +5,7 @@ function storageKey(userId: string, roomId: string) {
   return `${PREFIX}${userId}:${roomId}`;
 }
 
-/** 이 방 알림 뮤트 여부 (soft 점 끄기 · 14.8) */
+/** 이 방 알림 뮤트 여부 — 헤더·탭 soft 점 제외 · 카드 점은 흐리게 (14.8→디스코드식) */
 export function isRoomMuted(userId: string, roomId: string): boolean {
   if (typeof window === 'undefined') return false;
   return localStorage.getItem(storageKey(userId, roomId)) === '1';

@@ -37,6 +37,8 @@ export type ApiRoom = {
   owner: ApiRoomOwner;
   /** `/rooms/mine`만 · 최근 메시지 시각 */
   lastMessageAt?: string | null;
+  lastReadAt?: string;
+  unread?: boolean;
 };
 
 export type ApiRoomMember = {
@@ -201,6 +203,13 @@ export function joinRoom(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(password ? { password } : {}),
   });
+}
+
+/** POST /rooms/:id/read — 읽음 처리 */
+export function markRoomRead(
+  roomId: string,
+): Promise<{ lastReadAt: string; unread: false }> {
+  return authFetchApi(`/rooms/${roomId}/read`, { method: 'POST' });
 }
 
 /** POST /rooms/:id/leave — 204 */
