@@ -130,7 +130,7 @@ export default function DmChatPage() {
           {other?.id ? (
             <Link
               href={`/users/${other.id}`}
-              className="truncate text-[15px] font-semibold tracking-tight text-[#ebe3d8] hover:underline">
+              className="truncate text-[15px] font-semibold tracking-tight text-[#ebe3d8] transition-colors hover:text-brand-primary">
               {title}
             </Link>
           ) : (

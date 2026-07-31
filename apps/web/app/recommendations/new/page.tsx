@@ -127,7 +127,7 @@ export default function NewRecommendationPage() {
     <main className={authPageClassName}>
       <Link
         href="/recommendations"
-        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
+        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary/80">
         <ChevronLeftIcon className="h-4 w-4" aria-hidden />
         피드로 돌아가기
       </Link>

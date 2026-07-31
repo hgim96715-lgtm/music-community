@@ -263,7 +263,7 @@ export function SavedCardAlbumBook({
                         type="button"
                         disabled={shelfBusy}
                         onClick={() => void demoteFromTop(card.id)}
-                        className="text-[10px] text-brand-primary underline-offset-2 hover:underline disabled:opacity-50">
+                        className="text-[10px] text-brand-primary transition-colors hover:text-brand-primary/80 disabled:opacity-50">
                         책장으로
                       </button>
                     ) : null}

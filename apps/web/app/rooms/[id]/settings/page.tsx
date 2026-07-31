@@ -168,7 +168,7 @@ export default function RoomSettingsPage() {
         <p className={fieldErrorClassName}>{error || '방을 찾을 수 없어요.'}</p>
         <Link
           href="/rooms"
-          className="text-sm text-brand-primary hover:underline">
+          className="text-sm text-brand-primary transition-colors hover:text-brand-primary/80">
           방 목록
         </Link>
       </main>
@@ -178,7 +178,7 @@ export default function RoomSettingsPage() {
     <main className={`${authPageClassName} gap-6`}>
       <Link
         href={`/rooms/${roomId}`}
-        className="inline-flex items-center gap-1 self-start text-sm font-medium text-brand-primary hover:underline">
+        className="inline-flex items-center gap-1 self-start text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary/80">
         <ChevronLeft className="size-4" aria-hidden />
         채팅으로
       </Link>

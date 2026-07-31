@@ -80,7 +80,7 @@ export default function FriendRequestsPage() {
     <main className={`${authPageClassName} gap-6`}>
       <Link
         href="/friends"
-        className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
+        className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary/80">
         <ChevronLeft className="size-4" aria-hidden />
         친구
       </Link>
@@ -100,7 +100,7 @@ export default function FriendRequestsPage() {
                 className="flex items-center justify-between gap-3 px-4 py-3">
                 <Link
                   href={`/users/${f.requester.id}`}
-                  className="min-w-0 truncate text-sm font-semibold hover:underline">
+                  className="min-w-0 truncate text-sm font-semibold transition-colors hover:text-brand-primary">
                   @{f.requester.nickname}
                 </Link>
                 <div className="flex shrink-0 gap-1.5">
@@ -143,7 +143,7 @@ export default function FriendRequestsPage() {
                 className="flex items-center justify-between gap-3 px-4 py-3">
                 <Link
                   href={`/users/${f.addressee.id}`}
-                  className="min-w-0 truncate text-sm font-semibold hover:underline">
+                  className="min-w-0 truncate text-sm font-semibold transition-colors hover:text-brand-primary">
                   @{f.addressee.nickname}
                 </Link>
                 <button

@@ -161,7 +161,7 @@ export function FeedList() {
                 type="button"
                 onClick={() => void loadMoreOlder()}
                 disabled={loadingMore}
-                className="text-sm font-medium text-brand-primary underline-offset-4 hover:underline disabled:opacity-50">
+                className="text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary/80 disabled:opacity-50">
                 {loadingMore ? '불러오는 중…' : '더 보기 · 지난 추천'}
               </button>
             </div>

@@ -113,7 +113,7 @@ export default function MyHomePage() {
       <div>
         <Link
           href="/recommendations"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
+          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary/80">
           <ChevronLeft className="size-4" aria-hidden />
           피드
         </Link>

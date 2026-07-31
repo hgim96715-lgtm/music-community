@@ -78,7 +78,7 @@ export default function MessageRequestsPage() {
     <main className={`${authPageClassName} gap-6`}>
       <Link
         href="/messages"
-        className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
+        className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary/80">
         <ChevronLeft className="size-4" aria-hidden />
         메시지
       </Link>
@@ -98,7 +98,7 @@ export default function MessageRequestsPage() {
                 {otherId ? (
                   <Link
                     href={`/users/${otherId}`}
-                    className="min-w-0 truncate text-sm font-semibold text-[#ebe3d8] hover:text-brand-primary hover:underline">
+                    className="min-w-0 truncate text-sm font-semibold text-[#ebe3d8] transition-colors hover:text-brand-primary">
                     @{name}
                   </Link>
                 ) : (

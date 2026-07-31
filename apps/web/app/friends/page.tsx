@@ -82,7 +82,7 @@ export default function FriendsPage() {
       <div className="flex items-center justify-between gap-3">
         <Link
           href="/users/me"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
+          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary/80">
           <ChevronLeft className="size-4" aria-hidden />
           마이페이지
         </Link>
@@ -104,7 +104,7 @@ export default function FriendsPage() {
                 className="flex items-center justify-between gap-3 px-4 py-3">
                 <Link
                   href={`/users/${other.id}`}
-                  className="min-w-0 truncate text-sm font-semibold text-neutral-800 hover:underline">
+                  className="min-w-0 truncate text-sm font-semibold text-neutral-800 transition-colors hover:text-brand-primary">
                   @{other.nickname}
                 </Link>
                 <button

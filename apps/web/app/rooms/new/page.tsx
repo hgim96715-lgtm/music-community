@@ -91,7 +91,7 @@ export default function NewRoomPage() {
     <main className={`${authPageClassName} gap-6`}>
       <Link
         href="/rooms"
-        className="inline-flex items-center gap-1 self-start text-sm font-medium text-brand-primary hover:underline">
+        className="inline-flex items-center gap-1 self-start text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary/80">
         <ChevronLeft className="size-4" aria-hidden />방 목록
       </Link>
       <h1 className={authTitleClassName}>새 방</h1>

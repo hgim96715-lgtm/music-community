@@ -64,7 +64,7 @@ export default function MessagesPage() {
       <div className="flex items-center justify-between gap-3">
         <Link
           href="/users/me"
-          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:underline">
+          className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary/80">
           <ChevronLeft className="size-4" aria-hidden />
           마이페이지
         </Link>
