@@ -53,31 +53,31 @@ export function RoomMembersSheet({
     const reqId = ++reqIdRef.current;
     let cancelled = false;
     const t = window.setTimeout(() => {
-      setLoading(true);
-      setError('');
-      setMembers([]);
-      setNextCursor(null);
-      fetchRoomMembers(roomId, {
-        q: query.trim() || undefined,
-        limit: 30,
-      })
-        .then((page) => {
+      void (async () => {
+        setLoading(true);
+        setError('');
+        setMembers([]);
+        setNextCursor(null);
+        try {
+          const page = await fetchRoomMembers(roomId, {
+            q: query.trim() || undefined,
+            limit: 30,
+          });
           if (cancelled || reqId !== reqIdRef.current) return;
           setMembers(page.items);
           setNextCursor(page.nextCursor);
           setTotal(page.total);
-        })
-        .catch((error) => {
+        } catch (error) {
           if (cancelled || reqId !== reqIdRef.current) return;
           setError(
             error instanceof Error
               ? error.message
               : '멤버 목록을 불러오지 못했어요.',
           );
-        })
-        .finally(() => {
+        } finally {
           if (!cancelled && reqId === reqIdRef.current) setLoading(false);
-        });
+        }
+      })();
     }, 250);
 
     return () => {

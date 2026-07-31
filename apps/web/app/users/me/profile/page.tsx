@@ -39,13 +39,17 @@ export default function MyProfileEditPage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    fetchFriendRequests()
-      .then((requests) => {
+    async function load() {
+      try {
+        const requests = await fetchFriendRequests();
         if (!cancelled) {
           setRequestCount(requests.received.length + requests.sent.length);
         }
-      })
-      .catch(() => {});
+      } catch {
+        /* ignore */
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

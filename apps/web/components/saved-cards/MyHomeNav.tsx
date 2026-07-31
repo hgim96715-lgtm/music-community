@@ -4,6 +4,7 @@ import {
   BarChart3,
   Home,
   LucideIcon,
+  MessageCircle,
   Settings,
   UserRound,
   Users,
@@ -15,6 +16,7 @@ export type MyHomeNavKey =
   | 'stats'
   | 'profile'
   | 'friends'
+  | 'messages'
   | 'settings';
 
 type MyHomeNavProps = {
@@ -38,6 +40,7 @@ const ITEMS: {
     icon: UserRound,
   },
   { key: 'friends', href: '/friends', label: '친구', icon: Users },
+  { key: 'messages', href: '/messages', label: '메시지', icon: MessageCircle },
   {
     key: 'settings',
     href: '/users/me/settings',

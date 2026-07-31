@@ -65,22 +65,23 @@ export function RoomLyricShareSheet({
     setFormError('');
     setError('');
     let cancelled = false;
-    setLoading(true);
-    fetchRecommendations(userId)
-      .then((list) => {
+    async function load() {
+      setLoading(true);
+      try {
+        const list = await fetchRecommendations(userId);
         if (cancelled) return;
         setMine(list.filter((r) => r.author.id === userId));
-      })
-      .catch((error) => {
+      } catch (error) {
         if (!cancelled) {
           setError(
             error instanceof Error ? error.message : '목록을 불러오지 못했어요',
           );
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

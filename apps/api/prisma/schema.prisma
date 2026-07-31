@@ -57,6 +57,12 @@ enum RoomMessageType {
     system
 }
 
+enum DmStatus {
+    pending
+    open
+    declined
+}
+
 model User {
   id           String   @id @default(uuid(7)) @db.Uuid
   email        String   @unique
@@ -70,6 +76,10 @@ model User {
   image String?
   deletedAt DateTime? @db.Timestamptz(3)
   withdrawScheduledAt DateTime? @db.Timestamptz(3)
+
+  dmMembers DmMember[]
+  dmMessages DmMessage[]
+  dmRequestsSent Dm[] @relation("DmRequestedBy")
 
   recommendations Recommendation[]
   reactions      Reaction[]
@@ -388,4 +398,49 @@ model RoomMessageHide {
 
     @@unique([messageId, userId])
     @@index([userId])
+}
+
+model Dm{
+    id String @id @default(uuid(7)) @db.Uuid
+    pairKey String @unique
+    status DmStatus @default(open)
+    requestedById String? @db.Uuid
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+    updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+    requestedBy User? @relation("DmRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+    members DmMember[]
+    messages DmMessage[]
+
+    @@index([status])
+    @@index([requestedById])
+}
+
+model DmMember {
+    id String @id @default(uuid(7)) @db.Uuid
+    dmId String @db.Uuid
+    userId String @db.Uuid
+    lastReadAt DateTime @default(now()) @db.Timestamptz(3)
+    joinedAt DateTime @default(now()) @db.Timestamptz(3)
+
+    dm Dm @relation(fields: [dmId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([dmId, userId])
+    @@index([userId])
+}
+
+model DmMessage {
+    id String @id @default(uuid(7)) @db.Uuid
+    dmId String @db.Uuid
+    senderId String @db.Uuid
+    body String
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+    updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+    dm Dm @relation(fields: [dmId], references: [id], onDelete: Cascade)
+    sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+    @@index([dmId,createdAt])
+    @@index([senderId])
 }

@@ -79,16 +79,19 @@ export default function MySettingsPage() {
 
   useEffect(() => {
     if (!user?.id) return;
+    const userId = user.id;
     let cancelled = false;
-    fetchPublishedNotices()
-      .then((notices) => {
+    async function load() {
+      try {
+        const notices = await fetchPublishedNotices();
         if (!cancelled) {
-          setSupportNew(hasUnseenSupportNotice(user.id, notices));
+          setSupportNew(hasUnseenSupportNotice(userId, notices));
         }
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setSupportNew(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };
@@ -101,13 +104,17 @@ export default function MySettingsPage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    fetchFriendRequests()
-      .then((requests) => {
+    async function load() {
+      try {
+        const requests = await fetchFriendRequests();
         if (!cancelled) {
           setRequestCount(requests.received.length + requests.sent.length);
         }
-      })
-      .catch(() => {});
+      } catch {
+        /* ignore */
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

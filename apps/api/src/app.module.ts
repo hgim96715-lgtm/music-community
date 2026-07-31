@@ -13,6 +13,7 @@ import { RoomsModule } from './rooms/rooms.module';
 import { SavedLyricsModule } from './saved-lyrics/saved-lyrics.module';
 import { SupportModule } from './support/support.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { DmsModule } from './dms/dms.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     RoomsModule,
     SavedLyricsModule,
     SupportModule,
+    DmsModule,
   ],
   controllers: [HealthController],
 })

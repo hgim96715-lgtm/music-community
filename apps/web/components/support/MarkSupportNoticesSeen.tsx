@@ -16,9 +16,11 @@ export function MarkSupportNoticesSeen({ publishedAt }: Props) {
       markSupportNoticesSeen(user.id, publishedAt);
       return;
     }
+    const userId = user.id;
     let cancelled = false;
-    fetchPublishedNotices()
-      .then((notices) => {
+    async function load() {
+      try {
+        const notices = await fetchPublishedNotices();
         if (cancelled) return;
         let latest = '';
         let latestMs = 0;
@@ -31,9 +33,12 @@ export function MarkSupportNoticesSeen({ publishedAt }: Props) {
             latest = at;
           }
         }
-        if (latest) markSupportNoticesSeen(user.id, latest);
-      })
-      .catch(() => {});
+        if (latest) markSupportNoticesSeen(userId, latest);
+      } catch {
+        /* ignore */
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

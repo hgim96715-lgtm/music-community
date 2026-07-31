@@ -29,22 +29,23 @@ export default function MyAlbumPage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    setAlbumLoading(true);
-    setAlbumError('');
-    fetchSavedCards()
-      .then((cards) => {
+    async function load() {
+      setAlbumLoading(true);
+      setAlbumError('');
+      try {
+        const cards = await fetchSavedCards();
         if (!cancelled) setSavedCards(cards);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           setAlbumError(
             err instanceof Error ? err.message : '앨범을 불러오지 못했어요.',
           );
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setAlbumLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };
@@ -53,13 +54,17 @@ export default function MyAlbumPage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    fetchFriendRequests()
-      .then((requests) => {
+    async function load() {
+      try {
+        const requests = await fetchFriendRequests();
         if (!cancelled) {
           setRequestCount(requests.received.length + requests.sent.length);
         }
-      })
-      .catch(() => {});
+      } catch {
+        /* ignore */
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

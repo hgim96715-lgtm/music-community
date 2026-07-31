@@ -83,10 +83,13 @@ function useCoverBackground(
       setTint(null);
       return;
     }
+    const src = thumb;
     let cancelled = false;
-    extractCoverTint(thumb).then((color) => {
+    async function load() {
+      const color = await extractCoverTint(src);
       if (!cancelled) setTint(color);
-    });
+    }
+    void load();
     return () => {
       cancelled = true;
     };

@@ -41,24 +41,26 @@ export default function MyLyricsPage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    setLoading(true);
-    fetchSavedLyrics()
-      .then((list) => {
+    async function load() {
+      setLoading(true);
+      try {
+        const list = await fetchSavedLyrics();
         if (!cancelled) setItems(list);
-      })
-      .catch((e) => {
+      } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : '불러오지 못했어요');
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
-    fetchFriendRequests()
-      .then((r) => {
+      }
+      try {
+        const r = await fetchFriendRequests();
         if (!cancelled) setRequestCount(r.received.length + r.sent.length);
-      })
-      .catch(() => {});
+      } catch {
+        /* ignore */
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

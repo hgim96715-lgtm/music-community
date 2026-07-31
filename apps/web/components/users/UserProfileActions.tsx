@@ -10,7 +10,9 @@ import {
 } from '@/lib/api';
 import type { FriendRelation } from '@/lib/friendsUtils';
 import { authSubmitClassName } from '@/lib/form';
+import { openOrGetDm } from '@/lib/dms';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 type Props = {
@@ -37,6 +39,22 @@ export function UserProfileActions({
   const [error, setError] = useState('');
   const [unfriendOpen, setUnfriendOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
+  const router = useRouter();
+
+  async function openDm() {
+    setBusy(true);
+    setError('');
+    try {
+      const dm = await openOrGetDm(profileUserId);
+      router.push(`/messages/${dm.id}`);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : '메시지를 열지 못했어요.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function run(action: () => Promise<unknown>) {
     setBusy(true);
@@ -109,6 +127,13 @@ export function UserProfileActions({
         </button>
       ) : (
         <>
+          <button
+            type="button"
+            disabled={busy}
+            className={btn}
+            onClick={() => void openDm()}>
+            {relation === 'friends' ? '메시지 보내기' : '메시지 요청'}
+          </button>
           {relation === 'none' ? (
             <button
               type="button"

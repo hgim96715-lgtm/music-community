@@ -12,15 +12,23 @@ export default function HealthCheck() {
       return;
     }
 
-    fetch(`${apiUrl}/health`, { credentials: 'include' })
-      .then((r) => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const r = await fetch(`${apiUrl}/health`, { credentials: 'include' });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => setHealth(JSON.stringify(data)))
-      .catch((e) =>
-        setHealth(`error: ${e instanceof Error ? e.message : String(e)}`),
-      );
+        const data = await r.json();
+        if (!cancelled) setHealth(JSON.stringify(data));
+      } catch (e) {
+        if (!cancelled) {
+          setHealth(`error: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

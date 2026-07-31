@@ -19,16 +19,19 @@ export function SupportNoticesNavLink({ className }: Props) {
       setShowNew(false);
       return;
     }
+    const userId = user.id;
     let cancelled = false;
-    fetchPublishedNotices()
-      .then((notices) => {
+    async function load() {
+      try {
+        const notices = await fetchPublishedNotices();
         if (!cancelled) {
-          setShowNew(hasUnseenSupportNotice(user.id, notices));
+          setShowNew(hasUnseenSupportNotice(userId, notices));
         }
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setShowNew(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

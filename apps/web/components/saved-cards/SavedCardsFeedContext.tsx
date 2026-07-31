@@ -32,17 +32,19 @@ export function SavedCardsFeedProvider({ children }: { children: ReactNode }) {
       return;
     }
     let cancelled = false;
-    fetchSavedCards()
-      .then((cards) => {
+    async function load() {
+      try {
+        const cards = await fetchSavedCards();
         if (!cancelled) {
           setSavedIds(new Set(cards.map((card) => card.recommendationId)));
         }
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setSavedIds(new Set());
         }
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

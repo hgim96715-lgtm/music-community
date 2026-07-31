@@ -1,0 +1,103 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ActiveAccountGuard,
+  AllowWithdrawing,
+} from 'src/auth/active-account.guard';
+import { UserId } from 'src/auth/decorators/user-id.decorator';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { DmsService } from './dms.service';
+import { OpenDmDto } from './dto/open-dm.dto';
+import { SendDmMessageDto } from './dto/send-dm-message.dto';
+
+@ApiTags('DMs')
+@Controller('dms')
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard, ActiveAccountGuard)
+export class DmsController {
+  constructor(private readonly dmsService: DmsService) {}
+
+  @ApiOperation({ summary: '열린 DM 목록' })
+  @AllowWithdrawing()
+  @Get()
+  async listMine(@UserId() userId: string) {
+    return await this.dmsService.listMine(userId);
+  }
+
+  @ApiOperation({ summary: '받은 DM 목록' })
+  @AllowWithdrawing()
+  @Get('requests')
+  async listRequests(@UserId() userId: string) {
+    return await this.dmsService.listRequests(userId);
+  }
+  @ApiOperation({ summary: 'DM 상세 (상대·status)' })
+  @AllowWithdrawing()
+  @Get(':id')
+  async findById(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) dmId: string,
+  ) {
+    return await this.dmsService.findById(dmId, userId);
+  }
+
+  @ApiOperation({ summary: 'DM 열기 또는 요청 (없으면 생성)' })
+  @Post()
+  async openOrGet(@UserId() userId: string, @Body() dto: OpenDmDto) {
+    return await this.dmsService.openOrGet(userId, dto.otherUserId);
+  }
+
+  @ApiOperation({ summary: 'DM 요청 수락' })
+  @Post(':id/accept')
+  async accept(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) dmId: string,
+  ) {
+    return await this.dmsService.accept(dmId, userId);
+  }
+
+  @ApiOperation({ summary: 'DM 요청 거절' })
+  @Post(':id/decline')
+  async decline(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) dmId: string,
+  ) {
+    return await this.dmsService.decline(dmId, userId);
+  }
+
+  @ApiOperation({ summary: 'DM 메시지 목록' })
+  @AllowWithdrawing()
+  @Get(':id/messages')
+  async listMessages(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) dmId: string,
+  ) {
+    return await this.dmsService.listMessages(dmId, userId);
+  }
+
+  @ApiOperation({ summary: 'DM 메시지 전송' })
+  @Post(':id/messages')
+  async sendMessage(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) dmId: string,
+    @Body() dto: SendDmMessageDto,
+  ) {
+    return await this.dmsService.sendMessage(dmId, userId, dto.body);
+  }
+
+  @ApiOperation({ summary: 'DM 메시지 읽음 처리' })
+  @Post(':id/read')
+  async markRead(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) dmId: string,
+  ) {
+    return await this.dmsService.markRead(dmId, userId);
+  }
+}

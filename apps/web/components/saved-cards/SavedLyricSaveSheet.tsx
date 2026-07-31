@@ -95,21 +95,22 @@ export function SavedLyricSaveSheet({
     setPicked(null);
     setStartRaw('');
     let cancelled = false;
-    setLoading(true);
-    fetchRecommendations(userId)
-      .then((list) => {
+    async function load() {
+      setLoading(true);
+      try {
+        const list = await fetchRecommendations(userId);
         if (!cancelled) setMine(list.filter((r) => r.author.id === userId));
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           setError(
             err instanceof Error ? err.message : '목록을 불러오지 못했어요',
           );
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

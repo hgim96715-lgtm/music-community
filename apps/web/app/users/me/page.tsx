@@ -35,17 +35,18 @@ export default function MyHomePage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    setStatsLoading(true);
-    fetchMyStats()
-      .then((data) => {
+    async function load() {
+      setStatsLoading(true);
+      try {
+        const data = await fetchMyStats();
         if (!cancelled) setStats(data);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setStats(null);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setStatsLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };
@@ -54,23 +55,27 @@ export default function MyHomePage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    setAlbumLoading(true);
-    Promise.all([fetchSavedCards(), fetchSavedLyrics()])
-      .then(([cards, lyrics]) => {
+    async function load() {
+      setAlbumLoading(true);
+      try {
+        const [cards, lyrics] = await Promise.all([
+          fetchSavedCards(),
+          fetchSavedLyrics(),
+        ]);
         if (cancelled) return;
         setSavedCards(cards);
         setLyricCount(lyrics.length);
         setLyricPreview(lyrics[0]?.lyricsText.trim() || null);
-      })
-      .catch(() => {
+      } catch {
         if (cancelled) return;
         setSavedCards([]);
         setLyricCount(0);
         setLyricPreview(null);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setAlbumLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };
@@ -79,13 +84,17 @@ export default function MyHomePage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    fetchFriendRequests()
-      .then((requests) => {
+    async function load() {
+      try {
+        const requests = await fetchFriendRequests();
         if (!cancelled) {
           setRequestCount(requests.received.length + requests.sent.length);
         }
-      })
-      .catch(() => {});
+      } catch {
+        /* ignore */
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

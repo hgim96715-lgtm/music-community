@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { FriendshipStatus } from 'src/generated/prisma/enums';
+import { FriendshipStatus, UserRole } from 'src/generated/prisma/enums';
 import { WithdrawUserDto } from './dto/withdraw-user.dto';
 import * as bcrypt from 'bcrypt';
 import { Logger } from '@nestjs/common';
@@ -100,24 +100,29 @@ export class UsersService {
 
   //block
   async blockUser(blockerId: string, blockedId: string) {
-    if (blockerId === blockedId) {
+    if (blockerId === blockedId)
       throw new BadRequestException('자기 자신을 차단할 수 없습니다.');
-    }
 
-    const target = await this.prisma.user.findUnique({
-      where: { id: blockedId },
-      select: { id: true },
-    });
-    if (!target) {
-      throw new NotFoundException('유저를 찾을 수 없습니다.');
-    }
+    const [me, target] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: blockerId },
+        select: { id: true, role: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: blockedId },
+        select: { id: true, role: true },
+      }),
+    ]);
+    if (!target) throw new NotFoundException('유저를 찾을 수 없습니다.');
+    if (!me) throw new NotFoundException('유저를 찾을 수 없습니다.');
+
+    if (me.role === UserRole.admin || target.role === UserRole.admin)
+      throw new ForbiddenException('관리자는 차단할 수 없습니다.');
     await this.prisma.block.upsert({
       where: { blockerId_blockedId: { blockerId, blockedId } },
       create: { blockerId, blockedId },
       update: {},
     });
-
-    // 진행 중 , 맞친구 관계정리
     await this.prisma.friendship.updateMany({
       where: {
         OR: [
@@ -447,7 +452,7 @@ export class UsersService {
       }),
       this.prisma.recommendation.findMany({
         where: { authorId: userId, hidden: false },
-        select: {moods: true },
+        select: { moods: true },
       }),
       this.prisma.recommendation.groupBy({
         by: ['artist'],

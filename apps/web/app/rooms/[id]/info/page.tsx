@@ -49,22 +49,23 @@ export default function RoomInfoPage() {
   useEffect(() => {
     if (!user || !roomId) return;
     let cancelled = false;
-    setLoading(true);
-    setError('');
-    fetchRoom(roomId)
-      .then((data) => {
+    async function load() {
+      setLoading(true);
+      setError('');
+      try {
+        const data = await fetchRoom(roomId);
         if (!cancelled) setRoom(data);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (!cancelled) {
           setError(
             err instanceof Error ? err.message : '방을 불러오지 못했어요.',
           );
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

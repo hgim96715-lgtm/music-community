@@ -17,6 +17,7 @@ import {
   unblockUser,
 } from '@/lib/api';
 import type { ApiFriendRequests, ApiFriendship } from '@/lib/apiTypes';
+import { openOrGetDm } from '@/lib/dms';
 import {
   friendRelationLabel,
   friendRelationWith,
@@ -134,10 +135,10 @@ export function AvatarActionSheetHost({
 
   const canOwnerActions = Boolean(
     user &&
-      target.roomId &&
-      target.roomOwnerId &&
-      user.id === target.roomOwnerId &&
-      target.id !== user.id,
+    target.roomId &&
+    target.roomOwnerId &&
+    user.id === target.roomOwnerId &&
+    target.id !== user.id,
   );
 
   return (
@@ -180,6 +181,39 @@ export function AvatarActionSheetHost({
           />
         ) : null}
 
+        {!blockedByMe && relation !== 'guest' && relation !== 'self' ? (
+          <AvatarActionRow
+            label={relation === 'friends' ? '메시지 보내기' : '메시지 요청'}
+            onClick={() =>
+              void (async () => {
+                setBusy(true);
+                setError('');
+                try {
+                  const dm = await openOrGetDm(target.id);
+                  onClose();
+                  router.push(`/messages/${dm.id}`);
+                } catch (error) {
+                  setError(
+                    error instanceof Error
+                      ? error.message
+                      : '메시지를 열지 못했어요.',
+                  );
+                } finally {
+                  setBusy(false);
+                }
+              })()
+            }
+          />
+        ) : null}
+
+        {!blockedByMe && relation === 'friends' ? (
+          <AvatarActionRow
+            label="친구 끊기"
+            danger
+            onClick={() => setUnfriendOpen(true)}
+          />
+        ) : null}
+
         {!blockedByMe && relation === 'pending_sent' ? (
           <AvatarActionRow
             label="요청 취소"
@@ -212,7 +246,7 @@ export function AvatarActionSheetHost({
 
         {!blockedByMe && relation === 'friends' ? (
           <>
-            <AvatarActionRow label="메시지 보내기" disabled />
+            <AvatarActionRow label="메시지 보내기" />
             <AvatarActionRow
               label="친구 끊기"
               danger

@@ -112,22 +112,23 @@ export default function RoomThemePage() {
   useEffect(() => {
     if (!user || !roomId) return;
     let cancelled = false;
-    setLoading(true);
-    setError('');
-    fetchRoom(roomId)
-      .then((data) => {
+    async function load() {
+      setLoading(true);
+      setError('');
+      try {
+        const data = await fetchRoom(roomId);
         if (!cancelled) setRoom(data);
-      })
-      .catch((error: unknown) => {
+      } catch (error: unknown) {
         if (!cancelled) {
           setError(
             error instanceof Error ? error.message : '방을 불러오지 못했어요.',
           );
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

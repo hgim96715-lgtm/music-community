@@ -71,9 +71,11 @@ export function YouTubeFeedEmbed({
       onEmbedBlocked();
       return;
     }
+    const id = videoId;
     let cancelled = false;
-    loadYoutubeIframeApi()
-      .then((YTApi) => {
+    async function load() {
+      try {
+        const YTApi = await loadYoutubeIframeApi();
         if (cancelled) return;
         const playerVars = (
           startSec != null && startSec > 0
@@ -82,7 +84,7 @@ export function YouTubeFeedEmbed({
         ) satisfies YouTubePlayerVars;
 
         playerRef.current = new YTApi.Player(containerId, {
-          videoId,
+          videoId: id,
           playerVars,
           events: {
             onError: (e: YT.OnErrorEvent) => {
@@ -90,10 +92,11 @@ export function YouTubeFeedEmbed({
             },
           },
         });
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) onEmbedBlocked();
-      });
+      }
+    }
+    void load();
 
     return () => {
       cancelled = true;

@@ -76,18 +76,17 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-
-    adminFetchJson<ApiAdminStats>('/stats')
-      .then((data) => {
+    async function load() {
+      try {
+        const data = await adminFetchJson<ApiAdminStats>('/stats');
         if (!cancelled) setStats(data);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setError('추천 통계를 불러오지 못했어요.');
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setIsLoading(false);
-      });
-
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

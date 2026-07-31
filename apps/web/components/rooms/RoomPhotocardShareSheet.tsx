@@ -34,13 +34,13 @@ export function RoomPhotocardShareSheet({
     if (!open) return;
     openedAtRef.current = Date.now();
     let cancelled = false;
-    setLoading(true);
-    setError('');
-    fetchSavedCards()
-      .then((list) => {
+    async function load() {
+      setLoading(true);
+      setError('');
+      try {
+        const list = await fetchSavedCards();
         if (!cancelled) setCards(list);
-      })
-      .catch((error) => {
+      } catch (error) {
         if (!cancelled) {
           setError(
             error instanceof Error
@@ -48,10 +48,11 @@ export function RoomPhotocardShareSheet({
               : '목록을 불러오지 못했어요.',
           );
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };

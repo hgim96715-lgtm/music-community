@@ -31,9 +31,11 @@ export function FeedCardMedia({ embedUrl, title, artist }: FeedCardMediaProps) {
       return;
     }
     let cancelled = false;
-    fetchSpotifyThumbnailUrl(embedUrl).then((url) => {
+    async function load() {
+      const url = await fetchSpotifyThumbnailUrl(embedUrl);
       if (!cancelled) setSpotifyThumb(url);
-    });
+    }
+    void load();
     return () => {
       cancelled = true;
     };

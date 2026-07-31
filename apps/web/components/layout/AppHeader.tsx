@@ -14,27 +14,36 @@ import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { isRoomMuted } from '@/lib/roomMuteStorage';
+import { fetchDmRequests, fetchMyDms } from '@/lib/dms';
 
 export default function AppHeader() {
   const { user, isLoading } = useAuth();
   const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState(false);
   const [roomsUnread, setRoomsUnread] = useState(false);
+  const [dmsUnread, setDmsUnread] = useState(false);
 
-  const refreshRoomsUnread = useCallback(async () => {
+  const refreshUnread = useCallback(async () => {
     if (!user?.id) {
       setRoomsUnread(false);
+      setDmsUnread(false);
       return;
     }
     try {
-      const mine = await fetchMyRooms();
+      const [mine, dms, requests] = await Promise.all([
+        fetchMyRooms(),
+        fetchMyDms(),
+        fetchDmRequests(),
+      ]);
       setRoomsUnread(
         mine.some(
           (room) => Boolean(room.unread) && !isRoomMuted(user.id, room.id),
         ),
       );
+      setDmsUnread(dms.some((dm) => dm.unread) || requests.length > 0);
     } catch {
       setRoomsUnread(false);
+      setDmsUnread(false);
     }
   }, [user?.id]);
 
@@ -46,10 +55,11 @@ export default function AppHeader() {
   useEffect(() => {
     if (!user?.id) {
       setRoomsUnread(false);
+      setDmsUnread(false);
       return;
     }
-    void refreshRoomsUnread();
-  }, [user?.id, pathname, refreshRoomsUnread]);
+    void refreshUnread();
+  }, [user?.id, pathname, refreshUnread]);
 
   return (
     <header className={appHeaderClassName}>
@@ -61,19 +71,34 @@ export default function AppHeader() {
         </Link>
         <nav className="flex min-w-0 shrink items-center gap-0.5 sm:gap-1.5">
           {loggedIn ? (
-            <Link
-              href="/rooms"
-              className={`relative ${appNavLinkClassName}`}
-              aria-label={roomsUnread ? '방 (안 읽은 채팅)' : '방'}>
-              방
-              {roomsUnread ? (
-                <span
-                  className="absolute right-0.5 top-1 size-1.5 rounded-full bg-brand-primary"
-                  aria-hidden
-                />
-              ) : null}
-            </Link>
+            <>
+              <Link
+                href="/rooms"
+                className={`relative ${appNavLinkClassName}`}
+                aria-label={roomsUnread ? '방 (안 읽은 채팅)' : '방'}>
+                방
+                {roomsUnread ? (
+                  <span
+                    className="absolute right-0.5 top-1 size-1.5 rounded-full bg-brand-primary"
+                    aria-hidden
+                  />
+                ) : null}
+              </Link>
+              <Link
+                href="/messages"
+                className={`relative ${appNavLinkClassName}`}
+                aria-label={dmsUnread ? '메시지 (안 읽음)' : '메시지'}>
+                메시지
+                {dmsUnread ? (
+                  <span
+                    className="absolute right-0.5 top-1 size-1.5 rounded-full bg-brand-primary"
+                    aria-hidden
+                  />
+                ) : null}
+              </Link>
+            </>
           ) : null}
+
           {loggedIn && user?.role === 'admin' ? (
             <Link href="/admin" className={appNavLinkClassName}>
               관리자

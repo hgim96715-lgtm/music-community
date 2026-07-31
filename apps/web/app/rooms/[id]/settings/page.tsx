@@ -63,10 +63,11 @@ export default function RoomSettingsPage() {
   useEffect(() => {
     if (!user || !roomId) return;
     let cancelled = false;
-    setLoading(true);
-    setError('');
-    fetchRoom(roomId)
-      .then((room) => {
+    async function load() {
+      setLoading(true);
+      setError('');
+      try {
+        const room = await fetchRoom(roomId);
         if (cancelled) return;
         if (room.ownerId !== user.id) {
           router.replace(`/rooms/${roomId}`);
@@ -78,17 +79,17 @@ export default function RoomSettingsPage() {
         setVisibility(room.visibility === 'private' ? 'private' : 'public');
         setTopicTagsText(room.topicTags.join(' '));
         setPasswordHint(room.passwordHint ?? '');
-      })
-      .catch((error) => {
+      } catch (error) {
         if (!cancelled) {
           setError(
             error instanceof Error ? error.message : '방을 불러오지 못했어요.',
           );
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       cancelled = true;
     };
