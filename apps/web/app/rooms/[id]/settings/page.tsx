@@ -62,6 +62,7 @@ export default function RoomSettingsPage() {
 
   useEffect(() => {
     if (!user || !roomId) return;
+    const userId = user.id;
     let cancelled = false;
     async function load() {
       setLoading(true);
@@ -69,7 +70,7 @@ export default function RoomSettingsPage() {
       try {
         const room = await fetchRoom(roomId);
         if (cancelled) return;
-        if (room.ownerId !== user.id) {
+        if (room.ownerId !== userId) {
           router.replace(`/rooms/${roomId}`);
           return;
         }

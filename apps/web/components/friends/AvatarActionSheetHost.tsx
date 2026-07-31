@@ -244,16 +244,6 @@ export function AvatarActionSheetHost({
           </>
         ) : null}
 
-        {!blockedByMe && relation === 'friends' ? (
-          <>
-            <AvatarActionRow label="메시지 보내기" />
-            <AvatarActionRow
-              label="친구 끊기"
-              danger
-              onClick={() => setUnfriendOpen(true)}
-            />
-          </>
-        ) : null}
         {canOwnerActions ? (
           <>
             <AvatarActionRow
