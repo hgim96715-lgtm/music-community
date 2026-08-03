@@ -913,4 +913,12 @@ export class RoomsService {
     });
     return { messageId, userId, emoji, removed: false as const };
   }
+
+  async listOtherMemberUserIds(roomId: string, exceptUserId: string) {
+    const members = await this.prisma.roomMember.findMany({
+      where: { roomId, userId: { not: exceptUserId } },
+      select: { userId: true },
+    });
+    return members.map((m) => m.userId);
+  }
 }

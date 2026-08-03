@@ -14,6 +14,7 @@ import { SavedLyricsModule } from './saved-lyrics/saved-lyrics.module';
 import { SupportModule } from './support/support.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DmsModule } from './dms/dms.module';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { DmsModule } from './dms/dms.module';
     }),
     ScheduleModule.forRoot(),
     PrismaModule,
+    RealtimeModule,
     RecommendationsModule,
     AuthModule,
     UsersModule,

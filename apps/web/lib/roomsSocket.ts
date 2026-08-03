@@ -2,6 +2,7 @@ import { io, type Socket } from 'socket.io-client';
 import { getApiAccessToken } from './authToken';
 import { getApiBaseUrl } from './fetchApi';
 import type { ApiRoomMessage, ToogleRoomMessageReactionResult } from './rooms';
+import { ApiDmMessage } from './dms';
 
 let socket: Socket | null = null;
 
@@ -109,5 +110,65 @@ export function onRoomMessageReaction(
   s.on('message:reaction', handler);
   return () => {
     s.off('message:reaction', handler);
+  };
+}
+
+export function socketJoinDm(dmId: string): Promise<{ ok: boolean }> {
+  const s = getRoomSocket();
+  return new Promise((resolve) => {
+    const doJoin = () => {
+      s.emit('dm:join', { dmId }, (res: { ok: boolean }) =>
+        resolve(res ?? { ok: false }),
+      );
+    };
+    if (s.connected) doJoin();
+    else s.once('connect', doJoin);
+  });
+}
+
+export function socketLeaveDm(dmId: string): Promise<{ ok: boolean }> {
+  const s = getRoomSocket();
+  return new Promise((resolve) => {
+    s.emit('dm:leave', { dmId }, (res: { ok: boolean }) =>
+      resolve(res ?? { ok: false }),
+    );
+  });
+}
+
+export function onDmMessage(
+  handler: (message: ApiDmMessage) => void,
+): () => void {
+  const s = getRoomSocket();
+  s.on('dm:message', handler);
+  return () => {
+    s.off('dm:message', handler);
+  };
+}
+
+export function onDmAccepted(handler: (dmId: string) => void): () => void {
+  const s = getRoomSocket();
+  s.on('dm:accepted', handler);
+  return () => {
+    s.off('dm:accepted', handler);
+  };
+}
+
+export function onDmUnread(
+  handler: (payload: { dmId: string; unread: boolean }) => void,
+): () => void {
+  const s = getRoomSocket();
+  s.on('dm:unread', handler);
+  return () => {
+    s.off('dm:unread', handler);
+  };
+}
+
+export function onRoomUnread(
+  handler: (payload: { roomId: string; unread: boolean }) => void,
+): () => void {
+  const s = getRoomSocket();
+  s.on('room:unread', handler);
+  return () => {
+    s.off('room:unread', handler);
   };
 }

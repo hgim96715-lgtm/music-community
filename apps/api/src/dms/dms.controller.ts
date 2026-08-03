@@ -14,6 +14,7 @@ import {
 } from 'src/auth/active-account.guard';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { ChatGateway } from 'src/realtime/chat.gateway';
 import { DmsService } from './dms.service';
 import { OpenDmDto } from './dto/open-dm.dto';
 import { SendDmMessageDto } from './dto/send-dm-message.dto';
@@ -23,7 +24,10 @@ import { SendDmMessageDto } from './dto/send-dm-message.dto';
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard, ActiveAccountGuard)
 export class DmsController {
-  constructor(private readonly dmsService: DmsService) {}
+  constructor(
+    private readonly dmsService: DmsService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @ApiOperation({ summary: '열린 DM 목록' })
   @AllowWithdrawing()
@@ -38,6 +42,7 @@ export class DmsController {
   async listRequests(@UserId() userId: string) {
     return await this.dmsService.listRequests(userId);
   }
+
   @ApiOperation({ summary: 'DM 상세 (상대·status)' })
   @AllowWithdrawing()
   @Get(':id')
@@ -60,7 +65,12 @@ export class DmsController {
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) dmId: string,
   ) {
-    return await this.dmsService.accept(dmId, userId);
+    const before = await this.dmsService.findById(dmId, userId);
+    const dm = await this.dmsService.accept(dmId, userId);
+    if (before.requestedById) {
+      this.chatGateway.emitDmAccepted(before.requestedById, dmId);
+    }
+    return dm;
   }
 
   @ApiOperation({ summary: 'DM 요청 거절' })
@@ -89,7 +99,13 @@ export class DmsController {
     @Param('id', ParseUUIDPipe) dmId: string,
     @Body() dto: SendDmMessageDto,
   ) {
-    return await this.dmsService.sendMessage(dmId, userId, dto.body);
+    const message = await this.dmsService.sendMessage(dmId, userId, dto.body);
+    this.chatGateway.emitDmMessage(dmId, message);
+    const { other } = await this.dmsService.findById(dmId, userId);
+    if (other?.id) {
+      this.chatGateway.emitDmUnread(other.id, { dmId, unread: true });
+    }
+    return message;
   }
 
   @ApiOperation({ summary: 'DM 메시지 읽음 처리' })
@@ -98,6 +114,8 @@ export class DmsController {
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) dmId: string,
   ) {
-    return await this.dmsService.markRead(dmId, userId);
+    const result = await this.dmsService.markRead(dmId, userId);
+    this.chatGateway.emitDmUnread(userId, { dmId, unread: false });
+    return result;
   }
 }

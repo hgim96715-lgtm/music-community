@@ -16,6 +16,7 @@ import { ChevronLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { getRoomSocket, onDmAccepted } from '@/lib/roomsSocket';
 
 const outlineBtn =
   'shrink-0 rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(42_36_30/0.55)] px-3 py-1.5 text-xs font-semibold text-[#ebe3d8] hover:bg-[rgb(201_166_107/0.12)] disabled:opacity-50';
@@ -41,6 +42,21 @@ export default function MessageRequestsPage() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    try {
+      getRoomSocket();
+    } catch {
+      return;
+    }
+    const off = onDmAccepted(() => {
+      void load();
+    });
+    return () => {
+      off();
+    };
+  }, [user, load]);
 
   useEffect(() => {
     if (authLoading) return;

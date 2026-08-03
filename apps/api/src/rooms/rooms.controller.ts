@@ -19,7 +19,7 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { RoomsService } from './rooms.service';
 import { CreateRoomMessageDto } from './dto/create-room-message.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
-import { RoomsGateway } from './rooms.gateway';
+import { ChatGateway } from 'src/realtime/chat.gateway';
 import { TransfreRoomDto } from './dto/tansfer-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
 import {
@@ -37,7 +37,7 @@ import { ToggleRoomMessageReactioinDto } from './dto/toggle-room-message-reactio
 export class RoomsController {
   constructor(
     private readonly roomsService: RoomsService,
-    private readonly roomsGateway: RoomsGateway,
+    private readonly chatGateway: ChatGateway,
   ) {}
 
   @ApiOperation({ summary: '공개 방 목록 조회' })
@@ -93,7 +93,9 @@ export class RoomsController {
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) roomId: string,
   ) {
-    return await this.roomsService.markRead(roomId, userId);
+    const result = await this.roomsService.markRead(roomId, userId);
+    this.chatGateway.emitRoomUnread(userId, { roomId, unread: false });
+    return result;
   }
 
   @ApiOperation({ summary: '방 퇴장' })
@@ -115,8 +117,8 @@ export class RoomsController {
     @Param('userId', ParseUUIDPipe) targetUserId: string,
   ) {
     const message = await this.roomsService.kick(roomId, userId, targetUserId);
-    this.roomsGateway.emitMemberKicked(roomId, targetUserId);
-    this.roomsGateway.emitMessage(roomId, message);
+    this.chatGateway.emitMemberKicked(roomId, targetUserId);
+    this.chatGateway.emitMessage(roomId, message);
   }
   @ApiOperation({ summary: '방 설정 수정(방장)' })
   @Patch(':id')
@@ -126,7 +128,7 @@ export class RoomsController {
     @Body() dto: UpdateRoomDto,
   ) {
     const updated = await this.roomsService.update(roomId, userId, dto);
-    this.roomsGateway.emitRoomUpdated(roomId, {
+    this.chatGateway.emitRoomUpdated(roomId, {
       description: updated.description,
       name: updated.name,
       topicTags: updated.topicTags,
@@ -165,7 +167,14 @@ export class RoomsController {
     @Body() dto: CreateRoomMessageDto,
   ) {
     const message = await this.roomsService.createMessage(roomId, userId, dto);
-    this.roomsGateway.emitMessage(roomId, message);
+    this.chatGateway.emitMessage(roomId, message);
+    const others = await this.roomsService.listOtherMemberUserIds(
+      roomId,
+      userId,
+    );
+    for (const other of others) {
+      this.chatGateway.emitRoomUnread(other, { roomId, unread: true });
+    }
     return message;
   }
 
@@ -193,7 +202,7 @@ export class RoomsController {
       messageId,
       userId,
     );
-    this.roomsGateway.emitMessageDeleted(roomId, message);
+    this.chatGateway.emitMessageDeleted(roomId, message);
   }
 
   @ApiOperation({ summary: '메시지 나에게서만 삭제(멤버)' })
@@ -242,7 +251,7 @@ export class RoomsController {
       userId,
       dto.emoji,
     );
-    this.roomsGateway.emitMessageReaction(roomId, result);
+    this.chatGateway.emitMessageReaction(roomId, result);
     return result;
   }
 }

@@ -18,6 +18,13 @@ import { ChevronLeft, Loader2, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import {
+  onDmMessage,
+  onRoomSocketConnect,
+  socketJoinDm,
+  socketLeaveDm,
+} from '@/lib/roomsSocket';
+import { ApiRoomMessage } from '@/lib/rooms';
 
 export default function DmChatPage() {
   const params = useParams();
@@ -51,8 +58,6 @@ export default function DmChatPage() {
           fetchDmMessages(dmId),
           fetchDm(dmId),
         ]);
-        console.log('list (messages)', list);
-        console.log('detail (dm)', detail);
         if (cancelled) return;
         const sorted = [...list].sort(
           (a, b) =>
@@ -77,6 +82,26 @@ export default function DmChatPage() {
       cancelled = true;
     };
   }, [authLoading, user, router, dmId]);
+
+  useEffect(() => {
+    if (!user || !dmId || loading) return;
+    void socketJoinDm(dmId);
+    const offConnect = onRoomSocketConnect(() => {
+      void socketJoinDm(dmId);
+    });
+    const offMessage = onDmMessage((message) => {
+      if (message.dmId !== dmId) return;
+      setMessages((prev) =>
+        prev.some((m) => m.id === message.id) ? prev : [...prev, message],
+      );
+      void markDmRead(dmId);
+    });
+    return () => {
+      offConnect();
+      offMessage();
+      void socketLeaveDm(dmId);
+    };
+  }, [user, dmId, loading]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

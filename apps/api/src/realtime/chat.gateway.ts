@@ -1,20 +1,16 @@
 import {
-  ConnectedSocket,
-  MessageBody,
   OnGatewayConnection,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { EnvKeys } from 'src/config/env.keys';
 import type { JwtPayload } from 'src/auth/jwt-payload';
-import { RoomsService } from './rooms.service';
+import type { AuthedSocket } from './authed-socket';
 
-type AuthedSocket = Socket & { data: { userId?: string } };
-
+/** 연결·방송만. join/leave는 RoomsEventsGateway / DmsEventsGateway */
 @WebSocketGateway({
   cors: {
     origin: [
@@ -28,14 +24,13 @@ type AuthedSocket = Socket & { data: { userId?: string } };
   },
   namespace: '/chat',
 })
-export class RoomsGateway implements OnGatewayConnection {
+export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-    private readonly roomsService: RoomsService,
   ) {}
 
   async handleConnection(client: AuthedSocket) {
@@ -57,29 +52,6 @@ export class RoomsGateway implements OnGatewayConnection {
       client.disconnect();
     }
   }
-  @SubscribeMessage('join')
-  async onJoin(
-    @ConnectedSocket() client: AuthedSocket,
-    @MessageBody() body: { roomId: string },
-  ) {
-    const userId = client.data.userId;
-    if (!userId || !body.roomId) {
-      return { ok: false };
-    }
-    await this.roomsService.listMessages(body.roomId, userId);
-    await client.join(`room:${body.roomId}`);
-    return { ok: true, roomId: body.roomId };
-  }
-
-  @SubscribeMessage('leave')
-  async onLeave(
-    @ConnectedSocket() client: AuthedSocket,
-    @MessageBody() body: { roomId: string },
-  ) {
-    if (!body?.roomId) return { ok: false };
-    await client.leave(`room:${body.roomId}`);
-    return { ok: true, roomId: body.roomId };
-  }
 
   /** REST로 저장된 메시지를 방 소켓에 전파 */
   emitMessage(roomId: string, message: unknown) {
@@ -90,12 +62,13 @@ export class RoomsGateway implements OnGatewayConnection {
   emitMessageDeleted(roomId: string, message: unknown) {
     this.server.to(`room:${roomId}`).emit('message:deleted', message);
   }
-  /** 강퇴 — 대상 유저 소켓만 (방 전체에 뿌리지 않음) */
+
+  /** 강퇴 — 대상 유저 소켓만 */
   emitMemberKicked(roomId: string, targetUserId: string) {
     this.server.to(`user:${targetUserId}`).emit('room:kicked', { roomId });
   }
 
-  /** 방 설정 변경 (공지 등) — 채팅 중인 멤버에 전파 */
+  /** 방 설정 변경 (공지 등) */
   emitRoomUpdated(
     roomId: string,
     patch: {
@@ -108,7 +81,7 @@ export class RoomsGateway implements OnGatewayConnection {
     this.server.to(`room:${roomId}`).emit('room:updated', { roomId, ...patch });
   }
 
-  /** 댓글 및 반응 추가 및 삭제 — 채팅 중인 멤버에 전파 */
+  /** 탭백 */
   emitMessageReaction(
     roomId: string,
     payload: {
@@ -119,5 +92,24 @@ export class RoomsGateway implements OnGatewayConnection {
     },
   ) {
     this.server.to(`room:${roomId}`).emit('message:reaction', payload);
+  }
+
+  emitDmMessage(dmId: string, message: unknown) {
+    this.server.to(`dm:${dmId}`).emit('dm:message', message);
+  }
+
+  emitDmAccepted(requesterUserId: string, dmId: string) {
+    this.server.to(`user:${requesterUserId}`).emit('dm:accepted', { dmId });
+  }
+
+  emitDmUnread(userId: string, payload: { dmId: string; unread: boolean }) {
+    this.server.to(`user:${userId}`).emit('dm:unread', payload);
+  }
+
+  emitRoomUnread(
+    userId: string,
+    payload: { roomId: string; unread: boolean },
+  ) {
+    this.server.to(`user:${userId}`).emit('room:unread', payload);
   }
 }

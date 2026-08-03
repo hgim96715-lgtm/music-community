@@ -15,6 +15,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { isRoomMuted } from '@/lib/roomMuteStorage';
 import { fetchDmRequests, fetchMyDms } from '@/lib/dms';
+import {
+  getRoomSocket,
+  onDmAccepted,
+  onDmUnread,
+  onRoomUnread,
+} from '@/lib/roomsSocket';
 
 export default function AppHeader() {
   const { user, isLoading } = useAuth();
@@ -60,6 +66,32 @@ export default function AppHeader() {
     }
     void refreshUnread();
   }, [user?.id, pathname, refreshUnread]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const userId = user.id;
+    try {
+      getRoomSocket();
+    } catch {
+      return;
+    }
+    const offDmUnread = onDmUnread(({ unread }) => {
+      if (unread) setDmsUnread(true);
+      else void refreshUnread();
+    });
+    const offDmAccepted = onDmAccepted(() => {
+      void refreshUnread();
+    });
+    const offRoomUnread = onRoomUnread(({ roomId, unread }) => {
+      if (unread && !isRoomMuted(userId, roomId)) setRoomsUnread(true);
+      else void refreshUnread();
+    });
+    return () => {
+      offDmUnread();
+      offDmAccepted();
+      offRoomUnread();
+    };
+  }, [user?.id, refreshUnread]);
 
   return (
     <header className={appHeaderClassName}>

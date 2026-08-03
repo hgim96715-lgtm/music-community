@@ -12,6 +12,12 @@ import { ChevronLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import {
+  getRoomSocket,
+  onDmAccepted,
+  onDmMessage,
+  onDmUnread,
+} from '@/lib/roomsSocket';
 
 export default function MessagesPage() {
   const router = useRouter();
@@ -19,6 +25,20 @@ export default function MessagesPage() {
   const [items, setItems] = useState<ApiDmListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  async function loadList() {
+    setError('');
+    try {
+      const data = await fetchMyDms();
+      setItems(data);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : '메시지 목록을 불러오지 못했어요.',
+      );
+    }
+  }
 
   useEffect(() => {
     if (authLoading) return;
@@ -29,7 +49,6 @@ export default function MessagesPage() {
     let cancelled = false;
     async function load() {
       setLoading(true);
-      setError('');
       try {
         const data = await fetchMyDms();
         if (!cancelled) setItems(data);
@@ -50,6 +69,28 @@ export default function MessagesPage() {
       cancelled = true;
     };
   }, [authLoading, user, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    try {
+      getRoomSocket();
+    } catch {
+      return;
+    }
+    const refresh = () => {
+      void loadList();
+    };
+
+    const offMsg = onDmMessage(refresh);
+    const offUnread = onDmUnread(refresh);
+    const offAccepted = onDmAccepted(refresh);
+
+    return () => {
+      offMsg();
+      offUnread();
+      offAccepted();
+    };
+  }, [user]);
 
   if (authLoading || !user || loading) {
     return (
