@@ -4,7 +4,15 @@ import { PillInput } from '@/components/auth/PillInput';
 import { PillTextarea } from '@/components/auth/PillTextarea';
 import { adminFetchJson, adminFetchVoid } from '@/lib/adminFetch';
 import type { ApiAdminNotice } from '@/lib/apiTypes';
-import { postCard } from '@/lib/neobrutal';
+import {
+  adminMutedClassName,
+  adminOutlineBtnClassName,
+  adminPanelClassName,
+  adminTableHeadRowClassName,
+  adminTableRowClassName,
+  authSubmitClassName,
+  authTitleClassName,
+} from '@/lib/form';
 import { Megaphone } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -95,7 +103,9 @@ export default function AdminNoticesPage() {
       setEditingId(null);
       setForm(emptyForm());
     } catch {
-      setError(editingId ? '공지를 수정하지 못했어요.' : '공지를 작성하지 못했어요.');
+      setError(
+        editingId ? '공지를 수정하지 못했어요.' : '공지를 작성하지 못했어요.',
+      );
     } finally {
       setPendingId(null);
     }
@@ -112,9 +122,7 @@ export default function AdminNoticesPage() {
           body: JSON.stringify({ published: !row.published }),
         },
       );
-      setRows((prev) =>
-        prev.map((r) => (r.id === row.id ? updated : r)),
-      );
+      setRows((prev) => prev.map((r) => (r.id === row.id ? updated : r)));
     } catch {
       setError('게시 상태를 변경하지 못했어요.');
     } finally {
@@ -143,9 +151,9 @@ export default function AdminNoticesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-brand-primary">공지 관리</h1>
+      <h1 className={authTitleClassName}>공지 관리</h1>
 
-      <section className={`${postCard} space-y-4 p-4`}>
+      <section className={`${adminPanelClassName} space-y-4 p-4`}>
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-brand-primary">
             {editingId ? '공지 수정' : '새 공지'}
@@ -154,7 +162,7 @@ export default function AdminNoticesPage() {
             <button
               type="button"
               onClick={startCreate}
-              className="text-xs text-neutral-500 underline">
+              className="cursor-pointer text-xs font-medium text-brand-primary transition-colors hover:text-brand-primary/80">
               새로 작성
             </button>
           ) : null}
@@ -178,90 +186,88 @@ export default function AdminNoticesPage() {
             maxLength={10000}
             rows={6}
           />
-          <label className="flex items-center gap-2 text-sm text-neutral-600">
+          <label className="flex items-center gap-2 text-sm text-[color:var(--color-lp-cream)]">
             <input
               type="checkbox"
               checked={form.published}
               onChange={(e) =>
                 setForm((f) => ({ ...f, published: e.target.checked }))
               }
-              className="size-4 rounded border-neutral-300"
+              className="size-4 rounded border-[rgb(201_166_107/0.35)]"
             />
             저장 시 바로 게시
           </label>
           <button
             type="submit"
             disabled={formBusy}
-            className="rounded-full bg-brand-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+            className={`${authSubmitClassName} !w-auto !px-4 !py-2`}>
             {formBusy ? '저장 중…' : editingId ? '수정 저장' : '공지 작성'}
           </button>
         </form>
       </section>
 
       {isLoading ? (
-        <p className="text-sm text-neutral-500">불러오는 중…</p>
+        <p className={adminMutedClassName}>불러오는 중…</p>
       ) : error ? (
-        <p className="text-sm text-red-500" role="alert">
+        <p className="text-sm text-red-400" role="alert">
           {error}
         </p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-neutral-500">등록된 공지가 없어요.</p>
+        <p className={adminMutedClassName}>등록된 공지가 없어요.</p>
       ) : (
-        <div className={`${postCard} overflow-x-auto`}>
+        <div className={`${adminPanelClassName} overflow-x-auto`}>
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
-              <tr className="border-b border-neutral-200 text-neutral-500">
-                <th className="px-3 py-2 font-medium">제목</th>
-                <th className="px-3 py-2 font-medium">상태</th>
-                <th className="px-3 py-2 font-medium">게시일</th>
-                <th className="px-3 py-2 font-medium">작성자</th>
-                <th className="px-3 py-2 font-medium">관리</th>
+              <tr className={adminTableHeadRowClassName}>
+                <th className="px-3 py-2.5 font-medium">제목</th>
+                <th className="px-3 py-2.5 font-medium">상태</th>
+                <th className="px-3 py-2.5 font-medium">게시일</th>
+                <th className="px-3 py-2.5 font-medium">작성자</th>
+                <th className="px-3 py-2.5 font-medium">관리</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => {
                 const busy = pendingId === row.id;
                 return (
-                  <tr
-                    key={row.id}
-                    className="border-b border-neutral-100 last:border-0">
-                    <td className="max-w-[200px] truncate px-3 py-2 font-medium text-brand-primary">
+                  <tr key={row.id} className={adminTableRowClassName}>
+                    <td className="max-w-[200px] truncate px-3 py-2.5 font-medium text-brand-primary">
                       {row.title}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2.5">
                       {row.published ? (
                         <span className="text-brand-primary">게시</span>
                       ) : (
-                        <span className="text-neutral-400">숨김</span>
+                        <span className="text-[color:var(--color-lp-muted)]">
+                          숨김
+                        </span>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-neutral-500">
-                      {row.publishedAt
-                        ? formatDate(row.publishedAt)
-                        : '—'}
+                    <td className="px-3 py-2.5 text-[color:var(--color-lp-muted)]">
+                      {row.publishedAt ? formatDate(row.publishedAt) : '—'}
                     </td>
-                    <td className="px-3 py-2">{row.author.nickname}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2.5">@{row.author.nickname}</td>
+                    <td className="px-3 py-2.5">
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => startEdit(row)}
-                          className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs disabled:opacity-50">
+                          className={adminOutlineBtnClassName}>
                           수정
                         </button>
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => void togglePublished(row)}
-                          className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs disabled:opacity-50">
+                          className={adminOutlineBtnClassName}>
                           {row.published ? '숨김' : '게시'}
                         </button>
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => void remove(row.id, row.title)}
-                          className="rounded-full border border-red-200 px-2.5 py-1 text-xs text-red-600 disabled:opacity-50">
+                          className="cursor-pointer rounded-full border border-red-400/40 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-400/10 disabled:opacity-50">
                           삭제
                         </button>
                       </div>
@@ -277,10 +283,11 @@ export default function AdminNoticesPage() {
   );
 }
 
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('ko-KR', {
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('ko-KR', {
     timeZone: 'Asia/Seoul',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   });
+}

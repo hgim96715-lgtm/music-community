@@ -9,6 +9,8 @@ import { AdminUsersController } from './admin-users.controller';
 import { UsersModule } from 'src/users/users.module';
 import { AdminNoticesService } from './admin-notices.service';
 import { AdminNoticesController } from './admin-notices.controller';
+import { AdminRoomsController } from './admin-rooms.controller';
+import { AdminRoomsService } from './admin-rooms.service';
 
 @Module({
   imports: [AuthModule, UsersModule],
@@ -17,12 +19,14 @@ import { AdminNoticesController } from './admin-notices.controller';
     AdminRecommendationsController,
     AdminUsersController,
     AdminNoticesController,
+    AdminRoomsController,
   ],
   providers: [
     AdminStatsService,
     AdminRecommendationsService,
     AdminUsersService,
     AdminNoticesService,
+    AdminRoomsService,
   ],
 })
 export class AdminModule {}

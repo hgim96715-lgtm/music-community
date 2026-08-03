@@ -3,69 +3,30 @@
 import { useAuth } from '@/components/auth/AuthProvider';
 import { adminFetchJson } from '@/lib/adminFetch';
 import type { ApiAdminStats } from '@/lib/apiTypes';
-import { postCard } from '@/lib/neobrutal';
+import {
+  adminMutedClassName,
+  adminPanelClassName,
+  authTitleClassName,
+} from '@/lib/form';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
+
+const chartLoading = (
+  <p className={adminMutedClassName}>차트 불러오는 중…</p>
+);
 
 const VisibleHiddenPie = dynamic(
   () =>
     import('@/components/charts/VisibleHiddenPie').then(
       (m) => m.VisibleHiddenPie,
     ),
-  {
-    ssr: false,
-    loading: () => (
-      <p className="text-sm text-neutral-500">차트 불러오는 중…</p>
-    ),
-  },
+  { ssr: false, loading: () => chartLoading },
 );
 
 const DailyCountBar = dynamic(
   () =>
     import('@/components/charts/DailyCountBar').then((m) => m.DailyCountBar),
-  {
-    ssr: false,
-    loading: () => (
-      <p className="text-sm text-neutral-500">차트 불러오는 중…</p>
-    ),
-  },
-);
-
-const ActivityLineChart = dynamic(
-  () =>
-    import('@/components/charts/ActivityLineChart').then(
-      (m) => m.ActivityLineChart,
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <p className="text-sm text-neutral-500">차트 불러오는 중…</p>
-    ),
-  },
-);
-
-const MonthlyCountBar = dynamic(
-  () =>
-    import('@/components/charts/MonthlyCountBar').then(
-      (m) => m.MonthlyCountBar,
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <p className="text-sm text-neutral-500">차트 불러오는 중…</p>
-    ),
-  },
-);
-
-const HourlyCountBar = dynamic(
-  () =>
-    import('@/components/charts/HourlyCountBar').then((m) => m.HourlyCountBar),
-  {
-    ssr: false,
-    loading: () => (
-      <p className="text-sm text-neutral-500">차트 불러오는 중…</p>
-    ),
-  },
+  { ssr: false, loading: () => chartLoading },
 );
 
 export default function AdminDashboardPage() {
@@ -94,19 +55,19 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-brand-primary">
+      <h1 className={authTitleClassName}>
         관리자 대시보드
         {user?.nickname ? (
-          <span className="ml-2 text-base font-normal text-neutral-500">
+          <span className={`ml-2 text-base font-normal ${adminMutedClassName}`}>
             @{user.nickname}
           </span>
         ) : null}
       </h1>
 
       {isLoading ? (
-        <p className="text-sm text-neutral-500">불러오는 중…</p>
+        <p className={adminMutedClassName}>불러오는 중…</p>
       ) : error ? (
-        <p className="text-sm text-red-500" role="alert">
+        <p className="text-sm text-red-400" role="alert">
           {error}
         </p>
       ) : stats ? (
@@ -125,15 +86,12 @@ export default function AdminDashboardPage() {
             <StatCard label="7일+ 미접속" value={stats.inactive7d} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
-            <StatCard label="전체 회원" value={stats.usersTotal} />
-            <StatCard label="오늘 가입" value={stats.signupsToday} />
+          <div className={`${adminPanelClassName} space-y-4 p-4`}>
+            <VisibleHiddenPie visible={stats.visible} hidden={stats.hidden} />
+            <DailyCountBar data={stats.daily} title="최근 7일 작성" />
+            <DailyCountBar data={stats.signupsDaily} title="최근 7일 가입" />
+            <DailyCountBar data={stats.activeDaily} title="최근 7일 활동" />
           </div>
-
-          <VisibleHiddenPie visible={stats.visible} hidden={stats.hidden} />
-          <DailyCountBar data={stats.daily} title="최근 7일 작성" />
-          <DailyCountBar data={stats.signupsDaily} title="최근 7일 가입" />
-          <DailyCountBar data={stats.activeDaily} title="최근 7일 활동" />
         </div>
       ) : null}
     </div>
@@ -142,8 +100,8 @@ export default function AdminDashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className={`${postCard} p-4 text-center`}>
-      <p className="text-xs text-neutral-500">{label}</p>
+    <div className={`${adminPanelClassName} p-4 text-center`}>
+      <p className="text-xs text-[color:var(--color-lp-muted)]">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-brand-primary">{value}</p>
     </div>
   );

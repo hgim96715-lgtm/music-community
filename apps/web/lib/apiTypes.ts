@@ -307,3 +307,26 @@ export type WithdrawResult = {
   withdrawScheduledAt: string;
   graceDays: number;
 };
+
+export type ApiAdminRoom = {
+  id: string;
+  name: string;
+  description: string | null;
+  topicTags: string[];
+  visibility: 'public' | 'private' | 'invite';
+  status: 'active' | 'closed' | 'archived';
+  memberCount: number;
+  passwordHint: string | null;
+  createdAt: string;
+  updatedAt: string;
+  ownerId: string;
+  owner: { id: string; nickname: string; email: string };
+};
+export type ApiAdminRoomsPage = {
+  items: ApiAdminRoom[];
+  nextCursor: string | null;
+};
+export type ApiAdminUsersPage = {
+  items: ApiAdminUser[];
+  nextCursor: string | null;
+};

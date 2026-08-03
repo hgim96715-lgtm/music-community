@@ -48,3 +48,35 @@ export const fieldErrorClassName =
 
 export const pillInputErrorClassName =
   'border-red-400/70 focus:border-red-400 focus:ring-red-400/20';
+
+/** Admin — LP 다크 셸 (흰 bg + post-card 혼용 ❌) */
+export const adminShellClassName =
+  'min-h-screen bg-brand-bg text-[color:var(--color-lp-cream)]';
+
+export const adminHeaderInnerClassName =
+  'mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-3.5';
+
+export const adminMainClassName = 'mx-auto max-w-5xl px-5 py-8';
+
+export const adminPanelClassName =
+  'rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.45)]';
+
+export const adminMutedClassName =
+  'text-sm text-[color:var(--color-lp-muted)]';
+
+export const adminTableHeadRowClassName =
+  'border-b border-[rgb(201_166_107/0.12)] text-[color:var(--color-lp-muted)]';
+
+export const adminTableRowClassName =
+  'border-b border-[rgb(201_166_107/0.08)] last:border-0';
+
+export const adminFilterActiveClassName =
+  'cursor-pointer rounded-full bg-brand-primary px-3 py-1.5 text-sm font-semibold text-[color:var(--color-lp-ink)]';
+
+export const adminFilterIdleClassName =
+  'cursor-pointer rounded-full border border-[rgb(201_166_107/0.22)] px-3 py-1.5 text-sm text-[color:var(--color-lp-muted)] transition-colors hover:text-brand-primary';
+
+export const adminOutlineBtnClassName =
+  'cursor-pointer rounded-full border border-[rgb(201_166_107/0.22)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-lp-cream)] transition-colors hover:bg-[rgb(42_36_30/0.65)] disabled:opacity-50';
+
+export const adminSearchInputClassName = `${pillInputClassName} px-4 !py-2`;

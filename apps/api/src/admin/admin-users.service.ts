@@ -3,6 +3,7 @@ import { Prisma } from 'src/generated/prisma/client';
 import { UserRole } from 'src/generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { startOfKstDay } from 'src/common/kst-date';
+import { ListAdminUsersQueryDto } from './dto/list-admin-users-query.dto';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -37,7 +38,8 @@ export type AdminUserListQuery = {
 export class AdminUsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(query: AdminUserListQuery = {}) {
+  async findAll(query: ListAdminUsersQueryDto = {}) {
+    const take = Math.min(Math.max(query.limit ?? 30, 1), 50);
     const where: Prisma.UserWhereInput = {};
     if (query.q?.trim()) {
       where.OR = [
@@ -69,13 +71,26 @@ export class AdminUsersService {
       where.AND = [...existingAnd, inactiveFilter];
     }
 
-    return this.prisma.user.findMany({
+    const rows = await this.prisma.user.findMany({
       where,
+      take: take + 1,
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
       orderBy: { createdAt: 'desc' },
       select: {
         ...adminUserSelect,
         _count: adminUserInclude._count,
       },
     });
+
+    const hasMore = rows.length > take;
+    const items = hasMore ? rows.slice(0, take) : rows;
+    return {
+      items: items.map((item) => ({
+        ...item,
+        createdAt: item.createdAt.toISOString(),
+        lastActiveAt: item.lastActiveAt?.toISOString() ?? null,
+      })),
+      nextCursor: hasMore ? (items[items.length - 1]?.id ?? null) : null,
+    };
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { fetchAdminUsers } from '@/lib/adminFetch';
-import type { ApiAdminUser } from '@/lib/apiTypes';
+import { fetchAdminRooms } from '@/lib/adminFetch';
+import type { ApiAdminRoom } from '@/lib/apiTypes';
 import {
   adminFilterActiveClassName,
   adminFilterIdleClassName,
@@ -15,17 +15,23 @@ import {
 } from '@/lib/form';
 import { useEffect, useState } from 'react';
 
-type ActivityFilter = 'all' | 'activeToday' | 'inactive7d';
+type StatusFilter = 'all' | 'active' | 'closed' | 'archived';
 
-export default function AdminUsersPage() {
-  const [rows, setRows] = useState<ApiAdminUser[]>([]);
+const STATUS_LABEL: Record<Exclude<StatusFilter, 'all'>, string> = {
+  active: '운영',
+  closed: '닫힘',
+  archived: '보관',
+};
+
+export default function AdminRoomsPage() {
+  const [rows, setRows] = useState<ApiAdminRoom[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [searchQ, setSearchQ] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
-  const [activityFilter, setActivityFilter] = useState<ActivityFilter>('all');
 
   useEffect(() => {
     let cancelled = false;
@@ -34,22 +40,21 @@ export default function AdminUsersPage() {
       setIsLoading(true);
       setNextCursor(null);
       try {
-        const page = await fetchAdminUsers({
+        const page = await fetchAdminRooms({
           q: searchQ.trim() || undefined,
-          activeToday: activityFilter === 'activeToday' ? true : undefined,
-          inactiveDays: activityFilter === 'inactive7d' ? 7 : undefined,
+          status: status === 'all' ? undefined : status,
           limit: 30,
         });
         if (!cancelled) {
           setRows(page.items);
           setNextCursor(page.nextCursor);
         }
-      } catch (err) {
+      } catch (error) {
         if (!cancelled) {
           setError(
-            err instanceof Error
-              ? err.message
-              : '사용자 목록을 불러오지 못했어요.',
+            error instanceof Error
+              ? error.message
+              : '방 목록을 불러오지 못했어요.',
           );
         }
       } finally {
@@ -60,24 +65,25 @@ export default function AdminUsersPage() {
     return () => {
       cancelled = true;
     };
-  }, [searchQ, activityFilter]);
+  }, [searchQ, status]);
 
   async function loadMore() {
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const page = await fetchAdminUsers({
+      const page = await fetchAdminRooms({
         q: searchQ.trim() || undefined,
-        activeToday: activityFilter === 'activeToday' ? true : undefined,
-        inactiveDays: activityFilter === 'inactive7d' ? 7 : undefined,
+        status: status === 'all' ? undefined : status,
         cursor: nextCursor,
         limit: 30,
       });
       setRows((prev) => [...prev, ...page.items]);
       setNextCursor(page.nextCursor);
-    } catch (err) {
+    } catch (error) {
       setError(
-        err instanceof Error ? err.message : '사용자 목록을 불러오지 못했어요.',
+        error instanceof Error
+          ? error.message
+          : '방 목록을 불러오지 못했어요.',
       );
     } finally {
       setLoadingMore(false);
@@ -92,13 +98,13 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className={authTitleClassName}>사용자 관리</h1>
+        <h1 className={authTitleClassName}>방 관리</h1>
         <form onSubmit={handleSearch} className="flex w-full gap-2 sm:w-auto">
           <input
             type="text"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="닉네임·이메일 검색"
+            placeholder="방 이름·방장 닉"
             autoComplete="off"
             className={`${adminSearchInputClassName} min-w-0 flex-1 sm:w-56 sm:flex-none`}
           />
@@ -107,20 +113,22 @@ export default function AdminUsersPage() {
           </button>
         </form>
       </div>
+
       <div className="flex flex-wrap gap-2">
         {(
           [
             ['all', '전체'],
-            ['activeToday', '오늘 활동'],
-            ['inactive7d', '7일+ 미접속'],
+            ['active', '운영'],
+            ['closed', '닫힘'],
+            ['archived', '보관'],
           ] as const
         ).map(([value, label]) => (
           <button
             key={value}
             type="button"
-            onClick={() => setActivityFilter(value)}
+            onClick={() => setStatus(value)}
             className={
-              activityFilter === value
+              status === value
                 ? adminFilterActiveClassName
                 : adminFilterIdleClassName
             }>
@@ -128,6 +136,7 @@ export default function AdminUsersPage() {
           </button>
         ))}
       </div>
+
       {isLoading ? (
         <p className={adminMutedClassName}>불러오는 중…</p>
       ) : error ? (
@@ -135,38 +144,47 @@ export default function AdminUsersPage() {
           {error}
         </p>
       ) : rows.length === 0 ? (
-        <p className={adminMutedClassName}>사용자가 없어요.</p>
+        <p className={adminMutedClassName}>방이 없어요.</p>
       ) : (
         <>
           <div className={`${adminPanelClassName} overflow-x-auto`}>
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead>
                 <tr className={adminTableHeadRowClassName}>
-                  <th className="px-3 py-2.5 font-medium">닉네임</th>
-                  <th className="px-3 py-2.5 font-medium">이메일</th>
-                  <th className="px-3 py-2.5 font-medium">가입일</th>
-                  <th className="px-3 py-2.5 font-medium">마지막 활동</th>
-                  <th className="px-3 py-2.5 font-medium">글</th>
-                  <th className="px-3 py-2.5 font-medium">role</th>
+                  <th className="px-3 py-2.5 font-medium">이름</th>
+                  <th className="px-3 py-2.5 font-medium">방장</th>
+                  <th className="px-3 py-2.5 font-medium">상태</th>
+                  <th className="px-3 py-2.5 font-medium">공개</th>
+                  <th className="px-3 py-2.5 font-medium">인원</th>
+                  <th className="px-3 py-2.5 font-medium">생성</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id} className={adminTableRowClassName}>
                     <td className="px-3 py-2.5 font-medium text-brand-primary">
-                      @{row.nickname}
+                      {row.name}
+                      {row.visibility === 'private' ? (
+                        <span className="ml-1.5 text-xs text-[color:var(--color-lp-muted)]">
+                          비공개
+                        </span>
+                      ) : null}
                     </td>
-                    <td className="px-3 py-2.5">{row.email}</td>
+                    <td className="px-3 py-2.5">@{row.owner.nickname}</td>
+                    <td className="px-3 py-2.5">
+                      {STATUS_LABEL[row.status] ?? row.status}
+                    </td>
+                    <td className="px-3 py-2.5 text-[color:var(--color-lp-muted)]">
+                      {row.visibility === 'public'
+                        ? '공개'
+                        : row.visibility === 'private'
+                          ? '비공개'
+                          : '초대'}
+                    </td>
+                    <td className="px-3 py-2.5">{row.memberCount}</td>
                     <td className="px-3 py-2.5 text-[color:var(--color-lp-muted)]">
                       {formatDate(row.createdAt)}
                     </td>
-                    <td className="px-3 py-2.5 text-[color:var(--color-lp-muted)]">
-                      {row.lastActiveAt ? formatDate(row.lastActiveAt) : '—'}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      {row._count.recommendations}
-                    </td>
-                    <td className="px-3 py-2.5">{row.role}</td>
                   </tr>
                 ))}
               </tbody>

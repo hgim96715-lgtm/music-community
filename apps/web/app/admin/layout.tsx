@@ -1,9 +1,13 @@
 'use client';
+
 import { useAuth } from '@/components/auth/AuthProvider';
 import {
+  adminHeaderInnerClassName,
+  adminMainClassName,
+  adminShellClassName,
   appHeaderClassName,
-  appHeaderInnerClassName,
   appNavLinkClassName,
+  authTitleClassName,
 } from '@/lib/form';
 import { buildLoginHref } from '@/lib/redirect';
 import Link from 'next/link';
@@ -11,6 +15,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 const ADMIN_BASE = '/admin';
+
+const NAV = [
+  { href: `${ADMIN_BASE}/recommendations`, label: '추천' },
+  { href: `${ADMIN_BASE}/users`, label: '사용자' },
+  { href: `${ADMIN_BASE}/rooms`, label: '방' },
+  { href: `${ADMIN_BASE}/notices`, label: '공지' },
+] as const;
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -30,34 +41,40 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   if (isLoading || !user || user.role !== 'admin') return null;
 
+  function navClass(href: string) {
+    const active =
+      pathname === href ||
+      (href !== ADMIN_BASE && pathname.startsWith(`${href}/`));
+    return active
+      ? `${appNavLinkClassName} bg-brand-primary-soft !text-brand-primary`
+      : appNavLinkClassName;
+  }
+
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className={adminShellClassName}>
       <header className={appHeaderClassName}>
-        <div className={appHeaderInnerClassName}>
+        <div className={adminHeaderInnerClassName}>
           <Link
             href={ADMIN_BASE}
-            className="text-sm font-semibold text-brand-primary">
+            className={`${authTitleClassName} text-base tracking-tight`}>
             Admin
           </Link>
-          <nav className="flex items-center gap-2">
-            <Link
-              href={`${ADMIN_BASE}/recommendations`}
-              className={appNavLinkClassName}>
-              추천 관리
-            </Link>
-            <Link href={`${ADMIN_BASE}/users`} className={appNavLinkClassName}>
-              사용자 관리
-            </Link>
-            <Link href={`${ADMIN_BASE}/notices`} className={appNavLinkClassName}>
-              공지 관리
-            </Link>
+          <nav className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={navClass(item.href)}>
+                {item.label}
+              </Link>
+            ))}
             <Link href="/recommendations" className={appNavLinkClassName}>
-              피드로
+              피드
             </Link>
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-4xl px-5 py-8">{children}</main>
+      <main className={adminMainClassName}>{children}</main>
     </div>
   );
 }
