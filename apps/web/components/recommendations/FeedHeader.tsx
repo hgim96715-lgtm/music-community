@@ -15,8 +15,8 @@ export function FeedHeader() {
         <PostButton />
       </div>
       <p
-        className={`${napkinHandClassName} mt-2.5 max-w-[22rem] text-[1.2rem] leading-snug text-[#c9a66b]
-        style={{ transform: 'rotate(-0.8deg)', transformOrigin: 'left center' }}`}>
+        className={`${napkinHandClassName} mt-2.5 max-w-[22rem] text-[1.2rem] leading-snug text-[#c9a66b]`}
+        style={{ transform: 'rotate(-0.8deg)', transformOrigin: 'left center' }}>
         켜진 조명 아래, 누군가 고른 곡이 돌아갑니다.
       </p>
     </header>

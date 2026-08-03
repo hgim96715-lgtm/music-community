@@ -8,7 +8,6 @@ import {
 } from '@/lib/api';
 import type { ApiFriendRequests } from '@/lib/apiTypes';
 import {
-  appNavLinkClassName,
   authPageClassName,
   authSubmitClassName,
   authTitleClassName,
@@ -19,7 +18,13 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 const outlineBtn =
-  'shrink-0 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-800 hover:bg-neutral-50 disabled:opacity-50';
+  'shrink-0 cursor-pointer rounded-full border border-[rgb(201_166_107/0.22)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-lp-cream)] transition-colors hover:bg-[rgb(42_36_30/0.65)] disabled:opacity-50';
+
+const listClassName =
+  'divide-y divide-[rgb(201_166_107/0.12)] rounded-2xl border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.45)]';
+
+const nickLinkClassName =
+  'min-w-0 truncate text-sm font-semibold text-[color:var(--color-lp-cream)] transition-colors hover:text-brand-primary';
 
 export default function FriendRequestsPage() {
   const router = useRouter();
@@ -89,25 +94,27 @@ export default function FriendRequestsPage() {
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-neutral-700">받은 요청</h2>
+        <h2 className="text-sm font-semibold text-brand-primary">받은 요청</h2>
         {requests.received.length === 0 ? (
-          <p className="text-sm text-neutral-500">받은 요청이 없어요.</p>
+          <p className="text-sm text-[color:var(--color-lp-muted)]">
+            받은 요청이 없어요.
+          </p>
         ) : (
-          <ul className="divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white">
+          <ul className={listClassName}>
             {requests.received.map((f) => (
               <li
                 key={f.id}
                 className="flex items-center justify-between gap-3 px-4 py-3">
                 <Link
                   href={`/users/${f.requester.id}`}
-                  className="min-w-0 truncate text-sm font-semibold transition-colors hover:text-brand-primary">
+                  className={nickLinkClassName}>
                   @{f.requester.nickname}
                 </Link>
                 <div className="flex shrink-0 gap-1.5">
                   <button
                     type="button"
                     disabled={busyId === f.id}
-                    className={`${authSubmitClassName} !w-auto !px-3 !py-1.5 !text-xs`}
+                    className={`${authSubmitClassName} !w-auto cursor-pointer !px-3 !py-1.5 !text-xs`}
                     onClick={() =>
                       void run(f.id, () => respondFriendRequest(f.id, 'accept'))
                     }>
@@ -132,18 +139,20 @@ export default function FriendRequestsPage() {
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-neutral-700">보낸 요청</h2>
+        <h2 className="text-sm font-semibold text-brand-primary">보낸 요청</h2>
         {requests.sent.length === 0 ? (
-          <p className="text-sm text-neutral-500">보낸 요청이 없어요.</p>
+          <p className="text-sm text-[color:var(--color-lp-muted)]">
+            보낸 요청이 없어요.
+          </p>
         ) : (
-          <ul className="divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white">
+          <ul className={listClassName}>
             {requests.sent.map((f) => (
               <li
                 key={f.id}
                 className="flex items-center justify-between gap-3 px-4 py-3">
                 <Link
                   href={`/users/${f.addressee.id}`}
-                  className="min-w-0 truncate text-sm font-semibold transition-colors hover:text-brand-primary">
+                  className={nickLinkClassName}>
                   @{f.addressee.nickname}
                 </Link>
                 <button

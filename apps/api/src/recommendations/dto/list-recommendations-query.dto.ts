@@ -20,4 +20,12 @@ export class ListRecommendationsQueryDto {
   @IsOptional()
   @IsIn(['recent', 'older', 'all'])
   scope?: 'recent' | 'older' | 'all';
+
+  /**
+   * all = 전체(기본) · friends = 맞친구 글만 (로그인 필요)
+   * scope(시간)와 독립 — 예: ?feed=friends&scope=recent
+   */
+  @IsOptional()
+  @IsIn(['all', 'friends'])
+  feed?: 'all' | 'friends';
 }

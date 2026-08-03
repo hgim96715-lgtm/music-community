@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -21,6 +22,7 @@ import {
   ActiveAccountGuard,
   AllowWithdrawing,
 } from 'src/auth/active-account.guard';
+import { SearchUsersQueryDto } from './dto/search-users-query.dto';
 
 @Controller('users')
 export class UsersController {
@@ -93,6 +95,17 @@ export class UsersController {
     @Param('id', ParseUUIDPipe) blockedId: string,
   ) {
     return await this.usersService.getBlockStatus(userId, blockedId);
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '가입 유저 닉네임 검색' })
+  @Get('search')
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard)
+  async searchUsers(
+    @UserId() userId: string,
+    @Query() query: SearchUsersQueryDto,
+  ) {
+    return await this.usersService.searchUsers(userId, query);
   }
 
   @ApiBearerAuth('access-token')

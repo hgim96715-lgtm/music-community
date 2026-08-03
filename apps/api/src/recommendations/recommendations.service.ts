@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
@@ -10,6 +11,8 @@ import { normalizeEmbedUrl } from './normalize-embed-url';
 import { startOfKstDay, toKstDateKey } from 'src/common/kst-date';
 import { UpdateRecommendationDto } from './dto/update-recommendation.dto';
 import { ListRecommendationsQueryDto } from './dto/list-recommendations-query.dto';
+import { FriendshipStatus } from 'src/generated/prisma/enums';
+import { Prisma } from 'src/generated/prisma/client';
 
 @Injectable()
 export class RecommendationsService {
@@ -47,21 +50,43 @@ export class RecommendationsService {
     return new Date(startOfKstDay(reference).getTime() - 6 * 86_400_000);
   }
 
-  async findAll(query: ListRecommendationsQueryDto = {}) {
+  async findAll(
+    query: ListRecommendationsQueryDto = {},
+    viewerUserId?: string | null,
+  ) {
     const scope = query.scope ?? 'all';
+    const feed = query.feed ?? 'all';
     const paginate = query.limit != null || query.cursor != null;
     const take = paginate
       ? Math.min(Math.max(query.limit ?? 20, 1), 50)
       : undefined;
     const recentStart = this.recentFeedWindowStart();
-    const scopeWhere =
+    const scopeWhere: Prisma.RecommendationWhereInput =
       scope === 'recent'
         ? { createdAt: { gte: recentStart } }
         : scope === 'older'
           ? { createdAt: { lt: recentStart } }
           : {};
 
-    let cursorWhere: object = {};
+    let feedWhere: Prisma.RecommendationWhereInput = {};
+    if (feed === 'friends') {
+      if (!viewerUserId) {
+        throw new UnauthorizedException('친구피드는 로그인이 필요합니다.');
+      }
+      const friendships = await this.prisma.friendship.findMany({
+        where: {
+          status: FriendshipStatus.accepted,
+          OR: [{ requesterId: viewerUserId }, { addresseeId: viewerUserId }],
+        },
+        select: { requesterId: true, addresseeId: true },
+      });
+      const friendIds = friendships.map((f) =>
+        f.requesterId === viewerUserId ? f.addresseeId : f.requesterId,
+      );
+      feedWhere = { authorId: { in: friendIds } };
+    }
+
+    let cursorWhere: Prisma.RecommendationWhereInput = {};
     if (query.cursor) {
       const cursorRow = await this.prisma.recommendation.findFirst({
         where: { id: query.cursor, hidden: false },
@@ -87,6 +112,7 @@ export class RecommendationsService {
         hidden: false,
         ...scopeWhere,
         ...cursorWhere,
+        ...feedWhere,
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       ...(take != null ? { take: take + 1 } : {}),

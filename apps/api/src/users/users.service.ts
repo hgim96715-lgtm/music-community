@@ -17,6 +17,7 @@ import {
   startOfKstDay,
   toKstDateKey,
 } from 'src/common/kst-date';
+import { SearchUsersQueryDto } from './dto/search-users-query.dto';
 
 const userSelect = {
   id: true,
@@ -96,6 +97,45 @@ export class UsersService {
       throw new NotFoundException('유저를 찾을 수 없습니다.');
     }
     return user;
+  }
+
+  async searchUsers(userId: string, query: SearchUsersQueryDto) {
+    const raw = query.q.trim().replace(/^@+/, '');
+    if (raw.length < 2) {
+      throw new BadRequestException('검색어는 2자 이상이어야 합니다.');
+    }
+    const take = Math.min(Math.max(query.limit ?? 20, 1), 30);
+    const blocked = await this.prisma.block.findMany({
+      where: {
+        OR: [{ blockerId: userId }, { blockedId: userId }],
+      },
+      select: { blockerId: true, blockedId: true },
+    });
+    const excludeIds = new Set<string>([userId]);
+    for (const b of blocked) {
+      excludeIds.add(b.blockerId === userId ? b.blockedId : b.blockerId);
+    }
+
+    const where = {
+      deletedAt: null,
+      nickname: { contains: raw, mode: 'insensitive' as const },
+      id: { notIn: [...excludeIds] },
+    };
+
+    const rows = await this.prisma.user.findMany({
+      where,
+      take: take + 1,
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+      orderBy: [{ nickname: 'asc' }, { id: 'asc' }],
+      select: { id: true, nickname: true, image: true },
+    });
+
+    const hasMore = rows.length > take;
+    const items = hasMore ? rows.slice(0, take) : rows;
+    return {
+      items,
+      nextCursor: hasMore ? (items[items.length - 1].id ?? null) : null,
+    };
   }
 
   //block

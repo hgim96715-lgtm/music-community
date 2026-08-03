@@ -235,6 +235,17 @@ export type ApiComment = {
 
 // Friendships
 
+export type ApiUserSearchHit = {
+  id: string;
+  nickname: string;
+  image: string | null;
+};
+
+export type ApiUserSearchPage = {
+  items: ApiUserSearchHit[];
+  nextCursor: string | null;
+};
+
 export type ApiPublicUser = {
   id: string;
   nickname: string;
@@ -288,4 +299,11 @@ export type ApiMyStats = {
   daily: ApiMyStatsDaily[];
   moods: { mood: string; count: number }[];
   artists: { artist: string; count: number }[];
+};
+
+export type WithdrawResult = {
+  ok: true;
+  deletedAt: string;
+  withdrawScheduledAt: string;
+  graceDays: number;
 };

@@ -16,13 +16,14 @@ import { RecommendationsService } from './recommendations.service';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { UserId } from 'src/auth/decorators/user-id.decorator';
+import { OptionalUserId, UserId } from 'src/auth/decorators/user-id.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ActiveAccountGuard } from 'src/auth/active-account.guard';
 import { UpdateRecommendationDto } from './dto/update-recommendation.dto';
 import { ListRecommendationsQueryDto } from './dto/list-recommendations-query.dto';
+import { OptionalJwtAuthGuard } from 'src/auth/optional-jwt-auth.guard';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
@@ -32,11 +33,15 @@ export class RecommendationsController {
   ) {}
 
   @ApiOperation({
-    summary: '피드 목록 (공개) · cursor·scope 선택',
+    summary: '피드 목록 · cursor·scope·feed · feed=friends는 로그인',
   })
   @Get()
-  async findAll(@Query() query: ListRecommendationsQueryDto) {
-    return await this.recommendationsService.findAll(query);
+  @UseGuards(OptionalJwtAuthGuard)
+  async findAll(
+    @Query() query: ListRecommendationsQueryDto,
+    @OptionalUserId() viewerUserId?: string,
+  ) {
+    return await this.recommendationsService.findAll(query, viewerUserId);
   }
 
   @ApiOperation({ summary: '댓글 목록(공개)' })

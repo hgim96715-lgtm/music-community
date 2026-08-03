@@ -15,3 +15,10 @@ export const UserId = createParamDecorator(
     return userId;
   },
 );
+
+export const OptionalUserId = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): string | undefined => {
+    const request = ctx.switchToHttp().getRequest<Request>();
+    return request.user?.sub;
+  },
+);
