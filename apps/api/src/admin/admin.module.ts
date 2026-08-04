@@ -11,9 +11,11 @@ import { AdminNoticesService } from './admin-notices.service';
 import { AdminNoticesController } from './admin-notices.controller';
 import { AdminRoomsController } from './admin-rooms.controller';
 import { AdminRoomsService } from './admin-rooms.service';
+import { DmsModule } from 'src/dms/dms.module';
+import { RealtimeModule } from 'src/realtime/realtime.module';
 
 @Module({
-  imports: [AuthModule, UsersModule],
+  imports: [AuthModule, UsersModule, DmsModule, RealtimeModule],
   controllers: [
     AdminStatsController,
     AdminRecommendationsController,

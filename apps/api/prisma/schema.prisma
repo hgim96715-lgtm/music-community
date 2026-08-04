@@ -63,6 +63,18 @@ enum DmStatus {
     declined
 }
 
+enum ReportTargetType {
+    comment
+    room_message
+}
+
+enum ReportStatus {
+    pending
+    resolved
+    dismissed
+}
+
+
 model User {
   id           String   @id @default(uuid(7)) @db.Uuid
   email        String   @unique
@@ -107,6 +119,8 @@ model User {
   messageHides RoomMessageHide[]
   messageReactions RoomMessageReaction[]
   messagesDeleted RoomMessage[] @relation("RoomMessageDeletedBy")
+
+  reports Report[]
 
   @@index([deletedAt])
   @@index([withdrawScheduledAt])
@@ -443,4 +457,22 @@ model DmMessage {
 
     @@index([dmId,createdAt])
     @@index([senderId])
+}
+
+model Report {
+    id String @id @default(uuid(7)) @db.Uuid
+    targetType ReportTargetType
+    targetId String @db.Uuid
+    reporterId String @db.Uuid
+    reason String
+    status ReportStatus @default(pending)
+    createdAt DateTime @default(now()) @db.Timestamptz(3)
+    updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+    reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+    @@index([reporterId,targetType,targetId])
+    @@index([status,createdAt])
+    @@index([targetType,targetId])
+    @@index([reporterId])
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import { fetchAdminRooms } from '@/lib/adminFetch';
+import { fetchAdminRooms, patchAdminRoomStatus } from '@/lib/adminFetch';
 import type { ApiAdminRoom } from '@/lib/apiTypes';
+import { FeedDialog } from '@/components/recommendations/FeedDialog';
 import {
   adminFilterActiveClassName,
   adminFilterIdleClassName,
@@ -12,6 +13,7 @@ import {
   adminTableHeadRowClassName,
   adminTableRowClassName,
   authTitleClassName,
+  pillTextareaClassName,
 } from '@/lib/form';
 import { useEffect, useState } from 'react';
 
@@ -32,6 +34,77 @@ export default function AdminRoomsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [statusConfirm, setStatusConfirm] = useState<{
+    row: ApiAdminRoom;
+    next: 'active' | 'closed' | 'archived';
+  } | null>(null);
+  const [reason, setReason] = useState('');
+  const [reasonError, setReasonError] = useState('');
+
+  const needsReason =
+    statusConfirm?.next === 'closed' || statusConfirm?.next === 'archived';
+
+  function beginStatusConfirm(
+    row: ApiAdminRoom,
+    next: 'active' | 'closed' | 'archived',
+  ) {
+    setReason('');
+    setReasonError('');
+    setStatusConfirm({ row, next });
+  }
+
+  async function confirmRoomStatus() {
+    if (!statusConfirm || updatingId) return;
+    const { row, next } = statusConfirm;
+    const trimmed = reason.trim();
+    if (needsReason && trimmed.length < 2) {
+      setReasonError('방장에게 전달할 사유를 입력해 주세요.');
+      return;
+    }
+    setUpdatingId(row.id);
+    setError('');
+    setReasonError('');
+    try {
+      const updated = await patchAdminRoomStatus(
+        row.id,
+        next,
+        needsReason ? trimmed : undefined,
+      );
+      setRows((prev) =>
+        prev.map((item) => (item.id === row.id ? updated : item)),
+      );
+      setStatusConfirm(null);
+      setReason('');
+    } catch (error) {
+      setReasonError(
+        error instanceof Error ? error.message : '방 상태를 변경하지 못했어요.',
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  const confirmLabel =
+    statusConfirm?.next === 'active'
+      ? '재개'
+      : statusConfirm?.next === 'closed'
+        ? '닫기'
+        : '보관';
+  const confirmTitle =
+    statusConfirm == null
+      ? ''
+      : statusConfirm.next === 'active'
+        ? `「${statusConfirm.row.name}」 재개할까요?`
+        : statusConfirm.next === 'closed'
+          ? `「${statusConfirm.row.name}」 닫을까요?`
+          : `「${statusConfirm.row.name}」 보관할까요?`;
+  const confirmDescription =
+    statusConfirm?.next === 'active'
+      ? '운영 중으로 돌려요. 입장·채팅 가능 · 공개면 둘러보기에 다시 보여요.'
+      : statusConfirm?.next === 'closed'
+        ? '정상 종료예요. 방장 닫기와 같아요 · 입장 불가 · 재개 여지 있음.\n사유는 방장 DM으로 전달돼요.'
+        : '운영 조치(보관)예요. 스팸·가이드라인·장기 치움용 · 입장 불가.\n사유는 방장 DM으로 전달돼요.';
 
   useEffect(() => {
     let cancelled = false;
@@ -81,16 +154,14 @@ export default function AdminRoomsPage() {
       setNextCursor(page.nextCursor);
     } catch (error) {
       setError(
-        error instanceof Error
-          ? error.message
-          : '방 목록을 불러오지 못했어요.',
+        error instanceof Error ? error.message : '방 목록을 불러오지 못했어요.',
       );
     } finally {
       setLoadingMore(false);
     }
   }
 
-  function handleSearch(e: React.FormEvent<HTMLFormElement>) {
+  function handleSearch(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setSearchQ(q);
   }
@@ -148,7 +219,7 @@ export default function AdminRoomsPage() {
       ) : (
         <>
           <div className={`${adminPanelClassName} overflow-x-auto`}>
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead>
                 <tr className={adminTableHeadRowClassName}>
                   <th className="px-3 py-2.5 font-medium">이름</th>
@@ -157,6 +228,7 @@ export default function AdminRoomsPage() {
                   <th className="px-3 py-2.5 font-medium">공개</th>
                   <th className="px-3 py-2.5 font-medium">인원</th>
                   <th className="px-3 py-2.5 font-medium">생성</th>
+                  <th className="px-3 py-2.5 font-medium">액션</th>
                 </tr>
               </thead>
               <tbody>
@@ -185,6 +257,37 @@ export default function AdminRoomsPage() {
                     <td className="px-3 py-2.5 text-[color:var(--color-lp-muted)]">
                       {formatDate(row.createdAt)}
                     </td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex flex-wrap gap-1.5">
+                        {row.status !== 'active' ? (
+                          <button
+                            type="button"
+                            disabled={updatingId === row.id}
+                            onClick={() => beginStatusConfirm(row, 'active')}
+                            className="cursor-pointer rounded-full bg-brand-primary px-3 py-1.5 text-xs font-semibold text-[color:var(--color-lp-ink)] transition-colors hover:bg-brand-primary/90 disabled:opacity-50">
+                            재개
+                          </button>
+                        ) : null}
+                        {row.status !== 'closed' ? (
+                          <button
+                            type="button"
+                            disabled={updatingId === row.id}
+                            onClick={() => beginStatusConfirm(row, 'closed')}
+                            className={adminOutlineBtnClassName}>
+                            닫기
+                          </button>
+                        ) : null}
+                        {row.status !== 'archived' ? (
+                          <button
+                            type="button"
+                            disabled={updatingId === row.id}
+                            onClick={() => beginStatusConfirm(row, 'archived')}
+                            className={adminOutlineBtnClassName}>
+                            보관
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -203,6 +306,48 @@ export default function AdminRoomsPage() {
           ) : null}
         </>
       )}
+
+      <FeedDialog
+        open={statusConfirm != null}
+        title={confirmTitle}
+        description={confirmDescription}
+        confirmLabel={confirmLabel}
+        pendingLabel={`${confirmLabel} 중…`}
+        isPending={updatingId != null}
+        onClose={() => {
+          if (!updatingId) {
+            setStatusConfirm(null);
+            setReason('');
+            setReasonError('');
+          }
+        }}
+        onConfirm={() => void confirmRoomStatus()}>
+        {needsReason ? (
+          <div className="space-y-1.5">
+            <textarea
+              value={reason}
+              onChange={(e) => {
+                setReason(e.target.value);
+                if (reasonError) setReasonError('');
+              }}
+              placeholder="방장에게 전달할 사유 (필수)"
+              rows={3}
+              maxLength={500}
+              disabled={updatingId != null}
+              className={`${pillTextareaClassName} text-left`}
+            />
+            {reasonError ? (
+              <p className="px-1 text-left text-xs text-red-400" role="alert">
+                {reasonError}
+              </p>
+            ) : (
+              <p className="px-1 text-left text-xs text-[color:var(--color-lp-muted)]">
+                같은 DM에서 방장이 운영에게 문의할 수 있어요.
+              </p>
+            )}
+          </div>
+        ) : null}
+      </FeedDialog>
     </div>
   );
 }

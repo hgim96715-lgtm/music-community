@@ -1,4 +1,4 @@
-import { ApiAdminRoomsPage, ApiAdminUsersPage } from './apiTypes';
+import { ApiAdminRoom, ApiAdminRoomsPage, ApiAdminUsersPage } from './apiTypes';
 import { authFetchApi, authFetchApiVoid } from './authFetch';
 
 export function adminFetchJson<T>(path: string, init?: RequestInit) {
@@ -46,4 +46,21 @@ export function fetchAdminUsers(
   if (opts.limit != null) sp.set('limit', opts.limit.toString());
   const qs = sp.toString();
   return adminFetchJson<ApiAdminUsersPage>(qs ? `/users?${qs}` : `/users`);
+}
+
+export function patchAdminRoomStatus(
+  id: string,
+  status: 'active' | 'closed' | 'archived',
+  reason?: string,
+): Promise<ApiAdminRoom> {
+  return adminFetchJson<ApiAdminRoom>(`/rooms/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      status,
+      ...(reason?.trim() ? { reason: reason.trim() } : {}),
+    }),
+  });
 }

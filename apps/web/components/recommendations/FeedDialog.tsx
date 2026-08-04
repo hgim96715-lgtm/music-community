@@ -18,6 +18,7 @@ type FeedDialogProps = {
   pendingLabel?: string;
   cancelLabel?: string;
   isPending?: boolean;
+  children?: React.ReactNode;
 };
 
 export function FeedDialog({
@@ -30,6 +31,7 @@ export function FeedDialog({
   cancelLabel = '취소',
   isPending = false,
   onConfirm,
+  children,
 }: FeedDialogProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -71,6 +73,7 @@ export function FeedDialog({
           <p className="mt-2 whitespace-pre-line text-center text-sm leading-relaxed text-[#a89880]">
             {description}
           </p>
+          {children ? <div className="mt-4">{children}</div> : null}
           <div className="mt-6 flex flex-col items-stretch gap-2">
             <button
               type="button"
