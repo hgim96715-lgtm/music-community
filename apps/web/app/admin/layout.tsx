@@ -20,6 +20,7 @@ const NAV = [
   { href: `${ADMIN_BASE}/recommendations`, label: '추천' },
   { href: `${ADMIN_BASE}/users`, label: '사용자' },
   { href: `${ADMIN_BASE}/rooms`, label: '방' },
+  { href: `${ADMIN_BASE}/reports`, label: '신고' },
   { href: `${ADMIN_BASE}/notices`, label: '공지' },
 ] as const;
 

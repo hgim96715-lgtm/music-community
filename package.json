@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "dev:api": "pnpm --filter api start:dev",
-    "dev:web": "pnpm --filter web dev"
+    "dev:web": "pnpm --filter web dev",
+    "dev:web:fresh": "pnpm --filter web dev:fresh",
+    "clean:web": "rm -rf apps/web/.next"
   }
 }

@@ -1,7 +1,11 @@
 'use client';
 
-import { fetchAdminRooms, patchAdminRoomStatus } from '@/lib/adminFetch';
-import type { ApiAdminRoom } from '@/lib/apiTypes';
+import {
+  fetchAdminRoomMessage,
+  fetchAdminRooms,
+  patchAdminRoomStatus,
+} from '@/lib/adminFetch';
+import type { ApiAdminRoom, ApiAdminRoomMessage } from '@/lib/apiTypes';
 import { FeedDialog } from '@/components/recommendations/FeedDialog';
 import {
   adminFilterActiveClassName,
@@ -15,7 +19,8 @@ import {
   authTitleClassName,
   pillTextareaClassName,
 } from '@/lib/form';
-import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 
 type StatusFilter = 'all' | 'active' | 'closed' | 'archived';
 
@@ -26,6 +31,12 @@ const STATUS_LABEL: Record<Exclude<StatusFilter, 'all'>, string> = {
 };
 
 export default function AdminRoomsPage() {
+  const [focusRoomId, setFocusRoomId] = useState<string | null>(null);
+  const [focusMessageId, setFocusMessageId] = useState<string | null>(null);
+  const [focusMessage, setFocusMessage] = useState<ApiAdminRoomMessage | null>(
+    null,
+  );
+  const [messageLoading, setMessageLoading] = useState(false);
   const [rows, setRows] = useState<ApiAdminRoom[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [q, setQ] = useState('');
@@ -44,6 +55,41 @@ export default function AdminRoomsPage() {
 
   const needsReason =
     statusConfirm?.next === 'closed' || statusConfirm?.next === 'archived';
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setFocusRoomId(params.get('id')?.trim() || null);
+    setFocusMessageId(params.get('messageId')?.trim() || null);
+  }, []);
+
+  useEffect(() => {
+    if (!focusMessageId) {
+      setFocusMessage(null);
+      return;
+    }
+    const messageId = focusMessageId;
+    let cancelled = false;
+    async function loadMessage() {
+      setMessageLoading(true);
+      try {
+        const data = await fetchAdminRoomMessage(messageId);
+        if (!cancelled) setFocusMessage(data);
+      } catch {
+        if (!cancelled) setFocusMessage(null);
+      } finally {
+        if (!cancelled) setMessageLoading(false);
+      }
+    }
+    void loadMessage();
+    return () => {
+      cancelled = true;
+    };
+  }, [focusMessageId]);
+
+  const visibleRows = useMemo(() => {
+    if (!focusRoomId) return rows;
+    return rows.filter((row) => row.id === focusRoomId);
+  }, [rows, focusRoomId]);
 
   function beginStatusConfirm(
     row: ApiAdminRoom,
@@ -168,45 +214,127 @@ export default function AdminRoomsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className={authTitleClassName}>방 관리</h1>
-        <form onSubmit={handleSearch} className="flex w-full gap-2 sm:w-auto">
-          <input
-            type="text"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="방 이름·방장 닉"
-            autoComplete="off"
-            className={`${adminSearchInputClassName} min-w-0 flex-1 sm:w-56 sm:flex-none`}
-          />
-          <button type="submit" className={adminOutlineBtnClassName}>
-            검색
-          </button>
-        </form>
+        {focusRoomId || focusMessageId ? (
+          <Link
+            href="/admin/rooms"
+            className="text-sm font-medium text-brand-primary hover:text-brand-primary/80">
+            전체 목록
+          </Link>
+        ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {(
-          [
-            ['all', '전체'],
-            ['active', '운영'],
-            ['closed', '닫힘'],
-            ['archived', '보관'],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setStatus(value)}
-            className={
-              status === value
-                ? adminFilterActiveClassName
-                : adminFilterIdleClassName
-            }>
-            {label}
-          </button>
-        ))}
-      </div>
+      {focusMessageId ? (
+        <p className={adminMutedClassName}>
+          신고에서 연 메시지만 보여요. 없으면 삭제되었거나 id가 달라요.
+        </p>
+      ) : focusRoomId ? (
+        <p className={adminMutedClassName}>
+          신고에서 연 방만 보여요. 없으면 삭제되었거나 id가 달라요.
+        </p>
+      ) : null}
+
+      {focusMessageId ? (
+        messageLoading ? (
+          <p className={adminMutedClassName}>메시지 불러오는 중…</p>
+        ) : focusMessage ? (
+          <div className={`${adminPanelClassName} space-y-3 p-4`}>
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <p className="text-base font-semibold text-brand-primary">
+                {focusMessage.roomName}
+              </p>
+              <p className="text-sm text-[color:var(--color-lp-muted)]">
+                방 상태 · {focusMessage.roomStatus}
+              </p>
+            </div>
+            <p className="font-mono text-xs text-[color:var(--color-lp-muted)]">
+              roomId · {focusMessage.roomId}
+            </p>
+            <p className="font-mono text-xs text-[color:var(--color-lp-muted)]">
+              messageId · {focusMessage.id}
+            </p>
+            <p className="text-sm text-[color:var(--color-lp-cream)]">
+              발신 ·{' '}
+              <span className="font-medium">@{focusMessage.sender.nickname}</span>
+              {focusMessage.deletedAt ? (
+                <span className="ml-2 text-[color:var(--color-lp-muted)]">
+                  · 삭제됨
+                  {focusMessage.deletedByOwner ? ' (방장)' : ''}
+                </span>
+              ) : null}
+            </p>
+            <div>
+              <p className="mb-1 text-xs font-medium text-[color:var(--color-lp-muted)]">
+                메시지 · {focusMessage.type}
+              </p>
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[color:var(--color-lp-cream)]">
+                {focusMessage.body?.trim()
+                  ? focusMessage.body
+                  : '(본문 없음 · 첨부·삭제된 메시지일 수 있음)'}
+              </p>
+            </div>
+            {focusMessage.recommendationTitle ? (
+              <p className="text-xs text-[color:var(--color-lp-muted)]">
+                첨부 곡 · {focusMessage.recommendationTitle}
+              </p>
+            ) : null}
+            <p className="text-xs text-[color:var(--color-lp-muted)]">
+              작성 · {formatDateTime(focusMessage.createdAt)}
+            </p>
+            <Link
+              href={`/rooms/${focusMessage.roomId}`}
+              className="inline-block text-xs font-medium text-brand-primary hover:text-brand-primary/80">
+              유저 방 화면 열기
+            </Link>
+          </div>
+        ) : (
+          <p className={adminMutedClassName}>해당 메시지를 찾을 수 없어요.</p>
+        )
+      ) : null}
+
+      {!focusMessageId ? (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <form onSubmit={handleSearch} className="flex w-full gap-2 sm:ml-auto sm:w-auto">
+            <input
+              type="text"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="방 이름·방장 닉"
+              autoComplete="off"
+              className={`${adminSearchInputClassName} min-w-0 flex-1 sm:w-56 sm:flex-none`}
+            />
+            <button type="submit" className={adminOutlineBtnClassName}>
+              검색
+            </button>
+          </form>
+        </div>
+      ) : null}
+
+      {!focusMessageId ? (
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              ['all', '전체'],
+              ['active', '운영'],
+              ['closed', '닫힘'],
+              ['archived', '보관'],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setStatus(value)}
+              className={
+                status === value
+                  ? adminFilterActiveClassName
+                  : adminFilterIdleClassName
+              }>
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {isLoading ? (
         <p className={adminMutedClassName}>불러오는 중…</p>
@@ -216,6 +344,8 @@ export default function AdminRoomsPage() {
         </p>
       ) : rows.length === 0 ? (
         <p className={adminMutedClassName}>방이 없어요.</p>
+      ) : visibleRows.length === 0 ? (
+        <p className={adminMutedClassName}>해당 방이 없어요.</p>
       ) : (
         <>
           <div className={`${adminPanelClassName} overflow-x-auto`}>
@@ -232,7 +362,7 @@ export default function AdminRoomsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {visibleRows.map((row) => (
                   <tr key={row.id} className={adminTableRowClassName}>
                     <td className="px-3 py-2.5 font-medium text-brand-primary">
                       {row.name}
@@ -293,7 +423,7 @@ export default function AdminRoomsPage() {
               </tbody>
             </table>
           </div>
-          {nextCursor ? (
+          {nextCursor && !focusRoomId ? (
             <div className="flex justify-center">
               <button
                 type="button"
@@ -358,5 +488,16 @@ function formatDate(iso: string) {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
+  });
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }

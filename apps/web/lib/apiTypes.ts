@@ -326,7 +326,63 @@ export type ApiAdminRoomsPage = {
   items: ApiAdminRoom[];
   nextCursor: string | null;
 };
+export type ApiAdminRoomMessage = {
+  id: string;
+  roomId: string;
+  roomName: string;
+  roomStatus: string;
+  type: string;
+  body: string | null;
+  sender: { id: string; nickname: string; email: string };
+  recommendationId: string | null;
+  recommendationTitle: string | null;
+  deletedAt: string | null;
+  deletedByOwner: boolean;
+  createdAt: string;
+};
 export type ApiAdminUsersPage = {
   items: ApiAdminUser[];
+  nextCursor: string | null;
+};
+export type ApiAdminReportTarget =
+  | {
+      kind: 'recommendation';
+      title: string;
+      artist: string;
+      reason: string;
+      hidden: boolean;
+      author: { id: string; nickname: string };
+    }
+  | {
+      kind: 'comment';
+      body: string;
+      recommendationId: string;
+      recommendationTitle: string | null;
+      author: { id: string; nickname: string };
+    }
+  | {
+      kind: 'room_message';
+      body: string | null;
+      roomId: string;
+      roomName: string | null;
+      deletedAt: string | null;
+      sender: { id: string; nickname: string };
+    };
+
+export type ApiAdminReport = {
+  id: string;
+  targetType: 'comment' | 'room_message' | 'recommendation';
+  targetId: string;
+  reason: string;
+  status: 'pending' | 'resolved' | 'dismissed';
+  createdAt: string;
+  updatedAt: string;
+  reporter: { id: string; nickname: string; email: string };
+  target: ApiAdminReportTarget | null;
+  targetMissing: boolean;
+};
+
+export type ApiAdminReportsPage = {
+  items: ApiAdminReport[];
   nextCursor: string | null;
 };

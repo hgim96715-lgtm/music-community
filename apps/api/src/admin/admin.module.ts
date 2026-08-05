@@ -13,6 +13,8 @@ import { AdminRoomsController } from './admin-rooms.controller';
 import { AdminRoomsService } from './admin-rooms.service';
 import { DmsModule } from 'src/dms/dms.module';
 import { RealtimeModule } from 'src/realtime/realtime.module';
+import { AdminReportsController } from './admin-reports.controller';
+import { AdminReportsService } from './admin-reports.service';
 
 @Module({
   imports: [AuthModule, UsersModule, DmsModule, RealtimeModule],
@@ -22,6 +24,7 @@ import { RealtimeModule } from 'src/realtime/realtime.module';
     AdminUsersController,
     AdminNoticesController,
     AdminRoomsController,
+    AdminReportsController,
   ],
   providers: [
     AdminStatsService,
@@ -29,6 +32,7 @@ import { RealtimeModule } from 'src/realtime/realtime.module';
     AdminUsersService,
     AdminNoticesService,
     AdminRoomsService,
+    AdminReportsService,
   ],
 })
 export class AdminModule {}

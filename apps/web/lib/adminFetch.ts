@@ -1,4 +1,11 @@
-import { ApiAdminRoom, ApiAdminRoomsPage, ApiAdminUsersPage } from './apiTypes';
+import {
+  ApiAdminReport,
+  ApiAdminReportsPage,
+  ApiAdminRoom,
+  ApiAdminRoomMessage,
+  ApiAdminRoomsPage,
+  ApiAdminUsersPage,
+} from './apiTypes';
 import { authFetchApi, authFetchApiVoid } from './authFetch';
 
 export function adminFetchJson<T>(path: string, init?: RequestInit) {
@@ -24,6 +31,12 @@ export function fetchAdminRooms(
   if (opts.limit != null) sp.set('limit', opts.limit.toString());
   const qs = sp.toString();
   return adminFetchJson<ApiAdminRoomsPage>(qs ? `/rooms?${qs}` : '/rooms');
+}
+
+export function fetchAdminRoomMessage(
+  messageId: string,
+): Promise<ApiAdminRoomMessage> {
+  return adminFetchJson<ApiAdminRoomMessage>(`/rooms/messages/${messageId}`);
 }
 
 export function fetchAdminUsers(
@@ -62,5 +75,37 @@ export function patchAdminRoomStatus(
       status,
       ...(reason?.trim() ? { reason: reason.trim() } : {}),
     }),
+  });
+}
+
+export function fetchAdminReports(
+  opts: {
+    status?: 'pending' | 'resolved' | 'dismissed';
+    targetType?: 'comment' | 'room_message' | 'recommendation';
+    cursor?: string;
+    limit?: number;
+  } = {},
+): Promise<ApiAdminReportsPage> {
+  const sp = new URLSearchParams();
+  if (opts.status) sp.set('status', opts.status);
+  if (opts.targetType) sp.set('targetType', opts.targetType);
+  if (opts.cursor) sp.set('cursor', opts.cursor);
+  if (opts.limit != null) sp.set('limit', opts.limit.toString());
+  const qs = sp.toString();
+  return adminFetchJson<ApiAdminReportsPage>(
+    qs ? `/reports?${qs}` : '/reports',
+  );
+}
+
+export function patchAdminReportStatus(
+  id: string,
+  status: 'resolved' | 'dismissed',
+): Promise<ApiAdminReport> {
+  return adminFetchJson<ApiAdminReport>(`/reports/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status }),
   });
 }

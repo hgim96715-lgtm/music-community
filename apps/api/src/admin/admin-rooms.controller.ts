@@ -31,6 +31,12 @@ export class AdminRoomsController {
     return this.adminRoomsService.list(query);
   }
 
+  @ApiOperation({ summary: '방 메시지 상세 (신고 원문)' })
+  @Get('messages/:messageId')
+  async getMessage(@Param('messageId', ParseUUIDPipe) messageId: string) {
+    return this.adminRoomsService.getMessage(messageId);
+  }
+
   @ApiOperation({
     summary: '방 상태 · active/closed/archived · 닫기·보관 시 reason',
   })

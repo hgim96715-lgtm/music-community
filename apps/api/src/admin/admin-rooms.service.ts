@@ -96,6 +96,48 @@ export class AdminRoomsService {
     };
   }
 
+  async getMessage(messageId: string) {
+    const row = await this.prisma.roomMessage.findUnique({
+      where: { id: messageId },
+      select: {
+        id: true,
+        roomId: true,
+        type: true,
+        body: true,
+        recommendationId: true,
+        deletedAt: true,
+        deletedByOwner: true,
+        createdAt: true,
+        sender: {
+          select: { id: true, nickname: true, email: true },
+        },
+        room: {
+          select: { id: true, name: true, status: true },
+        },
+        recommendation: {
+          select: { title: true, artist: true },
+        },
+      },
+    });
+    if (!row) throw new NotFoundException('메시지를 찾을 수 없습니다.');
+    return {
+      id: row.id,
+      roomId: row.roomId,
+      roomName: row.room.name,
+      roomStatus: row.room.status,
+      type: row.type,
+      body: row.body,
+      sender: row.sender,
+      recommendationId: row.recommendationId,
+      recommendationTitle: row.recommendation
+        ? `${row.recommendation.title} — ${row.recommendation.artist}`
+        : null,
+      deletedAt: row.deletedAt?.toISOString() ?? null,
+      deletedByOwner: row.deletedByOwner,
+      createdAt: row.createdAt.toISOString(),
+    };
+  }
+
   async update(id: string, dto: UpdateAdminRoomDto, adminUserId: string) {
     const room = await this.prisma.room.findUnique({ where: { id } });
     if (!room) throw new NotFoundException('방을 찾을 수 없습니다.');

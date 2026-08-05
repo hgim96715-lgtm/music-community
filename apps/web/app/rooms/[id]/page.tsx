@@ -87,6 +87,8 @@ import {
   ChatFontPrefs,
   getChatFontPrefs,
 } from '@/lib/chatFontStorage';
+import { createRoomMessageReport } from '@/lib/reports';
+import { ReportDialog } from '@/components/reports/ReportDialog';
 
 const ATTACH_ITEMS = [
   {
@@ -139,6 +141,7 @@ export default function RoomPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [actionHint, setActionHint] = useState<string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   /** Messages/인스타 — 꾹 누르면 뜨는 액션 시트 */
   const [actionTargetId, setActionTargetId] = useState<string | null>(null);
@@ -212,10 +215,18 @@ export default function RoomPage() {
 
   const showHideForMe = !!actionMsg && !isOwnerModTarget;
 
+  function showHint(message: string) {
+    setActionHint(message);
+    window.setTimeout(() => setActionHint(null), 2000);
+  }
+
   const [chatFont, setChatFont] = useState<ChatFontPrefs>({
     fontId: 'default',
     scale: 'M',
   });
+
+  const [reportTargetId, setReportTargetId] = useState<string | null>(null);
+  const [isReporting, setIsReporting] = useState(false);
 
   function applyDeletedMessage(m: ApiRoomMessage) {
     setMessages((prev) => {
@@ -643,6 +654,20 @@ export default function RoomPage() {
     }
   }
 
+  async function handleMessageReport(reason: string) {
+    if (!reportTargetId || !roomId || isReporting) return;
+    setIsReporting(true);
+    setError('');
+    try {
+      await createRoomMessageReport(roomId, reportTargetId, reason);
+      setReportTargetId(null);
+      showHint('신고를 접수했어요');
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsReporting(false);
+    }
+  }
   function applyReactionLocal(payload: ToogleRoomMessageReactionResult) {
     if (!payload.messageId || !payload.userId || !payload.emoji) return;
     setMessages((prev) =>
@@ -960,6 +985,10 @@ export default function RoomPage() {
 
           {error ? (
             <p className={`${fieldErrorClassName} px-4 py-1`}>{error}</p>
+          ) : actionHint ? (
+            <p className="px-4 py-1 text-center text-xs text-[#a89880]">
+              {actionHint}
+            </p>
           ) : null}
 
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3.5 py-4">
@@ -1644,12 +1673,34 @@ export default function RoomPage() {
                           전체에서 삭제
                         </button>
                       ) : null}
+                      {actionMsg && actionMsg.senderId !== user.id ? (
+                        <button
+                          type="button"
+                          disabled={isReporting}
+                          onClick={() => {
+                            setReportTargetId(actionTargetId);
+                            setActionTargetId(null);
+                            setTapbackMoreOpen(false);
+                          }}
+                          className="rounded-full border border-amber-400/30 bg-[rgb(28_24_20/0.94)] px-3.5 py-2 text-[13px] font-semibold text-amber-300 shadow-[0_4px_16px_rgb(0_0_0/0.3)] backdrop-blur-md transition-transform active:scale-95 disabled:opacity-40">
+                          신고
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </div>,
                 document.body,
               )
             : null}
+          <ReportDialog
+            open={reportTargetId !== null}
+            title="이 메시지를 신고할까요?"
+            isPending={isReporting}
+            onClose={() => {
+              if (!isReporting) setReportTargetId(null);
+            }}
+            onSubmit={handleMessageReport}
+          />
 
           <FeedDialog
             open={deleteTargetId !== null}

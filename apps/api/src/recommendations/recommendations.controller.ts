@@ -24,12 +24,15 @@ import { ActiveAccountGuard } from 'src/auth/active-account.guard';
 import { UpdateRecommendationDto } from './dto/update-recommendation.dto';
 import { ListRecommendationsQueryDto } from './dto/list-recommendations-query.dto';
 import { OptionalJwtAuthGuard } from 'src/auth/optional-jwt-auth.guard';
+import { ReportsService } from 'src/reports/reports.service';
+import { CreateReportDto } from 'src/reports/dto/create-report.dto';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
 export class RecommendationsController {
   constructor(
     private readonly recommendationsService: RecommendationsService,
+    private readonly reportsService: ReportsService,
   ) {}
 
   @ApiOperation({
@@ -143,6 +146,22 @@ export class RecommendationsController {
     @UserId() authorId: string,
   ) {
     return await this.recommendationsService.create(dto, authorId);
+  }
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '피드 추천 신고' })
+  @Post(':id/reports')
+  @UseGuards(JwtAuthGuard, ActiveAccountGuard)
+  async report(
+    @Param('id', ParseUUIDPipe) recommendationId: string,
+    @UserId() userId: string,
+    @Body() dto: CreateReportDto,
+  ) {
+    return await this.reportsService.createRecommendationReport(
+      recommendationId,
+      userId,
+      dto.reason,
+    );
   }
 
   @ApiBearerAuth('access-token')

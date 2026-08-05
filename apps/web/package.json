@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3031",
+    "dev:fresh": "rm -rf .next && next dev --port 3031",
     "build": "next build",
     "start": "next start --port 3031",
     "lint": "eslint"

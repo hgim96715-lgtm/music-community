@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageCircle, PencilIcon, Share2, Trash2 } from 'lucide-react';
+import { Flag, MessageCircle, PencilIcon, Share2, Trash2 } from 'lucide-react';
 import { ACTION_BTN, ACTION_ICON, COUNT_SLOT } from '@/lib/feedCardActions';
 import { HeartButton } from './HeartButton';
 import { MoodNapkin } from './MoodNapkin';
@@ -20,6 +20,8 @@ import { brandPillBtn } from '@/lib/neobrutal';
 import { FeedAuthorNickname } from '@/components/friends/FeedAuthorNickname';
 import { CommentAvatar } from './CommentAvatar';
 import { CommentEmojiPicker } from './CommentEmojiPicker';
+import { createCommentReport } from '@/lib/reports';
+import { ReportDialog } from '../reports/ReportDialog';
 
 type FeedCardFooterProps = {
   recommendationId: string;
@@ -99,6 +101,9 @@ export function FeedCardFooter({
   const [deletingPendingId, setDeletingPendingId] = useState<string | null>(
     null,
   );
+  const [reportCommentId, setReportCommentId] = useState<string | null>(null);
+  const [reportLoginOpen, setReportLoginOpen] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
 
   useEffect(() => {
     setDisplayedCommentCount(commentCount);
@@ -206,6 +211,30 @@ export function FeedCardFooter({
       showHint('댓글을 삭제하지 못했어요');
     } finally {
       setDeletingPendingId(null);
+    }
+  }
+
+  function openCommentReport(commentId: string) {
+    if (!user) {
+      window.setTimeout(() => setReportLoginOpen(true), 0);
+      return;
+    }
+    window.setTimeout(() => setReportCommentId(commentId), 0);
+  }
+
+  async function handleCommentReport(reason: string) {
+    if (!reportCommentId || isReporting) return;
+    setIsReporting(true);
+    try {
+      await createCommentReport(reportCommentId, reason);
+      setReportCommentId(null);
+      showHint('신고를 접수했어요');
+    } catch (error) {
+      throw error instanceof Error
+        ? error
+        : new Error('신고에 실패했습니다.');
+    } finally {
+      setIsReporting(false);
     }
   }
 
@@ -360,16 +389,26 @@ export function FeedCardFooter({
                             <Trash2 className="size-3.5" aria-hidden />
                           </button>
                         </div>
-                      ) : user?.role === 'admin' &&
-                        comment.authorId !== user.id ? (
-                        <button
-                          type="button"
-                          onClick={() => handleCommentDelete(comment.id)}
-                          aria-label="댓글 삭제"
-                          disabled={deletingPendingId === comment.id}
-                          className="shrink-0 rounded-full p-1 text-neutral-400 hover:bg-red-50 hover:text-red-500">
-                          <Trash2 className="size-3.5" aria-hidden />
-                        </button>
+                      ) : comment.authorId !== user?.id ? (
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          {user?.role === 'admin' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleCommentDelete(comment.id)}
+                              aria-label="댓글 삭제"
+                              disabled={deletingPendingId === comment.id}
+                              className="rounded-full p-1 text-neutral-400 hover:bg-red-50 hover:text-red-500">
+                              <Trash2 className="size-3.5" aria-hidden />
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            onClick={() => openCommentReport(comment.id)}
+                            aria-label="댓글 신고"
+                            className="rounded-full p-1 text-neutral-400 hover:bg-amber-50 hover:text-amber-600">
+                            <Flag className="size-3.5" aria-hidden />
+                          </button>
+                        </div>
                       ) : null}
                     </div>
 
@@ -418,6 +457,22 @@ export function FeedCardFooter({
         </section>
       ) : null}
 
+      <ReportDialog
+        open={reportCommentId !== null}
+        title="이 댓글을 신고할까요?"
+        isPending={isReporting}
+        onClose={() => {
+          if (!isReporting) setReportCommentId(null);
+        }}
+        onSubmit={handleCommentReport}
+      />
+      <LoginPromptDialog
+        open={reportLoginOpen}
+        onClose={() => setReportLoginOpen(false)}
+        redirectPath="/recommendations"
+        title="로그인이 필요해요"
+        description="신고하려면 로그인해 주세요."
+      />
       <LoginPromptDialog
         open={loginDialogOpen}
         onClose={() => setLoginDialogOpen(false)}
