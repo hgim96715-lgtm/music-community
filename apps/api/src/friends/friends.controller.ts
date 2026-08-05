@@ -45,6 +45,7 @@ export class FriendsController {
 
   @ApiOperation({ summary: '친구 요청 보내기' })
   @Post('requests')
+  @HttpCode(HttpStatus.CREATED)
   async createRequest(
     @UserId() userId: string,
     @Body() dto: CreateFriendRequestDto,

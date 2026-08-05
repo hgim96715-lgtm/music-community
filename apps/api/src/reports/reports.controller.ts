@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -22,6 +24,7 @@ export class ReportsController {
 
   @ApiOperation({ summary: '댓글 신고' })
   @Post('comments/:id/reports')
+  @HttpCode(HttpStatus.CREATED)
   async createCommentReport(
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) commentId: string,
@@ -36,6 +39,7 @@ export class ReportsController {
 
   @ApiOperation({ summary: '방 메시지 신고' })
   @Post('rooms/:id/messages/:messageId/reports')
+  @HttpCode(HttpStatus.CREATED)
   async reportRoomMessage(
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) roomId: string,

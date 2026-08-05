@@ -73,6 +73,7 @@ export class RoomsController {
 
   @ApiOperation({ summary: '방 생성 (생성자=방장)' })
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async create(@UserId() userId: string, @Body() dto: CreateRoomDto) {
     return await this.roomsService.create(userId, dto);
   }
@@ -161,6 +162,7 @@ export class RoomsController {
 
   @ApiOperation({ summary: '방 메시지 전송' })
   @Post(':id/messages')
+  @HttpCode(HttpStatus.CREATED)
   async sendMessage(
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) roomId: string,

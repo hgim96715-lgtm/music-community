@@ -42,6 +42,7 @@ export class SavedCardsController {
 
   @ApiOperation({ summary: '추천을 포토카드로 저장 (본인 글만)' })
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async create(@UserId() userId: string, @Body() dto: CreateSavedCardDto) {
     return await this.savedCardsService.create(userId, dto);
   }

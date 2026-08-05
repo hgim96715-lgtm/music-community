@@ -56,6 +56,7 @@ export class RecommendationsController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '댓글 작성(로그인 필요)' })
   @Post(':id/comments')
+  @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')
   async createComment(
@@ -139,6 +140,7 @@ export class RecommendationsController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 등록 (로그인 필요)' })
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')
   async create(
@@ -151,6 +153,7 @@ export class RecommendationsController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '피드 추천 신고' })
   @Post(':id/reports')
+  @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard, ActiveAccountGuard)
   async report(
     @Param('id', ParseUUIDPipe) recommendationId: string,

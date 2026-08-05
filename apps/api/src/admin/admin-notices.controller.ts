@@ -42,6 +42,7 @@ export class AdminNoticesController {
 
   @ApiOperation({ summary: '공지 작성' })
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   create(@UserId() authorId: string, @Body() dto: CreateAdminNoticeDto) {
     return this.AdminNoticesService.create(authorId, dto);
   }

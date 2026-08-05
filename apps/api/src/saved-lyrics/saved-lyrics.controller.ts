@@ -41,6 +41,7 @@ export class SavedLyricsController {
 
   @ApiOperation({ summary: '가사 소절 저장 (듣다 저장)' })
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async create(@UserId() userId: string, @Body() dto: CreateSavedLyricDto) {
     return this.savedLyricsService.create(userId, dto);
   }

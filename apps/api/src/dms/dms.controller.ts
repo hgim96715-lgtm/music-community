@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -94,6 +96,7 @@ export class DmsController {
 
   @ApiOperation({ summary: 'DM 메시지 전송' })
   @Post(':id/messages')
+  @HttpCode(HttpStatus.CREATED)
   async sendMessage(
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) dmId: string,
