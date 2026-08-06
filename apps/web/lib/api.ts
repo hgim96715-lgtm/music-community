@@ -9,5 +9,6 @@ export * from './savedCards';
 export * from './savedLyrics';
 export * from './support';
 export * from './users';
+export * from './notifications';
 
 export type { WithdrawResult } from './apiTypes';

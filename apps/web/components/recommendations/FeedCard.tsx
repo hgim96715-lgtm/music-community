@@ -10,9 +10,15 @@ import { FeedCardMenu } from './FeedCardMenu';
 type FeedCardProps = {
   recommendation: Recommendation;
   onDeleted?: (id: string) => void;
+  /** 알림 딥링크 — 해당 댓글 펼침·하이라이트용 */
+  focusCommentId?: string | null;
 };
 
-export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
+export function FeedCard({
+  recommendation,
+  onDeleted,
+  focusCommentId,
+}: FeedCardProps) {
   const {
     id,
     title,
@@ -78,6 +84,7 @@ export function FeedCard({ recommendation, onDeleted }: FeedCardProps) {
             likeCount={likeCount}
             likedByMe={likedByMe}
             commentCount={commentCount}
+            focusCommentId={focusCommentId}
           />
         </div>
       </article>

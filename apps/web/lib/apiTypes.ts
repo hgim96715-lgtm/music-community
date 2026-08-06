@@ -229,6 +229,7 @@ export type ApiComment = {
   authorId: string;
   body: string;
   parentId: string | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
   author: ApiAuthor;
@@ -386,4 +387,18 @@ export type ApiAdminReport = {
 export type ApiAdminReportsPage = {
   items: ApiAdminReport[];
   nextCursor: string | null;
+};
+
+export type ApiNotificationType = 'comment_reply';
+
+export type ApiNotification = {
+  id: string;
+  userId: string;
+  type: ApiNotificationType;
+  recommendationId: string;
+  commentId: string;
+  actorId: string;
+  readAt: string | null;
+  createdAt: string;
+  actor: ApiAuthor;
 };

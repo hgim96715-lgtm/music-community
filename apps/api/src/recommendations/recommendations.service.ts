@@ -240,7 +240,7 @@ export class RecommendationsService {
     body: string,
   ) {
     const comment = await this.prisma.comment.findFirst({
-      where: { id: commentId, recommendationId },
+      where: { id: commentId, recommendationId, deletedAt: null },
       select: { id: true, authorId: true },
     });
     if (!comment) {
@@ -269,18 +269,19 @@ export class RecommendationsService {
     }
 
     let resolvedParentId: string | null = null;
+    let parentAuthorId: string | null = null;
     if (parentId) {
       const parent = await this.prisma.comment.findFirst({
-        where: { id: parentId, recommendationId },
-        select: { id: true },
+        where: { id: parentId, recommendationId, deletedAt: null },
+        select: { id: true, authorId: true },
       });
-      if (!parent) {
+      if (!parent)
         throw new NotFoundException('답글 대상 댓글을 찾을 수 없어요.');
-      }
       resolvedParentId = parent.id;
+      parentAuthorId = parent.authorId;
     }
 
-    return this.prisma.comment.create({
+    const created = await this.prisma.comment.create({
       data: {
         recommendationId,
         authorId,
@@ -289,6 +290,19 @@ export class RecommendationsService {
       },
       include: { author: { select: { id: true, nickname: true } } },
     });
+
+    if (parentAuthorId && parentAuthorId !== authorId) {
+      await this.prisma.notification.create({
+        data: {
+          userId: parentAuthorId,
+          type: 'comment_reply',
+          recommendationId,
+          commentId: created.id,
+          actorId: authorId,
+        },
+      });
+    }
+    return created;
   }
 
   // 본인·admin 삭제 — where에 authorId 넣으면 admin 경로가 막혀서 find 후 권한 검사
@@ -299,7 +313,7 @@ export class RecommendationsService {
   ) {
     await this.assertVisibleRecommendation(recommendationId);
     const comment = await this.prisma.comment.findFirst({
-      where: { id: commentId, recommendationId },
+      where: { id: commentId, recommendationId, deletedAt: null },
       select: { id: true, authorId: true },
     });
     if (!comment) {
@@ -314,6 +328,9 @@ export class RecommendationsService {
         throw new ForbiddenException('본인 댓글만 삭제할 수 있습니다.');
       }
     }
-    await this.prisma.comment.delete({ where: { id: commentId } });
+    await this.prisma.comment.update({
+      where: { id: commentId },
+      data: { deletedAt: new Date(), body: '' },
+    });
   }
 }

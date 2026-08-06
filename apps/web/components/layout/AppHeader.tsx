@@ -8,7 +8,7 @@ import {
   authLinkClassName,
 } from '@/lib/form';
 import { fetchMyRooms } from '@/lib/rooms';
-import { User } from 'lucide-react';
+import { Bell, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -21,6 +21,7 @@ import {
   onDmUnread,
   onRoomUnread,
 } from '@/lib/roomsSocket';
+import { fetchNotificationUnreadCount } from '@/lib/notifications';
 
 export default function AppHeader() {
   const { user, isLoading } = useAuth();
@@ -28,18 +29,21 @@ export default function AppHeader() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [roomsUnread, setRoomsUnread] = useState(false);
   const [dmsUnread, setDmsUnread] = useState(false);
+  const [notificationsUnread, setNotificationsUnread] = useState(false);
 
   const refreshUnread = useCallback(async () => {
     if (!user?.id) {
       setRoomsUnread(false);
       setDmsUnread(false);
+      setNotificationsUnread(false);
       return;
     }
     try {
-      const [mine, dms, requests] = await Promise.all([
+      const [mine, dms, requests, notif] = await Promise.all([
         fetchMyRooms(),
         fetchMyDms(),
         fetchDmRequests(),
+        fetchNotificationUnreadCount(),
       ]);
       setRoomsUnread(
         mine.some(
@@ -47,9 +51,11 @@ export default function AppHeader() {
         ),
       );
       setDmsUnread(dms.some((dm) => dm.unread) || requests.length > 0);
+      setNotificationsUnread(notif.count > 0);
     } catch {
       setRoomsUnread(false);
       setDmsUnread(false);
+      setNotificationsUnread(false);
     }
   }, [user?.id]);
 
@@ -62,6 +68,7 @@ export default function AppHeader() {
     if (!user?.id) {
       setRoomsUnread(false);
       setDmsUnread(false);
+      setNotificationsUnread(false);
       return;
     }
     void refreshUnread();
@@ -124,6 +131,18 @@ export default function AppHeader() {
                 {dmsUnread ? (
                   <span
                     className="absolute right-0.5 top-1 size-1.5 rounded-full bg-brand-primary"
+                    aria-hidden
+                  />
+                ) : null}
+              </Link>
+              <Link
+                href="/notifications"
+                className={`relative inline-flex items-center justify-center ${appNavLinkClassName}`}
+                aria-label={notificationsUnread ? '알림 (안 읽음)' : '알림'}>
+                <Bell className="size-4" strokeWidth={1.75} aria-hidden />
+                {notificationsUnread ? (
+                  <span
+                    className="absolute right-1.5 top-1 size-1.5 rounded-full bg-brand-primary"
                     aria-hidden
                   />
                 ) : null}

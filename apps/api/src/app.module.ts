@@ -16,6 +16,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { DmsModule } from './dms/dms.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { ReportsModule } from './reports/reports.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ReportsModule } from './reports/reports.module';
     SupportModule,
     DmsModule,
     ReportsModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
 })

@@ -46,6 +46,7 @@ type FeedCardFooterProps = {
   likeCount: number;
   likedByMe?: boolean;
   commentCount: number;
+  focusCommentId?: string | null;
 };
 
 export function FeedCardFooter({
@@ -61,6 +62,7 @@ export function FeedCardFooter({
   likeCount,
   likedByMe,
   commentCount,
+  focusCommentId,
 }: FeedCardFooterProps) {
   const { user } = useAuth();
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -87,6 +89,11 @@ export function FeedCardFooter({
   const replyInputRef = useRef<HTMLInputElement>(null);
   const replyComposerRef = useRef<HTMLLIElement>(null);
 
+  function showHint(message: string) {
+    setActionHint(message);
+    window.setTimeout(() => setActionHint(null), 2000);
+  }
+
   useEffect(() => {
     setDisplayedCommentCount(commentCount);
   }, [commentCount]);
@@ -100,13 +107,45 @@ export function FeedCardFooter({
     replyInputRef.current?.focus();
   }, [replyToId]);
 
-  function showHint(message: string) {
-    setActionHint(message);
-    window.setTimeout(() => setActionHint(null), 2000);
-  }
+  useEffect(() => {
+    if (!focusCommentId) return;
+    let cancelled = false;
+    async function openFocused() {
+      setCommentsOpen(true);
+      setCommentsLoading(true);
+      try {
+        const data = await fetchComments(recommendationId);
+        if (cancelled) return;
+        const flat = flattenCommentThread(data);
+        setComments(flat);
+        setDisplayedCommentCount(data.length);
+        const rootId = commentRootId(flat, focusCommentId!);
+        setExpandedRootIds(new Set([rootId]));
+      } catch {
+        if (!cancelled) {
+          setCommentsOpen(false);
+          showHint('댓글을 불러오지 못했어요');
+        }
+      } finally {
+        if (!cancelled) {
+          setCommentsLoading(false);
+        }
+      }
+    }
+    void openFocused();
+    return () => {
+      cancelled = true;
+    };
+  }, [focusCommentId, recommendationId]);
 
-  async function handleShare() {
-    const url =
+  useEffect(() => {
+    if (!focusCommentId || commentsLoading || !commentsOpen) return;
+    document
+      .getElementById(`feed-comment-${focusCommentId}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [focusCommentId, commentsLoading, commentsOpen, comments]);
+
+  async function handleShare() {    const url =
       typeof window !== 'undefined'
         ? `${window.location.origin}/recommendations/${recommendationId}`
         : `/recommendations/${recommendationId}`;
@@ -218,7 +257,13 @@ export function FeedCardFooter({
     try {
       setDeletingPendingId(commentId);
       await deleteComment(recommendationId, commentId);
-      setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId
+            ? { ...c, deletedAt: new Date().toISOString(), body: '' }
+            : c,
+        ),
+      );
       setDisplayedCommentCount((count) => Math.max(0, count - 1));
       if (editingCommentId === commentId) cancelCommentEdit();
       if (replyToId === commentId) setReplyToId(null);
@@ -407,14 +452,20 @@ export function FeedCardFooter({
                 const showMoreReplies =
                   hiddenReplyCount > 0 &&
                   lastVisibleInThread?.id === comment.id;
+                const isDeleted = comment.deletedAt != null;
 
                 return (
                   <Fragment key={comment.id}>
                     <li
+                      id={`feed-comment-${comment.id}`}
                       style={
                         indent > 0 ? { paddingLeft: indent * 28 } : undefined
                       }
                       className={`flex gap-2.5 ${
+                        comment.id === focusCommentId
+                          ? 'rounded-lg bg-[rgb(201_166_107/0.14)] ring-1 ring-[rgb(201_166_107/0.35)]'
+                          : ''
+                      } ${
                         startsRootThread
                           ? 'mt-3 border-t border-[rgb(201_166_107/0.12)] pt-3'
                           : depth === 0
@@ -423,147 +474,168 @@ export function FeedCardFooter({
                       }`}>
                       <CommentAvatar nickname={comment.author.nickname} />
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="min-w-0 font-sans text-xs leading-5">
-                            <FeedAuthorNickname
-                              userId={comment.author.id}
-                              nickname={comment.author.nickname}
-                              className="font-medium text-[#ebe4da]"
-                            />
-
-                            <span className="text-[#a89880]/70"> · </span>
-                            <time
-                              dateTime={comment.createdAt}
-                              className="font-medium text-[#a89880]">
-                              {formatCommentDate(comment.createdAt)}
-                            </time>
-                            {comment.updatedAt !== comment.createdAt ? (
-                              <span className="ml-1.5 inline rounded-full bg-[rgb(201_166_107/0.16)] px-1.5 py-px text-[10px] font-medium text-brand-primary">
-                                수정됨
-                              </span>
-                            ) : null}
+                        {isDeleted ? (
+                          <p className="py-0.5 font-sans text-sm italic text-[#a89880]/80">
+                            삭제된 댓글
                           </p>
-
-                          {user &&
-                          comment.authorId === user.id &&
-                          editingCommentId !== comment.id ? (
-                            <div className="flex shrink-0 items-center gap-0.5">
-                              <button
-                                type="button"
-                                onClick={() => startCommentEdit(comment)}
-                                aria-label="댓글 수정"
-                                className="rounded-full p-1 text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-brand-primary">
-                                <PencilIcon className="size-3.5" aria-hidden />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleCommentDelete(comment.id)}
-                                aria-label="댓글 삭제"
-                                disabled={deletingPendingId === comment.id}
-                                className="rounded-full p-1 text-[#a89880] transition-colors hover:bg-red-400/10 hover:text-red-300">
-                                <Trash2 className="size-3.5" aria-hidden />
-                              </button>
-                            </div>
-                          ) : comment.authorId !== user?.id ? (
-                            <div className="flex shrink-0 items-center gap-0.5">
-                              {user?.role === 'admin' ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleCommentDelete(comment.id)
-                                  }
-                                  aria-label="댓글 삭제"
-                                  disabled={deletingPendingId === comment.id}
-                                  className="rounded-full p-1 text-[#a89880] transition-colors hover:bg-red-400/10 hover:text-red-300">
-                                  <Trash2 className="size-3.5" aria-hidden />
-                                </button>
-                              ) : null}
-                              <button
-                                type="button"
-                                onClick={() => openCommentReport(comment.id)}
-                                aria-label="댓글 신고"
-                                className="rounded-full p-1 text-[#a89880] transition-colors hover:bg-amber-400/10 hover:text-amber-300">
-                                <Flag className="size-3.5" aria-hidden />
-                              </button>
-                            </div>
-                          ) : null}
-                        </div>
-
-                        {parent ? (
-                          <p className="mt-0.5 font-sans text-[11px] text-[#a89880]/85">
-                            ↳ @{parent.author.nickname}
-                          </p>
-                        ) : null}
-
-                        {editingCommentId === comment.id ? (
-                          <form
-                            className="mt-2 flex items-center gap-1.5 rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.85)] py-1 pl-3 pr-1.5"
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              void handleCommentUpdate(comment.id);
-                            }}>
-                            <input
-                              type="text"
-                              value={editDraft}
-                              onChange={(e) => setEditDraft(e.target.value)}
-                              className="min-w-0 flex-1 bg-transparent py-1.5 font-sans text-sm text-[#ebe4da] focus:outline-none"
-                              disabled={editingPendingId === comment.id}
-                            />
-                            <button
-                              type="submit"
-                              disabled={
-                                !editDraft.trim() ||
-                                editingPendingId === comment.id
-                              }
-                              className={`${brandPillBtn} shrink-0 !px-2.5 !py-1 !text-[11px] disabled:opacity-40`}>
-                              {editingPendingId === comment.id
-                                ? '수정 중…'
-                                : '저장'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={cancelCommentEdit}
-                              disabled={editingPendingId === comment.id}
-                              className="shrink-0 px-2 font-sans text-[11px] text-[#a89880] hover:text-[#ebe4da]">
-                              취소
-                            </button>
-                          </form>
                         ) : (
                           <>
-                            <p className="mt-0.5 break-words font-sans text-[0.9375rem] leading-relaxed text-[#d4c8b8]">
-                              {comment.body}
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!user) {
-                                  setLoginDialogOpen(true);
-                                  return;
-                                }
-                                setReplyToId(comment.id);
-                                setEditingCommentId(null);
-                                setExpandedRootIds((prev) => {
-                                  const next = new Set(prev);
-                                  next.add(
-                                    commentRootId(comments, comment.id),
-                                  );
-                                  return next;
-                                });
-                              }}
-                              className="mt-0.5 font-sans text-[11px] font-medium text-[#a89880] hover:text-brand-primary">
-                              답글
-                            </button>
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="min-w-0 font-sans text-xs leading-5">
+                                <FeedAuthorNickname
+                                  userId={comment.author.id}
+                                  nickname={comment.author.nickname}
+                                  className="font-medium text-[#ebe4da]"
+                                />
+
+                                <span className="text-[#a89880]/70"> · </span>
+                                <time
+                                  dateTime={comment.createdAt}
+                                  className="font-medium text-[#a89880]">
+                                  {formatCommentDate(comment.createdAt)}
+                                </time>
+                                {comment.updatedAt !== comment.createdAt ? (
+                                  <span className="ml-1.5 inline rounded-full bg-[rgb(201_166_107/0.16)] px-1.5 py-px text-[10px] font-medium text-brand-primary">
+                                    수정됨
+                                  </span>
+                                ) : null}
+                              </p>
+
+                              {user &&
+                              comment.authorId === user.id &&
+                              editingCommentId !== comment.id ? (
+                                <div className="flex shrink-0 items-center gap-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => startCommentEdit(comment)}
+                                    aria-label="댓글 수정"
+                                    className="rounded-full p-1 text-[#a89880] transition-colors hover:bg-[rgb(201_166_107/0.12)] hover:text-brand-primary">
+                                    <PencilIcon
+                                      className="size-3.5"
+                                      aria-hidden
+                                    />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleCommentDelete(comment.id)
+                                    }
+                                    aria-label="댓글 삭제"
+                                    disabled={deletingPendingId === comment.id}
+                                    className="rounded-full p-1 text-[#a89880] transition-colors hover:bg-red-400/10 hover:text-red-300">
+                                    <Trash2 className="size-3.5" aria-hidden />
+                                  </button>
+                                </div>
+                              ) : comment.authorId !== user?.id ? (
+                                <div className="flex shrink-0 items-center gap-0.5">
+                                  {user?.role === 'admin' ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleCommentDelete(comment.id)
+                                      }
+                                      aria-label="댓글 삭제"
+                                      disabled={
+                                        deletingPendingId === comment.id
+                                      }
+                                      className="rounded-full p-1 text-[#a89880] transition-colors hover:bg-red-400/10 hover:text-red-300">
+                                      <Trash2
+                                        className="size-3.5"
+                                        aria-hidden
+                                      />
+                                    </button>
+                                  ) : null}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      openCommentReport(comment.id)
+                                    }
+                                    aria-label="댓글 신고"
+                                    className="rounded-full p-1 text-[#a89880] transition-colors hover:bg-amber-400/10 hover:text-amber-300">
+                                    <Flag className="size-3.5" aria-hidden />
+                                  </button>
+                                </div>
+                              ) : null}
+                            </div>
+
+                            {parent ? (
+                              <p className="mt-0.5 font-sans text-[11px] text-[#a89880]/85">
+                                ↳ @{parent.author.nickname}
+                              </p>
+                            ) : null}
+
+                            {editingCommentId === comment.id ? (
+                              <form
+                                className="mt-2 flex items-center gap-1.5 rounded-full border border-[rgb(201_166_107/0.28)] bg-[rgb(28_24_20/0.85)] py-1 pl-3 pr-1.5"
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  void handleCommentUpdate(comment.id);
+                                }}>
+                                <input
+                                  type="text"
+                                  value={editDraft}
+                                  onChange={(e) => setEditDraft(e.target.value)}
+                                  className="min-w-0 flex-1 bg-transparent py-1.5 font-sans text-sm text-[#ebe4da] focus:outline-none"
+                                  disabled={editingPendingId === comment.id}
+                                />
+                                <button
+                                  type="submit"
+                                  disabled={
+                                    !editDraft.trim() ||
+                                    editingPendingId === comment.id
+                                  }
+                                  className={`${brandPillBtn} shrink-0 !px-2.5 !py-1 !text-[11px] disabled:opacity-40`}>
+                                  {editingPendingId === comment.id
+                                    ? '수정 중…'
+                                    : '저장'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={cancelCommentEdit}
+                                  disabled={editingPendingId === comment.id}
+                                  className="shrink-0 px-2 font-sans text-[11px] text-[#a89880] hover:text-[#ebe4da]">
+                                  취소
+                                </button>
+                              </form>
+                            ) : (
+                              <>
+                                <p className="mt-0.5 break-words font-sans text-[0.9375rem] leading-relaxed text-[#d4c8b8]">
+                                  {comment.body}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (!user) {
+                                      setLoginDialogOpen(true);
+                                      return;
+                                    }
+                                    setReplyToId(comment.id);
+                                    setEditingCommentId(null);
+                                    setExpandedRootIds((prev) => {
+                                      const next = new Set(prev);
+                                      next.add(
+                                        commentRootId(comments, comment.id),
+                                      );
+                                      return next;
+                                    });
+                                  }}
+                                  className="mt-0.5 font-sans text-[11px] font-medium text-[#a89880] hover:text-brand-primary">
+                                  답글
+                                </button>
+                              </>
+                            )}
                           </>
                         )}
                       </div>
                     </li>
 
-                    {replyToId === comment.id && user ? (
+                    {replyToId === comment.id && user && !isDeleted ? (
                       <li
                         ref={replyComposerRef}
                         className="py-2"
                         style={{
-                          paddingLeft: Math.min(depth + 1, REPLY_INDENT_CAP) * 28,
+                          paddingLeft:
+                            Math.min(depth + 1, REPLY_INDENT_CAP) * 28,
                         }}>
                         {renderCommentComposer()}
                       </li>

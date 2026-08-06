@@ -11,6 +11,7 @@ import { FeedNoteDivider } from './FeedNoteDivider';
 import { SavedCardsFeedProvider } from '@/components/saved-cards/SavedCardsFeedContext';
 import { AvatarActionProvider } from '../friends/AvatarActionContext';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 type FeedFilter = 'all' | 'friends';
 
@@ -23,6 +24,17 @@ export function FeedList() {
   const [olderCursor, setOlderCursor] = useState<string | null>(null);
   const [hasOlder, setHasOlder] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const searchParams = useSearchParams();
+  const focusId = searchParams.get('id')?.trim() || null;
+  const focusCommentId = searchParams.get('commentId')?.trim() || null;
+
+  useEffect(() => {
+    if (!focusId || isLoading) return;
+    document
+      .getElementById(`feed-card-${focusId}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [focusId, isLoading, items]);
 
   const handleDeleted = (id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
@@ -237,7 +249,15 @@ export function FeedList() {
               {items.map((item, index) => (
                 <li key={item.id} className="flex flex-col gap-5">
                   {index > 0 ? <FeedNoteDivider /> : null}
-                  <FeedCard recommendation={item} onDeleted={handleDeleted} />
+                  <div id={`feed-card-${item.id}`}>
+                    <FeedCard
+                      recommendation={item}
+                      onDeleted={handleDeleted}
+                      focusCommentId={
+                        item.id === focusId ? focusCommentId : null
+                      }
+                    />
+                  </div>
                 </li>
               ))}
             </ul>
