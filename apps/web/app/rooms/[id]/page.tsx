@@ -1051,7 +1051,9 @@ export default function RoomPage() {
                                 : 'room-bubble--other rounded-[1.25rem] rounded-bl-md border border-[rgb(201_166_107/0.18)] bg-[rgb(42_36_30/0.72)] text-[#a89880] shadow-[0_1px_4px_rgb(0_0_0/0.25)]'
                             }`}>
                             <span className="italic">
-                              방장에 의해 삭제되었습니다
+                              {m.deletedById && m.deletedById === room.ownerId
+                                ? '방장에 의해 삭제되었습니다'
+                                : '이 메시지는 삭제되었습니다'}
                             </span>
                           </div>
                         ) : (

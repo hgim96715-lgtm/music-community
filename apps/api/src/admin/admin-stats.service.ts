@@ -6,6 +6,7 @@ import {
   startOfKstDay,
   toKstDateKey,
 } from 'src/common/kst-date';
+import { AdminStatsMetric } from 'src/generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 const DAILY_STATS_DAYS = 7;
@@ -15,11 +16,16 @@ const MS_PER_DAY = 86_400_000;
 export class AdminStatsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private static readonly DAY_TOTAL_HOUR = -1;
+
   private startOfKstYear(reference = new Date()): Date {
     return new Date(`${getKstYear(reference)}-01-01T00:00:00+09:00`);
   }
 
-  private buildDailyBuckets(days: number, reference = new Date()): Map<string, number> {
+  private buildDailyBuckets(
+    days: number,
+    reference = new Date(),
+  ): Map<string, number> {
     const buckets = new Map<string, number>();
     const anchor = startOfKstDay(reference);
 
@@ -50,6 +56,54 @@ export class AdminStatsService {
       buckets.set(hour, 0);
     }
     return buckets;
+  }
+
+  async snapshotKstDay(day: Date = new Date()) {
+    const dayStart = startOfKstDay(day);
+    const dayEnd = new Date(dayStart.getTime() + MS_PER_DAY);
+    const dateKey = toKstDateKey(dayStart);
+    const dateOnly = new Date(`${dateKey}T00:00:00.000Z`);
+
+    const [recommendations, signups, active] = await Promise.all([
+      this.prisma.recommendation.count({
+        where: { createdAt: { gte: dayStart, lte: dayEnd } },
+      }),
+      this.prisma.user.count({
+        where: { role: 'user', createdAt: { gte: dayStart, lte: dayEnd } },
+      }),
+      this.prisma.user.count({
+        where: { role: 'user', lastActiveAt: { gte: dayStart, lte: dayEnd } },
+      }),
+    ]);
+    const rows = [
+      { metric: AdminStatsMetric.recommendations, count: recommendations },
+      { metric: AdminStatsMetric.signups, count: signups },
+      { metric: AdminStatsMetric.active, count: active },
+    ] as const;
+
+    await this.prisma.$transaction(
+      rows.map(({ metric, count }) =>
+        this.prisma.adminStatsDailySnapshot.upsert({
+          where: {
+            date_hour_metric: {
+              date: dateOnly,
+              hour: AdminStatsService.DAY_TOTAL_HOUR,
+              metric,
+            },
+          },
+          create: {
+            date: dateOnly,
+            hour: AdminStatsService.DAY_TOTAL_HOUR,
+            metric,
+            count,
+          },
+          update: {
+            count,
+          },
+        }),
+      ),
+    );
+    return { date: dateKey, recommendations, signups, active };
   }
 
   async getStats() {

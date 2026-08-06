@@ -1,7 +1,12 @@
 'use client';
 
-import { adminFetchJson, adminFetchVoid } from '@/lib/adminFetch';
-import type { ApiAdminRecommendation } from '@/lib/apiTypes';
+import { FeedDialog } from '@/components/recommendations/FeedDialog';
+import {
+  adminFetchJson,
+  adminFetchVoid,
+  deleteAdminComment,
+} from '@/lib/adminFetch';
+import { ApiComment, type ApiAdminRecommendation } from '@/lib/apiTypes';
 import {
   adminMutedClassName,
   adminOutlineBtnClassName,
@@ -10,6 +15,7 @@ import {
   adminTableRowClassName,
   authTitleClassName,
 } from '@/lib/form';
+import { fetchComments } from '@/lib/recommendations';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -19,11 +25,49 @@ export default function AdminRecommendationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [comments, setComments] = useState<ApiComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(
+    null,
+  );
+  const [commentDeleteId, setCommentDeleteId] = useState<string | null>(null);
+  const [focusCommentId, setFocusCommentId] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get('id')?.trim();
-    setFocusId(id || null);
+    const params = new URLSearchParams(window.location.search);
+    setFocusId(params.get('id')?.trim() || null);
+    setFocusCommentId(params.get('commentId')?.trim() || null);
   }, []);
+
+  useEffect(() => {
+    if (!focusId) {
+      setComments([]);
+      return;
+    }
+    let cancelled = false;
+    async function loadComments() {
+      setCommentsLoading(true);
+      try {
+        const list = await fetchComments(focusId!);
+        if (!cancelled) setComments(list);
+      } catch {
+        if (!cancelled) setComments([]);
+      } finally {
+        if (!cancelled) setCommentsLoading(false);
+      }
+    }
+    void loadComments();
+    return () => {
+      cancelled = true;
+    };
+  }, [focusId]);
+
+  useEffect(() => {
+    if (!focusCommentId || commentsLoading) return;
+    document
+      .getElementById(`admin-comment-${focusCommentId}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [focusCommentId, commentsLoading, comments]);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +130,25 @@ export default function AdminRecommendationsPage() {
     }
   }
 
+  async function confirmDeleteComment() {
+    if (!focusId || !commentDeleteId || deletingCommentId) return;
+    setDeletingCommentId(commentDeleteId);
+    setError('');
+    try {
+      await deleteAdminComment(focusId, commentDeleteId);
+      setComments((prev) =>
+        prev.filter((comment) => comment.id !== commentDeleteId),
+      );
+      setCommentDeleteId(null);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : '댓글을 삭제하지 못했어요.',
+      );
+    } finally {
+      setDeletingCommentId(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -98,7 +161,11 @@ export default function AdminRecommendationsPage() {
           </Link>
         ) : null}
       </div>
-      {focusId ? (
+      {focusCommentId ? (
+        <p className={adminMutedClassName}>
+          신고에서 연 댓글을 강조해요. 없으면 삭제되었거나 id가 달라요.
+        </p>
+      ) : focusId ? (
         <p className={adminMutedClassName}>
           신고에서 연 글만 보여요. 없으면 삭제되었거나 id가 달라요.
         </p>
@@ -153,6 +220,53 @@ export default function AdminRecommendationsPage() {
                       분위기 · {row.moods.join(', ')}
                     </p>
                   ) : null}
+                  <div className="border-t border-[rgb(201_166_107/0.14)] pt-3">
+                    <p className="mb-2 text-xs font-medium text-[color:var(--color-lp-muted)]">
+                      댓글 {commentsLoading ? '' : `· ${comments.length}`}
+                    </p>
+                    {commentsLoading ? (
+                      <p className={adminMutedClassName}>댓글 불러오는 중…</p>
+                    ) : comments.length === 0 ? (
+                      <p className={adminMutedClassName}>댓글이 없어요.</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {comments.map((c) => {
+                          const focused = c.id === focusCommentId;
+                          return (
+                            <li
+                              key={c.id}
+                              id={`admin-comment-${c.id}`}
+                              className={`rounded-xl border px-3 py-2.5 ${
+                                focused
+                                  ? 'border-brand-primary/55 bg-[rgb(201_166_107/0.12)] ring-1 ring-brand-primary/35'
+                                  : 'border-[rgb(201_166_107/0.14)] bg-[rgb(20_16_12/0.45)]'
+                              }`}>
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-xs text-[color:var(--color-lp-muted)]">
+                                  @{c.author.nickname}
+                                  {focused ? (
+                                    <span className="ml-2 text-brand-primary">
+                                      · 신고 대상
+                                    </span>
+                                  ) : null}
+                                </p>
+                                <button
+                                  type="button"
+                                  disabled={deletingCommentId === c.id}
+                                  onClick={() => setCommentDeleteId(c.id)}
+                                  className="shrink-0 cursor-pointer rounded-full border border-red-400/40 px-2.5 py-1 text-[11px] font-semibold text-red-400 transition-colors hover:bg-red-400/10 disabled:opacity-50">
+                                  삭제
+                                </button>
+                              </div>
+                              <p className="mt-1 whitespace-pre-wrap break-words text-sm text-[color:var(--color-lp-cream)]">
+                                {c.body}
+                              </p>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
                   {row.embedUrl ? (
                     <a
                       href={row.embedUrl}
@@ -248,6 +362,18 @@ export default function AdminRecommendationsPage() {
           </div>
         </div>
       )}
+      <FeedDialog
+        open={commentDeleteId !== null}
+        title="이 댓글을 삭제할까요?"
+        description="신고 조치용이에요. 삭제한 뒤에는 되돌릴 수 없어요."
+        confirmLabel="삭제"
+        pendingLabel="삭제 중…"
+        isPending={deletingCommentId != null}
+        onClose={() => {
+          if (!deletingCommentId) setCommentDeleteId(null);
+        }}
+        onConfirm={() => void confirmDeleteComment()}
+      />
     </div>
   );
 }

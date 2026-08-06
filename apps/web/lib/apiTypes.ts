@@ -228,6 +228,7 @@ export type ApiComment = {
   recommendationId: string;
   authorId: string;
   body: string;
+  parentId: string | null;
   createdAt: string;
   updatedAt: string;
   author: ApiAuthor;

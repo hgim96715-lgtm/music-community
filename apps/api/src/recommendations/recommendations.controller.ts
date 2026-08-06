@@ -68,6 +68,7 @@ export class RecommendationsController {
       recommendationId,
       authorId,
       dto.body,
+      dto.parentId,
     );
   }
 

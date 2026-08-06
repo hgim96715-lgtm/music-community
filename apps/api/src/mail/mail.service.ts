@@ -101,4 +101,18 @@ export class MailService {
       throw error;
     }
   }
+  async sendOpsAlert(subject: string, body: string): Promise<void> {
+    try {
+      await this.transporter.sendMail({
+        from: this.mailFrom,
+        to: this.supportTo,
+        subject: `[ops] ${subject.trim()}`,
+        text: body.trim(),
+      });
+    } catch (error) {
+      this.logger.error(
+        `ops 메일 전송 실패 · error=${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 }

@@ -138,6 +138,110 @@ export class AdminRoomsService {
     };
   }
 
+  async deleteMessage(roomId: string, messageId: string, adminUserId: string) {
+    const message = await this.prisma.roomMessage.findFirst({
+      where: { id: messageId, roomId },
+      select: {
+        id: true,
+        roomId: true,
+        senderId: true,
+        type: true,
+        replyToId: true,
+        createdAt: true,
+        deletedAt: true,
+        sender: { select: { id: true, nickname: true } },
+        replyTo: {
+          select: {
+            id: true,
+            body: true,
+            senderId: true,
+            deletedAt: true,
+            sender: { select: { id: true, nickname: true } },
+          },
+        },
+      },
+    });
+    if (!message) throw new NotFoundException('메시지를 찾을 수 없습니다.');
+    if (message.deletedAt) {
+      return {
+        id: message.id,
+        roomId: message.roomId,
+        senderId: message.senderId,
+        type: message.type,
+        body: null,
+        recommendationId: null,
+        savedCardId: null,
+        lyricStartSec: null,
+        lyricEndSec: null,
+        replyToId: message.replyToId,
+        createdAt: message.createdAt,
+        deletedAt: message.deletedAt,
+        deletedByOwner: true,
+        deletedById: adminUserId,
+        sender: message.sender,
+        recommendation: null,
+        savedCard: null,
+        reactions: [],
+        replyTo: message.replyTo,
+      };
+    }
+    const updated = await this.prisma.roomMessage.update({
+      where: { id: messageId },
+      data: {
+        deletedAt: new Date(),
+        deletedByOwner: true,
+        deletedById: adminUserId,
+        body: null,
+        recommendationId: null,
+        savedCardId: null,
+        lyricStartSec: null,
+        lyricEndSec: null,
+      },
+      select: {
+        id: true,
+        roomId: true,
+        senderId: true,
+        type: true,
+        replyToId: true,
+        createdAt: true,
+        deletedAt: true,
+        deletedByOwner: true,
+        deletedById: true,
+        sender: { select: { id: true, nickname: true } },
+        replyTo: {
+          select: {
+            id: true,
+            body: true,
+            senderId: true,
+            deletedAt: true,
+            sender: { select: { id: true, nickname: true } },
+          },
+        },
+      },
+    });
+    return {
+      id: updated.id,
+      roomId: updated.roomId,
+      senderId: updated.senderId,
+      type: updated.type,
+      body: null,
+      recommendationId: null,
+      savedCardId: null,
+      lyricStartSec: null,
+      lyricEndSec: null,
+      replyToId: updated.replyToId,
+      createdAt: updated.createdAt,
+      deletedAt: updated.deletedAt,
+      deletedByOwner: true,
+      deletedById: updated.deletedById,
+      sender: updated.sender,
+      recommendation: null,
+      savedCard: null,
+      reactions: [],
+      replyTo: updated.replyTo,
+    };
+  }
+
   async update(id: string, dto: UpdateAdminRoomDto, adminUserId: string) {
     const room = await this.prisma.room.findUnique({ where: { id } });
     if (!room) throw new NotFoundException('방을 찾을 수 없습니다.');

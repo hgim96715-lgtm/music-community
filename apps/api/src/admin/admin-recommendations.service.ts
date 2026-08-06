@@ -42,4 +42,14 @@ export class AdminRecommendationsService {
     await this.findOne(id);
     await this.prisma.recommendation.delete({ where: { id } });
   }
+
+  async removeComment(recommendationId: string, commentId: string) {
+    await this.findOne(recommendationId);
+    const comment = await this.prisma.comment.findFirst({
+      where: { id: commentId, recommendationId },
+      select: { id: true },
+    });
+    if (!comment) throw new NotFoundException('댓글을 찾을 수 없어요.');
+    await this.prisma.comment.delete({ where: { id: commentId } });
+  }
 }

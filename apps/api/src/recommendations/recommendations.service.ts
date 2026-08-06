@@ -260,14 +260,33 @@ export class RecommendationsService {
     recommendationId: string,
     authorId: string,
     body: string,
+    parentId?: string,
   ) {
     const recommendation =
       await this.assertVisibleRecommendation(recommendationId);
     if (recommendation.authorId !== authorId) {
       await this.assertNotBlocked(authorId, recommendation.authorId);
     }
+
+    let resolvedParentId: string | null = null;
+    if (parentId) {
+      const parent = await this.prisma.comment.findFirst({
+        where: { id: parentId, recommendationId },
+        select: { id: true },
+      });
+      if (!parent) {
+        throw new NotFoundException('답글 대상 댓글을 찾을 수 없어요.');
+      }
+      resolvedParentId = parent.id;
+    }
+
     return this.prisma.comment.create({
-      data: { recommendationId, authorId, body },
+      data: {
+        recommendationId,
+        authorId,
+        body,
+        parentId: resolvedParentId,
+      },
       include: { author: { select: { id: true, nickname: true } } },
     });
   }

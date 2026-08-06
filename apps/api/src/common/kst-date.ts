@@ -33,3 +33,17 @@ export function getKstMonthKey(date: Date): string {
 export function getKstYear(date: Date): number {
   return Number(toKstDateKey(date).slice(0, 4));
 }
+
+/** KST 표시용 — 메일·로그 (예: 2026-08-06 02:00:12) */
+export function formatKstDateTime(date = new Date()): string {
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: KST,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(date);
+}

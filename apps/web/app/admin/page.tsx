@@ -1,19 +1,18 @@
 'use client';
 
 import { useAuth } from '@/components/auth/AuthProvider';
-import { adminFetchJson } from '@/lib/adminFetch';
+import { adminFetchJson, postAdminStatsSnapshot } from '@/lib/adminFetch';
 import type { ApiAdminStats } from '@/lib/apiTypes';
 import {
   adminMutedClassName,
+  adminOutlineBtnClassName,
   adminPanelClassName,
   authTitleClassName,
 } from '@/lib/form';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
-const chartLoading = (
-  <p className={adminMutedClassName}>차트 불러오는 중…</p>
-);
+const chartLoading = <p className={adminMutedClassName}>차트 불러오는 중…</p>;
 
 const VisibleHiddenPie = dynamic(
   () =>
@@ -34,6 +33,29 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<ApiAdminStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [snapshotPending, setSnapshotPending] = useState(false);
+  const [snapshotHint, setSnapshotHint] = useState('');
+
+  async function runYesterdaySnapshot() {
+    if (snapshotPending) return;
+    setSnapshotPending(true);
+    setSnapshotHint('');
+    setError('');
+    try {
+      const result = await postAdminStatsSnapshot();
+      setSnapshotHint(
+        `${result.date} · 글 ${result.recommendations} · 가입 ${result.signups} · 활동 ${result.active}`,
+      );
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : '어제 스냅샷을 저장하지 못했어요.',
+      );
+    } finally {
+      setSnapshotPending(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +85,22 @@ export default function AdminDashboardPage() {
           </span>
         ) : null}
       </h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={snapshotPending}
+          onClick={() => void runYesterdaySnapshot()}
+          className={adminOutlineBtnClassName}>
+          {snapshotPending ? '스냅샷 중…' : '어제 스냅샷 저장'}
+        </button>
+        {snapshotHint ? (
+          <p className={`text-xs ${adminMutedClassName}`}>{snapshotHint}</p>
+        ) : (
+          <p className={`text-xs ${adminMutedClassName}`}>
+            매일 02:00 KST 자동 · 수동은 어제 일합계만
+          </p>
+        )}
+      </div>
 
       {isLoading ? (
         <p className={adminMutedClassName}>불러오는 중…</p>

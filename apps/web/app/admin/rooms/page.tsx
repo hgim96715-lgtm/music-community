@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  deleteAdminRoomMessage,
   fetchAdminRoomMessage,
   fetchAdminRooms,
   patchAdminRoomStatus,
@@ -52,6 +53,8 @@ export default function AdminRoomsPage() {
   } | null>(null);
   const [reason, setReason] = useState('');
   const [reasonError, setReasonError] = useState('');
+  const [deletingMessage, setDeletingMessage] = useState(false);
+  const [messageDeleteConfirm, setMessageDeleteConfirm] = useState(false);
 
   const needsReason =
     statusConfirm?.next === 'closed' || statusConfirm?.next === 'archived';
@@ -98,6 +101,28 @@ export default function AdminRoomsPage() {
     setReason('');
     setReasonError('');
     setStatusConfirm({ row, next });
+  }
+
+  async function confirmDeleteMessage() {
+    if (!focusMessage || deletingMessage || focusMessage.deletedAt) return;
+    setDeletingMessage(true);
+    setError('');
+    try {
+      await deleteAdminRoomMessage(focusMessage.roomId, focusMessage.id);
+      setFocusMessage({
+        ...focusMessage,
+        body: null,
+        deletedAt: new Date().toISOString(),
+        deletedByOwner: true,
+      });
+      setMessageDeleteConfirm(false);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : '메시지를 삭제하지 못했어요.',
+      );
+    } finally {
+      setDeletingMessage(false);
+    }
   }
 
   async function confirmRoomStatus() {
@@ -256,11 +281,12 @@ export default function AdminRoomsPage() {
             </p>
             <p className="text-sm text-[color:var(--color-lp-cream)]">
               발신 ·{' '}
-              <span className="font-medium">@{focusMessage.sender.nickname}</span>
+              <span className="font-medium">
+                @{focusMessage.sender.nickname}
+              </span>
               {focusMessage.deletedAt ? (
                 <span className="ml-2 text-[color:var(--color-lp-muted)]">
                   · 삭제됨
-                  {focusMessage.deletedByOwner ? ' (방장)' : ''}
                 </span>
               ) : null}
             </p>
@@ -287,6 +313,22 @@ export default function AdminRoomsPage() {
               className="inline-block text-xs font-medium text-brand-primary hover:text-brand-primary/80">
               유저 방 화면 열기
             </Link>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <Link
+                href={`/rooms/${focusMessage.roomId}`}
+                className="inline-block text-xs font-medium text-brand-primary hover:text-brand-primary/80">
+                유저 방 화면 열기
+              </Link>
+              {!focusMessage.deletedAt ? (
+                <button
+                  type="button"
+                  disabled={deletingMessage}
+                  onClick={() => setMessageDeleteConfirm(true)}
+                  className="cursor-pointer rounded-full border border-red-400/40 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-400/10 disabled:opacity-50">
+                  전체에서 삭제
+                </button>
+              ) : null}
+            </div>
           </div>
         ) : (
           <p className={adminMutedClassName}>해당 메시지를 찾을 수 없어요.</p>
@@ -295,7 +337,9 @@ export default function AdminRoomsPage() {
 
       {!focusMessageId ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <form onSubmit={handleSearch} className="flex w-full gap-2 sm:ml-auto sm:w-auto">
+          <form
+            onSubmit={handleSearch}
+            className="flex w-full gap-2 sm:ml-auto sm:w-auto">
             <input
               type="text"
               value={q}
@@ -436,6 +480,18 @@ export default function AdminRoomsPage() {
           ) : null}
         </>
       )}
+      <FeedDialog
+        open={messageDeleteConfirm}
+        title="메시지를 전체에서 삭제할까요?"
+        description="방 멤버 전원에게서 삭제됩니다. 신고 큐에서는 따로 「처리」를 눌러 닫아요."
+        confirmLabel="삭제"
+        pendingLabel="삭제 중…"
+        isPending={deletingMessage}
+        onClose={() => {
+          if (!deletingMessage) setMessageDeleteConfirm(false);
+        }}
+        onConfirm={() => void confirmDeleteMessage()}
+      />
 
       <FeedDialog
         open={statusConfirm != null}

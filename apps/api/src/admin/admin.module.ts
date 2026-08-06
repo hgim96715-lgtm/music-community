@@ -15,9 +15,11 @@ import { DmsModule } from 'src/dms/dms.module';
 import { RealtimeModule } from 'src/realtime/realtime.module';
 import { AdminReportsController } from './admin-reports.controller';
 import { AdminReportsService } from './admin-reports.service';
+import { AdminStatsCron } from './admin-stats.cron';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, DmsModule, RealtimeModule],
+  imports: [AuthModule, UsersModule, DmsModule, RealtimeModule, MailModule],
   controllers: [
     AdminStatsController,
     AdminRecommendationsController,
@@ -28,6 +30,7 @@ import { AdminReportsService } from './admin-reports.service';
   ],
   providers: [
     AdminStatsService,
+    AdminStatsCron,
     AdminRecommendationsService,
     AdminUsersService,
     AdminNoticesService,

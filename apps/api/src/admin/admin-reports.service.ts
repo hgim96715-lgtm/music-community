@@ -192,28 +192,39 @@ export class AdminReportsService {
   async update(id: string, dto: UpdateAdminReportDto) {
     const row = await this.prisma.report.findUnique({
       where: { id },
-      select: { id: true, status: true },
+      select: { id: true, status: true, targetType: true, targetId: true },
     });
     if (!row) throw new NotFoundException('신고를 찾을 수 없습니다.');
-    if (row.status !== ReportStatus.pending) {
+    if (row.status !== ReportStatus.pending)
       throw new ConflictException('이미 처리된 신고입니다.');
-    }
-    const updated = await this.prisma.report.update({
-      where: { id },
-      data: { status: dto.status as ReportStatus },
-      select: {
-        id: true,
-        targetType: true,
-        targetId: true,
-        reason: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        reporter: {
-          select: { id: true, nickname: true, email: true },
+    const status = dto.status as ReportStatus;
+    const [, updated] = await this.prisma.$transaction([
+      this.prisma.report.updateMany({
+        where: {
+          targetType: row.targetType,
+          targetId: row.targetId,
+          status: ReportStatus.pending,
+          NOT: { id: row.id },
         },
-      },
-    });
+        data: { status },
+      }),
+      this.prisma.report.update({
+        where: { id },
+        data: { status },
+        select: {
+          id: true,
+          targetType: true,
+          targetId: true,
+          reason: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          reporter: {
+            select: { id: true, nickname: true, email: true },
+          },
+        },
+      }),
+    ]);
     return {
       id: updated.id,
       targetType: updated.targetType,

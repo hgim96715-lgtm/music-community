@@ -109,3 +109,39 @@ export function patchAdminReportStatus(
     body: JSON.stringify({ status }),
   });
 }
+
+export function deleteAdminRoomMessage(
+  roomId: string,
+  messageId: string,
+): Promise<void> {
+  return adminFetchVoid(`/rooms/${roomId}/messages/${messageId}`, {
+    method: 'DELETE',
+  });
+}
+
+export function deleteAdminComment(
+  recommendationId: string,
+  commentId: string,
+): Promise<void> {
+  return adminFetchVoid(
+    `/recommendations/${recommendationId}/comments/${commentId}`,
+    {
+      method: 'DELETE',
+    },
+  );
+}
+
+export type ApiAdminStatsSnapshot = {
+  date: string;
+  recommendations: number;
+  signups: number;
+  active: number;
+};
+
+/** POST /admin/stats/snapshot — 기본 어제 KST · ?date=YYYY-MM-DD */
+export function postAdminStatsSnapshot(date?: string) {
+  const qs = date?.trim() ? `?date=${encodeURIComponent(date.trim())}` : '';
+  return adminFetchJson<ApiAdminStatsSnapshot>(`/stats/snapshot${qs}`, {
+    method: 'POST',
+  });
+}

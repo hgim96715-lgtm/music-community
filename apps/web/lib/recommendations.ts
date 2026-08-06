@@ -90,13 +90,17 @@ export async function fetchComments(recommendationId: string) {
 export async function createComment(
   recommendationId: string,
   body: string,
+  parentId?: string,
 ): Promise<ApiComment> {
   return authFetchApi<ApiComment>(
     `/recommendations/${recommendationId}/comments`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body }),
+      body: JSON.stringify({
+        body,
+        ...(parentId ? { parentId } : {}),
+      }),
     },
   );
 }

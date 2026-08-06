@@ -53,4 +53,17 @@ export class AdminRecommendationsController {
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     return await this.adminRecommendationsService.remove(id);
   }
+
+  @ApiOperation({ summary: '댓글 운영 삭제 (신고 조치)' })
+  @Delete(':id/comments/:commentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeComment(
+    @Param('id', ParseUUIDPipe) recommendationId: string,
+    @Param('commentId', ParseUUIDPipe) commentId: string,
+  ) {
+    return await this.adminRecommendationsService.removeComment(
+      recommendationId,
+      commentId,
+    );
+  }
 }

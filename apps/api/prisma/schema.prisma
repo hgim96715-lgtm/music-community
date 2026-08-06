@@ -75,6 +75,12 @@ enum ReportStatus {
     dismissed
 }
 
+enum AdminStatsMetric {
+    recommendations
+    signups
+    active
+}
+
 
 model User {
   id           String   @id @default(uuid(7)) @db.Uuid
@@ -219,14 +225,18 @@ model Comment {
     recommendationId String @db.Uuid
     authorId String @db.Uuid
     body String
+    parentId String? @db.Uuid
     createdAt DateTime @default(now()) @db.Timestamptz(3)
     updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
     recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
     author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    parent Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+    replies Comment[] @relation("CommentReplies")
 
     @@index([recommendationId])
     @@index([authorId])
+    @@index([parentId])
 }
 
 model Friendship {
@@ -476,4 +486,18 @@ model Report {
     @@index([status,createdAt])
     @@index([targetType,targetId])
     @@index([reporterId])
+}
+
+model AdminStatsDailySnapshot {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  date      DateTime         @db.Date
+  /// -1 = 일 합계 · 0~23 = KST 시간대 (null 금지 — unique 안전)
+  hour      Int
+  metric    AdminStatsMetric
+  count     Int
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime         @updatedAt @db.Timestamptz(3)
+
+  @@unique([date, hour, metric])
+  @@index([metric, date])
 }
