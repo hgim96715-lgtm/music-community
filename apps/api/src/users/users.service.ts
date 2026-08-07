@@ -25,6 +25,7 @@ const userSelect = {
   nickname: true,
   role: true,
   bio: true,
+  albumVisibility: true,
   deletedAt: true,
   withdrawScheduledAt: true,
 } as const;
@@ -56,7 +57,11 @@ export class UsersService {
     };
   }
   async updateMe(userId: string, dto: UpdateUserDto) {
-    const data: { nickname?: string; bio?: string | null } = {};
+    const data: {
+      nickname?: string;
+      bio?: string | null;
+      albumVisibility?: 'private' | 'public';
+    } = {};
     if (dto.nickname !== undefined) {
       const nickname = this.trimField(dto.nickname);
       const taken = await this.prisma.user.findFirst({
@@ -70,6 +75,9 @@ export class UsersService {
     if (dto.bio !== undefined) {
       const bio = dto.bio;
       data.bio = bio === '' ? null : bio;
+    }
+    if (dto.albumVisibility !== undefined) {
+      data.albumVisibility = dto.albumVisibility;
     }
     try {
       return await this.prisma.user.update({
@@ -91,12 +99,49 @@ export class UsersService {
         nickname: true,
         image: true,
         bio: true,
+        albumVisibility: true,
       },
     });
     if (!user) {
       throw new NotFoundException('유저를 찾을 수 없습니다.');
     }
     return user;
+  }
+
+  /** 공개 앨범만 — private면 403 */
+  async findPublicAlbum(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        nickname: true,
+        albumVisibility: true,
+      },
+    });
+    if (!user) throw new NotFoundException('유저를 찾을 수 없습니다.');
+    if (user.albumVisibility !== 'public')
+      throw new ForbiddenException('앨범 공개 범위가 비공개입니다.');
+    const items = await this.prisma.savedCard.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        recommendation: {
+          select: {
+            id: true,
+            title: true,
+            artist: true,
+            embedUrl: true,
+            moods: true,
+            reason: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+    return {
+      user: { id: user.id, nickname: user.nickname },
+      items,
+    };
   }
 
   async searchUsers(userId: string, query: SearchUsersQueryDto) {

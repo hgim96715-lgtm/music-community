@@ -1411,6 +1411,8 @@ export interface components {
             role: "user" | "admin";
             /** @example 안녕하세요, 저는 노래가 좋아요. */
             bio?: string | null;
+            /** @enum {string} */
+            albumVisibility: "private" | "public";
             /** @description 탈퇴 예약 시각 — null이면 활성 */
             deletedAt?: string | null;
             /** @description 실제 정리 예정 */
@@ -1575,6 +1577,8 @@ export interface components {
             /** @enum {string} */
             role: "user" | "admin";
             bio?: string | null;
+            /** @enum {string} */
+            albumVisibility?: "private" | "public";
             deletedAt?: string | null;
             withdrawScheduledAt?: string | null;
         };
@@ -1583,6 +1587,8 @@ export interface components {
             nickname?: string;
             /** @example 안녕하세요, 저는 노래가 좋아요. */
             bio?: string;
+            /** @enum {string} */
+            albumVisibility?: "private" | "public";
         };
         WithdrawUserDto: {
             /** @description 본인 nickname 또는 email 과 일치해야 함 */
@@ -1599,6 +1605,8 @@ export interface components {
             nickname: string;
             image?: string | null;
             bio?: string | null;
+            /** @enum {string} */
+            albumVisibility?: "private" | "public";
         };
         SavedCardDisplayDto: {
             title?: boolean;

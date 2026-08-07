@@ -74,6 +74,7 @@ export class AuthService {
     role: 'user' | 'admin';
     bio?: string | null;
     deletedAt?: Date | string | null;
+    albumVisibility?: 'private' | 'public';
     withdrawScheduledAt?: Date | string | null;
   }): Promise<AuthResponseDto> {
     const payload: JwtPayload = { sub: user.id, role: user.role };
@@ -92,6 +93,7 @@ export class AuthService {
       nickname: user.nickname,
       role: user.role,
       bio: user.bio ?? null,
+      albumVisibility: user.albumVisibility ?? 'private',
       deletedAt,
       withdrawScheduledAt,
     };
@@ -246,6 +248,7 @@ export class AuthService {
         nickname: true,
         role: true,
         bio: true,
+        albumVisibility: true,
         deletedAt: true,
         withdrawScheduledAt: true,
       },

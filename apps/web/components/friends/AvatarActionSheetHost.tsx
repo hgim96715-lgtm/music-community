@@ -12,6 +12,7 @@ import {
   fetchBlockStatus,
   fetchFriendRequests,
   fetchFriends,
+  fetchPublicUser,
   removeFriend,
   respondFriendRequest,
   unblockUser,
@@ -63,15 +64,30 @@ export function AvatarActionSheetHost({
 
   const [kickOpen, setKickOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [privateAlbumOpen, setPrivateAlbumOpen] = useState(false);
+
+  const [albumVisibility, setAlbumVisibility] = useState<
+    'private' | 'public' | null
+  >(null);
 
   const load = useCallback(async () => {
-    if (!target || !user) {
+    if (!target) {
       setFriends([]);
       setRequests({ received: [], sent: [] });
       setBlockedByMe(false);
+      setAlbumVisibility(null);
       return;
     }
     try {
+      const publicUser = await fetchPublicUser(target.id);
+      setAlbumVisibility(publicUser.albumVisibility ?? 'private');
+
+      if (!user) {
+        setFriends([]);
+        setRequests({ received: [], sent: [] });
+        setBlockedByMe(false);
+        return;
+      }
       const [friendsList, requestList, blockStatus] = await Promise.all([
         fetchFriends(),
         fetchFriendRequests(),
@@ -84,6 +100,7 @@ export function AvatarActionSheetHost({
       setFriends([]);
       setRequests({ received: [], sent: [] });
       setBlockedByMe(false);
+      setAlbumVisibility(null);
     }
   }, [target, user]);
 
@@ -156,6 +173,19 @@ export function AvatarActionSheetHost({
           label={relation === 'self' ? '마이페이지로 이동' : '프로필 방문'}
           onClick={goProfile}
         />
+        {relation !== 'self' ? (
+          <AvatarActionRow
+            label="앨범 방문하기"
+            onClick={() => {
+              if (albumVisibility === 'public') {
+                onClose();
+                router.push(`/users/${target.id}/album`);
+                return;
+              }
+              setPrivateAlbumOpen(true);
+            }}
+          />
+        ) : null}
 
         {relation === 'guest' ? (
           <AvatarActionRow
@@ -266,6 +296,16 @@ export function AvatarActionSheetHost({
           />
         ) : null}
       </AvatarActionSheet>
+
+      <FeedDialog
+        open={privateAlbumOpen}
+        title="비공개 앨범"
+        description="이 앨범은 비공개예요. 주인이 공개로 바꾸면 볼 수 있어요."
+        confirmLabel="확인"
+        cancelLabel="닫기"
+        onConfirm={() => setPrivateAlbumOpen(false)}
+        onClose={() => setPrivateAlbumOpen(false)}
+      />
 
       <FeedDialog
         open={unfriendOpen}

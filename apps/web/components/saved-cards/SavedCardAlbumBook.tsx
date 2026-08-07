@@ -26,6 +26,8 @@ type SavedCardAlbumBookProps = {
   editable?: boolean;
   /** 마이 홈 셸 안 — 바깥 lp-album-shell 생략 */
   embedded?: boolean;
+  /** 기본: 내 앨범 */
+  heading?: string;
 };
 
 const SHELF_PER_ROW = 6;
@@ -36,10 +38,7 @@ function mergeShelfResponse(
 ): ApiSavedCard[] {
   return cards.map((c) => {
     if (c.id === updated.id) return updated;
-    if (
-      updated.shelfRank !== null &&
-      c.shelfRank === updated.shelfRank
-    ) {
+    if (updated.shelfRank !== null && c.shelfRank === updated.shelfRank) {
       return { ...c, shelfRank: null };
     }
     return c;
@@ -55,6 +54,7 @@ export function SavedCardAlbumBook({
   onCardsChange,
   editable = true,
   embedded = false,
+  heading = '내 앨범',
 }: SavedCardAlbumBookProps) {
   const [pulledId, setPulledId] = useState<string | null>(null);
   const [replaceMode, setReplaceMode] = useState(false);
@@ -85,7 +85,10 @@ export function SavedCardAlbumBook({
   }, [ranks, cardById]);
 
   const shelfCards = useMemo(
-    () => cards.filter((c) => c.shelfRank !== 1 && c.shelfRank !== 2 && c.shelfRank !== 3),
+    () =>
+      cards.filter(
+        (c) => c.shelfRank !== 1 && c.shelfRank !== 2 && c.shelfRank !== 3,
+      ),
     [cards],
   );
 
@@ -212,7 +215,9 @@ export function SavedCardAlbumBook({
               {([1, 2, 3] as const).map((rank, index) => {
                 const card = topSlots[index];
                 return (
-                  <li key={rank} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+                  <li
+                    key={rank}
+                    className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => handleTopClick(rank, card)}
@@ -369,7 +374,7 @@ export function SavedCardAlbumBook({
         <div className="lp-album-header">
           <div>
             <h2 className="text-sm font-bold tracking-wide text-[#f3ebe3]">
-              내 앨범
+              {heading}
             </h2>
             <p className="mt-0.5 text-[11px] text-[#cbbba0]">
               LP Top 3 · 책장에 꽂아 두기

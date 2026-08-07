@@ -1,16 +1,21 @@
 'use client';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { AlbumPublicStamp } from '@/components/saved-cards/AlbumPublicStamp';
+import { JacketPreviewModal } from '@/components/saved-cards/JacketPreviewModal';
+import { SavedCardAlbumBook } from '@/components/saved-cards/SavedCardAlbumBook';
 import { UserProfileActions } from '@/components/users/UserProfileActions';
 import {
   fetchBlockStatus,
   fetchFriendRequests,
   fetchFriends,
+  fetchPublicAlbum,
   fetchPublicUser,
 } from '@/lib/api';
 import type {
   ApiFriendRequests,
   ApiFriendship,
   ApiPublicUser,
+  ApiSavedCard,
 } from '@/lib/apiTypes';
 import { friendRelationWith } from '@/lib/friendsUtils';
 import {
@@ -38,6 +43,10 @@ export default function PublicUserPage() {
   const [error, setError] = useState('');
   const [blockedByMe, setBlockedByMe] = useState(false);
 
+  const [albumCards, setAlbumCards] = useState<ApiSavedCard[]>([]);
+  const [albumLoading, setAlbumLoading] = useState(false);
+  const [selected, setSelected] = useState<ApiSavedCard | null>(null);
+
   const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
@@ -45,6 +54,20 @@ export default function PublicUserPage() {
     try {
       const publicUser = await fetchPublicUser(id);
       setProfile(publicUser);
+      if (publicUser.albumVisibility === 'public') {
+        setAlbumLoading(true);
+        try {
+          const album = await fetchPublicAlbum(publicUser.id);
+          setAlbumCards(album.items);
+        } catch {
+          setAlbumCards([]);
+        } finally {
+          setAlbumLoading(false);
+        }
+      } else {
+        setAlbumCards([]);
+        setAlbumLoading(false);
+      }
       if (user) {
         const [friendsList, requestList, blockStatus] = await Promise.all([
           fetchFriends(),
@@ -116,7 +139,12 @@ export default function PublicUserPage() {
             <User className="size-7" />
           </div>
           <div>
-            <h1 className={authTitleClassName}>@{profile.nickname}</h1>
+            <div className="inline-flex flex-wrap items-center justify-center gap-2">
+              <h1 className={authTitleClassName}>@{profile.nickname}</h1>
+              {profile.albumVisibility === 'public' ? (
+                <AlbumPublicStamp />
+              ) : null}
+            </div>
             {profile.bio ? (
               <p className="mt-2 text-sm leading-relaxed text-neutral-600">
                 {profile.bio}
@@ -138,6 +166,28 @@ export default function PublicUserPage() {
           </div>
         </div>
       </section>
+      {profile.albumVisibility === 'public' ? (
+        <section className="mt-6 w-full">
+          {albumLoading ? (
+            <Loader2 className="mx-auto size-6 animate-spin text-brand-primary" />
+          ) : (
+            <SavedCardAlbumBook
+              heading={`@${profile.nickname}의 앨범`}
+              cards={albumCards}
+              loading={false}
+              error=""
+              editable={false}
+              onSelectCard={setSelected}
+              onCardsChange={() => {}}
+            />
+          )}
+        </section>
+      ) : (
+        <p className="mt-6 text-center text-sm text-neutral-500">
+          비공개 앨범이에요
+        </p>
+      )}
+      <JacketPreviewModal jacket={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

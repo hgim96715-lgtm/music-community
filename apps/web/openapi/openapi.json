@@ -3679,6 +3679,13 @@
             "nullable": true,
             "example": "안녕하세요, 저는 노래가 좋아요."
           },
+          "albumVisibility": {
+            "enum": [
+              "private",
+              "public"
+            ],
+            "type": "string"
+          },
           "deletedAt": {
             "type": "string",
             "nullable": true,
@@ -3694,7 +3701,8 @@
           "id",
           "email",
           "nickname",
-          "role"
+          "role",
+          "albumVisibility"
         ]
       },
       "AvailableResponseDto": {
@@ -4115,6 +4123,13 @@
             "type": "string",
             "nullable": true
           },
+          "albumVisibility": {
+            "enum": [
+              "private",
+              "public"
+            ],
+            "type": "string"
+          },
           "deletedAt": {
             "type": "string",
             "nullable": true
@@ -4141,6 +4156,13 @@
           "bio": {
             "type": "string",
             "example": "안녕하세요, 저는 노래가 좋아요."
+          },
+          "albumVisibility": {
+            "enum": [
+              "private",
+              "public"
+            ],
+            "type": "string"
           }
         }
       },
@@ -4189,6 +4211,13 @@
           "bio": {
             "type": "string",
             "nullable": true
+          },
+          "albumVisibility": {
+            "enum": [
+              "private",
+              "public"
+            ],
+            "type": "string"
           }
         },
         "required": [

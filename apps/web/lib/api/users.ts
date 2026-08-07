@@ -2,6 +2,7 @@ import type {
   ApiAuthUser,
   ApiMyStats,
   ApiPublicUser,
+  ApiSavedCard,
   ApiUserSearchPage,
   WithdrawResult,
 } from './apiTypes';
@@ -16,6 +17,7 @@ export async function fetchUserProfile(): Promise<ApiAuthUser> {
 export async function patchUserProfile(body: {
   nickname?: string;
   bio?: string | null;
+  albumVisibility?: 'private' | 'public';
 }): Promise<ApiAuthUser> {
   return authFetchApi<ApiAuthUser>('/users/me', {
     method: 'PATCH',
@@ -54,6 +56,16 @@ export function fetchBlockStatus(
 /** GET /users/:id — 공개 프로필 (게스트 OK) */
 export function fetchPublicUser(userId: string): Promise<ApiPublicUser> {
   return fetchApi<ApiPublicUser>(`/users/${userId}`);
+}
+
+export type ApiPublicAlbum = {
+  user: { id: string; nickname: string };
+  items: ApiSavedCard[];
+};
+
+/** GET /users/:id/album — 공개 앨범 (게스트 OK · private면 403) */
+export function fetchPublicAlbum(userId: string): Promise<ApiPublicAlbum> {
+  return fetchApi<ApiPublicAlbum>(`/users/${userId}/album`);
 }
 
 /** POST /users/:id/block — 차단 · 204 */

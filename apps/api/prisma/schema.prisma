@@ -85,6 +85,11 @@ enum NotificationType {
     comment_reply
 }
 
+enum AlbumVisibility {
+    private
+    public
+}
+
 
 
 
@@ -97,6 +102,7 @@ model User {
   createdAt    DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
   bio          String?
+  albumVisibility AlbumVisibility @default(private)
   lastActiveAt DateTime? @db.Timestamptz(3)
   image String?
   deletedAt DateTime? @db.Timestamptz(3)

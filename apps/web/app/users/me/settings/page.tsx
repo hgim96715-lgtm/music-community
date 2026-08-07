@@ -8,6 +8,7 @@ import {
   cancelWithdraw,
   fetchFriendRequests,
   fetchPublishedNotices,
+  patchUserProfile,
   withdrawMe,
 } from '@/lib/api';
 import {
@@ -16,7 +17,7 @@ import {
   fieldErrorClassName,
 } from '@/lib/form';
 import { brandPillBtn, dialogPanel } from '@/lib/neobrutal';
-import { fetchMyRooms, fetchPublicRooms, type ApiRoom } from '@/lib/rooms';
+import { fetchMyRooms, type ApiRoom } from '@/lib/rooms';
 import { ChevronLeft, KeyRound, Loader2, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -32,6 +33,7 @@ import {
   type ChatFontPrefs,
 } from '@/lib/chatFontStorage';
 import { hasUnseenSupportNotice } from '@/lib/supportNoticeSeenStorage';
+import { AlbumVisibilityToggle } from '@/components/saved-cards/AlbumVisibilityToggle';
 
 const WITHDRAW_GRACE_DAYS = 7;
 
@@ -59,7 +61,7 @@ export default function MySettingsPage() {
   const [cancelPending, setCancelPending] = useState(false);
   const [welcomeBackOpen, setWelcomeBackOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-
+  const [albumPending, setAlbumPending] = useState(false);
   const [supportNew, setSupportNew] = useState(false);
 
   const [chatFont, setChatFont] = useState<ChatFontPrefs>({
@@ -201,6 +203,25 @@ export default function MySettingsPage() {
     }
   }
 
+  async function handleAlbumVisibility(next: 'private' | 'public') {
+    if (!user || albumPending) return;
+    setAlbumPending(true);
+    setError('');
+    try {
+      const updated = await patchUserProfile({ albumVisibility: next });
+      await refreshUser();
+      void updated;
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : '앨범 공개 설정에 실패했습니다.',
+      );
+    } finally {
+      setAlbumPending(false);
+    }
+  }
+
   if (isLoading || !user) {
     return (
       <main className={authPageClassName}>
@@ -223,7 +244,7 @@ export default function MySettingsPage() {
       <MyHomeSubShell
         nickname={user.nickname}
         title="설정"
-        subtitle="채팅 · 고객지원 · 계정"
+        subtitle="앨범 · 채팅 · 고객지원 · 계정"
         active="settings"
         requestCount={requestCount}>
         {isWithdrawing ? (
@@ -241,6 +262,17 @@ export default function MySettingsPage() {
             {error}
           </p>
         ) : null}
+        <section id="album-visibility" className="mb-4 scroll-mt-4">
+          <h2 className="mb-2 px-0.5 text-[12px] font-semibold tracking-wide text-[#a89880]">
+            앨범 공개
+          </h2>
+          <AlbumVisibilityToggle
+            value={user.albumVisibility ?? 'private'}
+            onChange={(next) => {
+              void handleAlbumVisibility(next);
+            }}
+          />
+        </section>
         <section id="chat-display" className="mb-4 scroll-mt-4">
           <h2 className="mb-2 px-0.5 text-[12px] font-semibold tracking-wide text-[#a89880]">
             채팅 표시

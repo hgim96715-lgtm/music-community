@@ -134,6 +134,12 @@ export class UsersController {
     return await this.usersService.unblockerUser(userId, blockedId);
   }
 
+  @ApiOperation({ summary: '공개 앨범 (Top3·책장) · private면 403' })
+  @Get(':id/album')
+  async findPublicAlbum(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.usersService.findPublicAlbum(id);
+  }
+
   @ApiOperation({ summary: '공개 프로필 조회' })
   @ApiOkResponse({ type: PublicUserDto })
   @Get(':id')

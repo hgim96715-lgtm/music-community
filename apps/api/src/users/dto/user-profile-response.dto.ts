@@ -17,6 +17,9 @@ export class UserMeDto {
   @ApiPropertyOptional({ nullable: true })
   bio: string | null;
 
+  @ApiPropertyOptional({ enum: ['private', 'public'] })
+  albumVisibility: 'private' | 'public';
+
   @ApiPropertyOptional({ nullable: true })
   deletedAt: string | null;
 
@@ -37,6 +40,9 @@ export class PublicUserDto {
 
   @ApiPropertyOptional({ nullable: true })
   bio: string | null;
+
+  @ApiPropertyOptional({ enum: ['private', 'public'] })
+  albumVisibility: 'private' | 'public';
 }
 
 export class BlockStatusDto {

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({ example: '노래가 좋아' })
@@ -12,4 +12,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   bio?: string;
+
+  @ApiPropertyOptional({ enum: ['private', 'public'] })
+  @IsOptional()
+  @IsIn(['private', 'public'])
+  albumVisibility?: 'private' | 'public';
 }
