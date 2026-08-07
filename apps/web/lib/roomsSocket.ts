@@ -1,8 +1,8 @@
 import { io, type Socket } from 'socket.io-client';
 import { getApiAccessToken } from './authToken';
-import { getApiBaseUrl } from './fetchApi';
-import type { ApiRoomMessage, ToogleRoomMessageReactionResult } from './rooms';
-import { ApiDmMessage } from './dms';
+import { getApiBaseUrl } from './api/fetchApi';
+import type { ApiRoomMessage, ToogleRoomMessageReactionResult } from './api/rooms';
+import { ApiDmMessage } from './api/dms';
 
 let socket: Socket | null = null;
 

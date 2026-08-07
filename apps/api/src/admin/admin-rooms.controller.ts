@@ -11,7 +11,7 @@ import {
   HttpCode,
   Delete,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -20,6 +20,7 @@ import { ListAdminRoomsQueryDto } from './dto/list-admin-rooms-query.dto';
 import { UpdateAdminRoomDto } from './dto/update-admin-room.dto';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
 import { ChatGateway } from 'src/realtime/chat.gateway';
+import { AdminRoomsPageDto } from './dto/admin-list-response.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth('access-token')
@@ -33,6 +34,7 @@ export class AdminRoomsController {
   ) {}
 
   @ApiOperation({ summary: '방 목록 (운영) · q·status·cursor' })
+  @ApiOkResponse({ type: AdminRoomsPageDto })
   @Get()
   async list(@Query() query: ListAdminRoomsQueryDto) {
     return this.adminRoomsService.list(query);

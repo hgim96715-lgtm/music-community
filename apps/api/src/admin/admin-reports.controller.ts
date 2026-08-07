@@ -8,13 +8,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { AdminReportsService } from './admin-reports.service';
 import { ListAdminReportsQueryDto } from './dto/list-admin-reports-query.dto';
 import { UpdateAdminReportDto } from './dto/update-admin-report.dto';
+import { AdminReportsPageDto } from './dto/admin-list-response.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth('access-token')
@@ -25,6 +26,7 @@ export class AdminReportsController {
   constructor(private readonly adminReportsService: AdminReportsService) {}
 
   @ApiOperation({ summary: '신고 목록 · status·targetType·cursor' })
+  @ApiOkResponse({ type: AdminReportsPageDto })
   @Get()
   async list(@Query() query: ListAdminReportsQueryDto) {
     return this.adminReportsService.list(query);

@@ -9,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   ActiveAccountGuard,
   AllowWithdrawing,
@@ -20,6 +20,12 @@ import { ChatGateway } from 'src/realtime/chat.gateway';
 import { DmsService } from './dms.service';
 import { OpenDmDto } from './dto/open-dm.dto';
 import { SendDmMessageDto } from './dto/send-dm-message.dto';
+import {
+  DmDetailResponseDto,
+  DmListItemResponseDto,
+  DmMessageResponseDto,
+  DmRequestItemResponseDto,
+} from './dto/dm-response.dto';
 
 @ApiTags('DMs')
 @Controller('dms')
@@ -32,6 +38,7 @@ export class DmsController {
   ) {}
 
   @ApiOperation({ summary: '열린 DM 목록' })
+  @ApiOkResponse({ type: DmListItemResponseDto, isArray: true })
   @AllowWithdrawing()
   @Get()
   async listMine(@UserId() userId: string) {
@@ -39,6 +46,7 @@ export class DmsController {
   }
 
   @ApiOperation({ summary: '받은 DM 목록' })
+  @ApiOkResponse({ type: DmRequestItemResponseDto, isArray: true })
   @AllowWithdrawing()
   @Get('requests')
   async listRequests(@UserId() userId: string) {
@@ -46,6 +54,7 @@ export class DmsController {
   }
 
   @ApiOperation({ summary: 'DM 상세 (상대·status)' })
+  @ApiOkResponse({ type: DmDetailResponseDto })
   @AllowWithdrawing()
   @Get(':id')
   async findById(
@@ -85,6 +94,7 @@ export class DmsController {
   }
 
   @ApiOperation({ summary: 'DM 메시지 목록' })
+  @ApiOkResponse({ type: DmMessageResponseDto, isArray: true })
   @AllowWithdrawing()
   @Get(':id/messages')
   async listMessages(
@@ -95,6 +105,7 @@ export class DmsController {
   }
 
   @ApiOperation({ summary: 'DM 메시지 전송' })
+  @ApiOkResponse({ type: DmMessageResponseDto })
   @Post(':id/messages')
   @HttpCode(HttpStatus.CREATED)
   async sendMessage(

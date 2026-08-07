@@ -1,4 +1,4 @@
-import type { ApiSavedCardCustomization } from './apiTypes';
+import type { ApiSavedCardCustomization } from './api/apiTypes';
 
 export const DEFAULT_TEXT_COLORS = {
   title: '#171717',

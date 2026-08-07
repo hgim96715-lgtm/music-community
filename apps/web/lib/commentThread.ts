@@ -1,4 +1,4 @@
-import type { ApiComment } from './apiTypes';
+import type { ApiComment } from './api/apiTypes';
 
 /** UI 들여쓰기 상한 — 깊이는 무한, 밀기는 여기까지만 */
 export const REPLY_INDENT_CAP = 2;

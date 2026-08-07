@@ -1,4 +1,4 @@
-import type { ApiSavedCardCustomization } from './apiTypes';
+import type { ApiSavedCardCustomization } from './api/apiTypes';
 
 export type SavedCardLayout = 'lp-jacket' | 'music-strip' | 'poster';
 

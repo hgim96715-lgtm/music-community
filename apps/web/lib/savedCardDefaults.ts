@@ -1,4 +1,4 @@
-import type { ApiSavedCardCustomization } from './apiTypes';
+import type { ApiSavedCardCustomization } from './api/apiTypes';
 import { DEFAULT_TEXT_COLORS } from './savedCardColors';
 
 /** 기본 포토카드 커스터마이징 — LP 자켓 · 브랜드 웜 톤 */

@@ -12,7 +12,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -29,6 +29,11 @@ import {
 import { ListRoomMemberQueryDto } from './dto/list-room-members-query.dto';
 import { UpdateRoomChatThemeDto } from './dto/update-room-chat-theme.dto';
 import { ToggleRoomMessageReactioinDto } from './dto/toggle-room-message-reaction.dto';
+import {
+  RoomChatThemeResponseDto,
+  RoomMessageResponseDto,
+  RoomResponseDto,
+} from './dto/room-response.dto';
 
 @ApiTags('Rooms')
 @Controller('rooms')
@@ -41,6 +46,7 @@ export class RoomsController {
   ) {}
 
   @ApiOperation({ summary: '공개 방 목록 조회' })
+  @ApiOkResponse({ type: RoomResponseDto, isArray: true })
   @AllowWithdrawing()
   @Get()
   async listPublic() {
@@ -48,6 +54,7 @@ export class RoomsController {
   }
 
   @ApiOperation({ summary: '내 방 목록(멤버인 방)' })
+  @ApiOkResponse({ type: RoomResponseDto, isArray: true })
   @AllowWithdrawing()
   @Get('mine')
   async listMine(@UserId() userId: string) {
@@ -55,6 +62,7 @@ export class RoomsController {
   }
 
   @ApiOperation({ summary: '방 메시지 목록 조회' })
+  @ApiOkResponse({ type: RoomMessageResponseDto, isArray: true })
   @AllowWithdrawing()
   @Get(':id/messages')
   async listMessages(
@@ -65,6 +73,7 @@ export class RoomsController {
   }
 
   @ApiOperation({ summary: '방 상세 조회' })
+  @ApiOkResponse({ type: RoomResponseDto })
   @AllowWithdrawing()
   @Get(':id')
   async findById(@Param('id', ParseUUIDPipe) roomId: string) {
@@ -219,6 +228,7 @@ export class RoomsController {
   }
 
   @ApiOperation({ summary: '방 채팅 테마 조회' })
+  @ApiOkResponse({ type: RoomChatThemeResponseDto })
   @AllowWithdrawing()
   @Get(':id/theme')
   async getChatTheme(
@@ -229,6 +239,7 @@ export class RoomsController {
   }
 
   @ApiOperation({ summary: '방 채팅 테마 수정' })
+  @ApiOkResponse({ type: RoomChatThemeResponseDto })
   @AllowWithdrawing()
   @Patch(':id/theme')
   async updateChatTheme(

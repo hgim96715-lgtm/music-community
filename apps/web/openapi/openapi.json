@@ -1622,7 +1622,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUsersPageDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1846,7 +1853,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRoomsPageDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2017,7 +2031,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReportsPageDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2076,7 +2097,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DmListItemResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2131,7 +2162,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DmRequestItemResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2160,7 +2201,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DmDetailResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2267,7 +2315,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object"
+                    "$ref": "#/components/schemas/DmMessageResponseDto"
                   }
                 }
               }
@@ -2307,12 +2355,12 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/DmMessageResponseDto"
                 }
               }
             }
@@ -2530,7 +2578,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object"
+                    "$ref": "#/components/schemas/RoomResponseDto"
                   }
                 }
               }
@@ -2589,7 +2637,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoomResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2624,7 +2682,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object"
+                    "$ref": "#/components/schemas/RoomMessageResponseDto"
                   }
                 }
               }
@@ -2705,7 +2763,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RoomResponseDto"
                 }
               }
             }
@@ -3128,7 +3186,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomChatThemeResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3165,7 +3230,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomChatThemeResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4402,6 +4474,84 @@
           }
         }
       },
+      "AdminUserCountsDto": {
+        "type": "object",
+        "properties": {
+          "recommendations": {
+            "type": "number"
+          },
+          "reactions": {
+            "type": "number"
+          },
+          "savedCards": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "recommendations",
+          "reactions",
+          "savedCards"
+        ]
+      },
+      "AdminUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "_count": {
+            "$ref": "#/components/schemas/AdminUserCountsDto"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "nickname",
+          "role",
+          "createdAt",
+          "_count"
+        ]
+      },
+      "AdminUsersPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserResponseDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
       "CreateAdminNoticeDto": {
         "type": "object",
         "properties": {
@@ -4447,6 +4597,115 @@
           }
         }
       },
+      "AdminRoomOwnerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nickname",
+          "email"
+        ]
+      },
+      "AdminRoomResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "topicTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "visibility": {
+            "enum": [
+              "public",
+              "private",
+              "invite"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "closed",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "number"
+          },
+          "passwordHint": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/AdminRoomOwnerDto"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "topicTags",
+          "visibility",
+          "status",
+          "memberCount",
+          "createdAt",
+          "updatedAt",
+          "ownerId",
+          "owner"
+        ]
+      },
+      "AdminRoomsPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminRoomResponseDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
       "UpdateAdminRoomDto": {
         "type": "object",
         "properties": {
@@ -4465,6 +4724,105 @@
           }
         }
       },
+      "AdminReportReporterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nickname",
+          "email"
+        ]
+      },
+      "AdminReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetType": {
+            "enum": [
+              "comment",
+              "room_message",
+              "recommendation"
+            ],
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "resolved",
+              "dismissed"
+            ],
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "reporter": {
+            "$ref": "#/components/schemas/AdminReportReporterDto"
+          },
+          "target": {
+            "type": "object",
+            "nullable": true,
+            "description": "polymorphic — 상세는 런타임 객체"
+          },
+          "targetMissing": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "targetType",
+          "targetId",
+          "reason",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "reporter",
+          "targetMissing"
+        ]
+      },
+      "AdminReportsPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminReportResponseDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
       "UpdateAdminReportDto": {
         "type": "object",
         "properties": {
@@ -4480,6 +4838,160 @@
           "status"
         ]
       },
+      "DmLastMessageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "body",
+          "senderId",
+          "createdAt"
+        ]
+      },
+      "DmListItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "open",
+              "declined"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "other": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthorSnippetDto"
+              }
+            ]
+          },
+          "lastMessage": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DmLastMessageDto"
+              }
+            ]
+          },
+          "unread": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "updatedAt",
+          "unread"
+        ]
+      },
+      "DmRequestItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "open",
+              "declined"
+            ],
+            "type": "string"
+          },
+          "requestedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "other": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthorSnippetDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "createdAt"
+        ]
+      },
+      "DmDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "open",
+              "declined"
+            ],
+            "type": "string"
+          },
+          "requestedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "other": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthorSnippetDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "OpenDmDto": {
         "type": "object",
         "properties": {
@@ -4491,6 +5003,44 @@
         },
         "required": [
           "otherUserId"
+        ]
+      },
+      "DmMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dmId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "senderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/AuthorSnippetDto"
+          }
+        },
+        "required": [
+          "id",
+          "dmId",
+          "senderId",
+          "body",
+          "createdAt",
+          "updatedAt",
+          "sender"
         ]
       },
       "SendDmMessageDto": {
@@ -4532,6 +5082,260 @@
         },
         "required": [
           "action"
+        ]
+      },
+      "RoomResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "topicTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "visibility": {
+            "enum": [
+              "public",
+              "private",
+              "invite"
+            ],
+            "type": "string"
+          },
+          "passwordHint": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "enum": [
+              "active",
+              "closed",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "number"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/AuthorSnippetDto"
+          },
+          "lastMessageAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "`/rooms/mine`만"
+          },
+          "lastReadAt": {
+            "type": "string"
+          },
+          "unread": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "topicTags",
+          "visibility",
+          "status",
+          "memberCount",
+          "ownerId",
+          "createdAt",
+          "updatedAt",
+          "owner"
+        ]
+      },
+      "RoomMessageSenderDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "nickname"
+        ]
+      },
+      "RoomMessageRecommendationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "artist": {
+            "type": "string"
+          },
+          "embedUrl": {
+            "type": "string"
+          },
+          "moods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "artist",
+          "embedUrl",
+          "moods",
+          "reason",
+          "createdAt"
+        ]
+      },
+      "RoomMessageReactionDto": {
+        "type": "object",
+        "properties": {
+          "emoji": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "emoji",
+          "userId",
+          "createdAt"
+        ]
+      },
+      "RoomMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "senderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "recommendation",
+              "saved_card",
+              "lyric_quote",
+              "system"
+            ]
+          },
+          "body": {
+            "type": "string",
+            "nullable": true
+          },
+          "recommendationId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "deletedByOwner": {
+            "type": "boolean"
+          },
+          "deletedById": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/RoomMessageSenderDto"
+          },
+          "recommendation": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoomMessageRecommendationDto"
+              }
+            ]
+          },
+          "savedCard": {
+            "type": "object",
+            "nullable": true
+          },
+          "lyricStartSec": {
+            "type": "number",
+            "nullable": true
+          },
+          "lyricEndSec": {
+            "type": "number",
+            "nullable": true
+          },
+          "reactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomMessageReactionDto"
+            }
+          },
+          "replyTo": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "roomId",
+          "senderId",
+          "type",
+          "createdAt",
+          "deletedByOwner",
+          "sender"
         ]
       },
       "CreateRoomDto": {
@@ -4675,6 +5479,21 @@
         },
         "required": [
           "type"
+        ]
+      },
+      "RoomChatThemeResponseDto": {
+        "type": "object",
+        "properties": {
+          "presetId": {
+            "type": "string"
+          },
+          "backgroundUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "presetId"
         ]
       },
       "UpdateRoomChatThemeDto": {

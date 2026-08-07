@@ -1,4 +1,4 @@
-import { ApiRecommendation } from './apiTypes';
+import { ApiRecommendation } from './api/apiTypes';
 import { displayAuthorNickname } from './displayAuthor';
 import { Recommendation } from './types';
 

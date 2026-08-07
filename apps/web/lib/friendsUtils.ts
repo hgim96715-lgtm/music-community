@@ -2,7 +2,7 @@ import type {
   ApiFriendRequests,
   ApiFriendship,
   ApiPublicUser,
-} from './apiTypes';
+} from './api/apiTypes';
 
 /** Friendship row에서 나 말고 상대 */
 export function otherUser(

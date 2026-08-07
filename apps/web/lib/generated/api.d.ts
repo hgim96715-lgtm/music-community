@@ -1698,6 +1698,27 @@ export interface components {
             /** @description true면 피드에서 숨기기 */
             hidden?: boolean;
         };
+        AdminUserCountsDto: {
+            recommendations: number;
+            reactions: number;
+            savedCards: number;
+        };
+        AdminUserResponseDto: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            nickname: string;
+            /** @enum {string} */
+            role: "user" | "admin";
+            createdAt: string;
+            lastActiveAt?: string | null;
+            _count: components["schemas"]["AdminUserCountsDto"];
+        };
+        AdminUsersPageDto: {
+            items: components["schemas"]["AdminUserResponseDto"][];
+            /** Format: uuid */
+            nextCursor?: string | null;
+        };
         CreateAdminNoticeDto: {
             /** @example 서비스 점검 안내 */
             title: string;
@@ -1715,15 +1736,111 @@ export interface components {
             /** @description true 게시 · false 숨김 */
             published?: boolean;
         };
+        AdminRoomOwnerDto: {
+            /** Format: uuid */
+            id: string;
+            nickname: string;
+            email: string;
+        };
+        AdminRoomResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description?: string | null;
+            topicTags: string[];
+            /** @enum {string} */
+            visibility: "public" | "private" | "invite";
+            /** @enum {string} */
+            status: "active" | "closed" | "archived";
+            memberCount: number;
+            passwordHint?: string | null;
+            createdAt: string;
+            updatedAt: string;
+            /** Format: uuid */
+            ownerId: string;
+            owner: components["schemas"]["AdminRoomOwnerDto"];
+        };
+        AdminRoomsPageDto: {
+            items: components["schemas"]["AdminRoomResponseDto"][];
+            /** Format: uuid */
+            nextCursor?: string | null;
+        };
         UpdateAdminRoomDto: {
             /** @enum {string} */
             status?: "active" | "closed" | "archived";
             /** @description 방장 통지용 사유 · 닫기·보관 시 필수 */
             reason?: string;
         };
+        AdminReportReporterDto: {
+            /** Format: uuid */
+            id: string;
+            nickname: string;
+            email: string;
+        };
+        AdminReportResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            targetType: "comment" | "room_message" | "recommendation";
+            /** Format: uuid */
+            targetId: string;
+            reason: string;
+            /** @enum {string} */
+            status: "pending" | "resolved" | "dismissed";
+            createdAt: string;
+            updatedAt: string;
+            reporter: components["schemas"]["AdminReportReporterDto"];
+            /** @description polymorphic — 상세는 런타임 객체 */
+            target?: Record<string, never> | null;
+            targetMissing: boolean;
+        };
+        AdminReportsPageDto: {
+            items: components["schemas"]["AdminReportResponseDto"][];
+            /** Format: uuid */
+            nextCursor?: string | null;
+        };
         UpdateAdminReportDto: {
             /** @enum {string} */
             status: "resolved" | "dismissed";
+        };
+        DmLastMessageDto: {
+            /** Format: uuid */
+            id: string;
+            body: string;
+            /** Format: uuid */
+            senderId: string;
+            createdAt: string;
+        };
+        DmListItemResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "pending" | "open" | "declined";
+            updatedAt: string;
+            other?: components["schemas"]["AuthorSnippetDto"] | null;
+            lastMessage?: components["schemas"]["DmLastMessageDto"] | null;
+            unread: boolean;
+        };
+        DmRequestItemResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "pending" | "open" | "declined";
+            /** Format: uuid */
+            requestedById?: string | null;
+            createdAt: string;
+            other?: components["schemas"]["AuthorSnippetDto"] | null;
+        };
+        DmDetailResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "pending" | "open" | "declined";
+            /** Format: uuid */
+            requestedById?: string | null;
+            createdAt: string;
+            updatedAt: string;
+            other?: components["schemas"]["AuthorSnippetDto"] | null;
         };
         OpenDmDto: {
             /**
@@ -1731,6 +1848,18 @@ export interface components {
              * @description 상대 userId
              */
             otherUserId: string;
+        };
+        DmMessageResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            dmId: string;
+            /** Format: uuid */
+            senderId: string;
+            body: string;
+            createdAt: string;
+            updatedAt: string;
+            sender: components["schemas"]["AuthorSnippetDto"];
         };
         SendDmMessageDto: {
             /** @description 메시지 내용 */
@@ -1743,6 +1872,75 @@ export interface components {
         RespondFriendRequestDto: {
             /** @enum {string} */
             action: "accept" | "decline";
+        };
+        RoomResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description?: string | null;
+            topicTags: string[];
+            /** @enum {string} */
+            visibility: "public" | "private" | "invite";
+            passwordHint?: string | null;
+            /** @enum {string} */
+            status: "active" | "closed" | "archived";
+            memberCount: number;
+            /** Format: uuid */
+            ownerId: string;
+            createdAt: string;
+            updatedAt: string;
+            owner: components["schemas"]["AuthorSnippetDto"];
+            /** @description `/rooms/mine`만 */
+            lastMessageAt?: string | null;
+            lastReadAt?: string;
+            unread?: boolean;
+        };
+        RoomMessageSenderDto: {
+            /** Format: uuid */
+            id: string;
+            nickname: string;
+            image?: string | null;
+        };
+        RoomMessageRecommendationDto: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            artist: string;
+            embedUrl: string;
+            moods: string[];
+            reason: string;
+            createdAt: string;
+        };
+        RoomMessageReactionDto: {
+            emoji: string;
+            /** Format: uuid */
+            userId: string;
+            createdAt: string;
+        };
+        RoomMessageResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            roomId: string;
+            /** Format: uuid */
+            senderId: string;
+            /** @enum {string} */
+            type: "text" | "recommendation" | "saved_card" | "lyric_quote" | "system";
+            body?: string | null;
+            /** Format: uuid */
+            recommendationId?: string | null;
+            createdAt: string;
+            deletedAt?: string | null;
+            deletedByOwner: boolean;
+            /** Format: uuid */
+            deletedById?: string | null;
+            sender: components["schemas"]["RoomMessageSenderDto"];
+            recommendation?: components["schemas"]["RoomMessageRecommendationDto"] | null;
+            savedCard?: Record<string, never> | null;
+            lyricStartSec?: number | null;
+            lyricEndSec?: number | null;
+            reactions?: components["schemas"]["RoomMessageReactionDto"][];
+            replyTo?: Record<string, never> | null;
         };
         CreateRoomDto: {
             topicTags?: string[];
@@ -1785,6 +1983,10 @@ export interface components {
             lyricEndSec?: number;
             /** Format: uuid */
             replyToId?: string;
+        };
+        RoomChatThemeResponseDto: {
+            presetId: string;
+            backgroundUrl?: string | null;
         };
         UpdateRoomChatThemeDto: {
             /** @enum {string} */
@@ -2878,7 +3080,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AdminUsersPageDto"];
+                };
             };
         };
     };
@@ -3005,7 +3209,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AdminRoomsPageDto"];
+                };
             };
         };
     };
@@ -3089,7 +3295,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AdminReportsPageDto"];
+                };
             };
         };
     };
@@ -3129,7 +3337,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DmListItemResponseDto"][];
+                };
             };
         };
     };
@@ -3169,7 +3379,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DmRequestItemResponseDto"][];
+                };
             };
         };
     };
@@ -3188,7 +3400,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DmDetailResponseDto"];
+                };
             };
         };
     };
@@ -3250,7 +3464,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>[];
+                    "application/json": components["schemas"]["DmMessageResponseDto"][];
                 };
             };
         };
@@ -3270,12 +3484,12 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["DmMessageResponseDto"];
                 };
             };
         };
@@ -3416,7 +3630,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>[];
+                    "application/json": components["schemas"]["RoomResponseDto"][];
                 };
             };
         };
@@ -3457,7 +3671,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RoomResponseDto"][];
+                };
             };
         };
     };
@@ -3477,7 +3693,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>[];
+                    "application/json": components["schemas"]["RoomMessageResponseDto"][];
                 };
             };
         };
@@ -3523,7 +3739,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["RoomResponseDto"];
                 };
             };
         };
@@ -3758,7 +3974,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RoomChatThemeResponseDto"];
+                };
             };
         };
     };
@@ -3781,7 +3999,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RoomChatThemeResponseDto"];
+                };
             };
         };
     };
