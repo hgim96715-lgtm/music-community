@@ -13,7 +13,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -23,13 +28,20 @@ import {
   AllowWithdrawing,
 } from 'src/auth/active-account.guard';
 import { SearchUsersQueryDto } from './dto/search-users-query.dto';
+import {
+  BlockStatusDto,
+  PublicUserDto,
+  UserMeDto,
+} from './dto/user-profile-response.dto';
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '내 프로필 조회' })
+  @ApiOkResponse({ type: UserMeDto })
   @Get('me')
   @AllowWithdrawing()
   @UseGuards(JwtAuthGuard, ActiveAccountGuard)
@@ -47,6 +59,7 @@ export class UsersController {
 
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '내 프로필 수정' })
+  @ApiOkResponse({ type: UserMeDto })
   @Patch('me')
   @UseGuards(JwtAuthGuard, ActiveAccountGuard)
   async updateMe(@UserId() userId: string, @Body() dto: UpdateUserDto) {
@@ -87,6 +100,7 @@ export class UsersController {
 
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '내가 이 사용자를 차단했는지' })
+  @ApiOkResponse({ type: BlockStatusDto })
   @Get(':id/block-status')
   @AllowWithdrawing()
   @UseGuards(JwtAuthGuard, ActiveAccountGuard)
@@ -121,6 +135,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: '공개 프로필 조회' })
+  @ApiOkResponse({ type: PublicUserDto })
   @Get(':id')
   async findPublicProfile(@Param('id', ParseUUIDPipe) id: string) {
     return await this.usersService.findPublicProfile(id);

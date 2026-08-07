@@ -1,0 +1,4872 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "HealthController_healthCheck",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUserDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "현재 로그인 사용자 (Bearer)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/email-available": {
+      "get": {
+        "operationId": "AuthController_checkEmail",
+        "parameters": [
+          {
+            "name": "email",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "이메일 사용 가능 여부",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/nickname-available": {
+      "get": {
+        "operationId": "AuthController_checkNickname",
+        "parameters": [
+          {
+            "name": "nickname",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "닉네임 사용 가능 여부",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "회원가입",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "로그인",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/oauth/google": {
+      "get": {
+        "operationId": "OAuthController_googleStart",
+        "parameters": [
+          {
+            "name": "next",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "OAuth"
+        ]
+      }
+    },
+    "/auth/oauth/google/callback": {
+      "get": {
+        "operationId": "OAuthController_googleCallback",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "OAuth"
+        ]
+      }
+    },
+    "/auth/oauth/naver": {
+      "get": {
+        "operationId": "OAuthController_naverStart",
+        "parameters": [
+          {
+            "name": "next",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "OAuth"
+        ]
+      }
+    },
+    "/auth/oauth/naver/callback": {
+      "get": {
+        "operationId": "OAuthController_naverCallback",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "OAuth"
+        ]
+      }
+    },
+    "/auth/oauth/kakao": {
+      "get": {
+        "operationId": "OAuthController_kakaoStart",
+        "parameters": [
+          {
+            "name": "next",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "OAuth"
+        ]
+      }
+    },
+    "/auth/oauth/kakao/callback": {
+      "get": {
+        "operationId": "OAuthController_kakaoCallback",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "OAuth"
+        ]
+      }
+    },
+    "/recommendations": {
+      "get": {
+        "operationId": "RecommendationsController_findAll",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "recent = KST 최근 7일 · older = 그 이전 · all = 전체(기본)\n피드 home/더보기 · 공유 시트는 all",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "recent",
+                "older",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "feed",
+            "required": false,
+            "in": "query",
+            "description": "all = 전체(기본) · friends = 맞친구 글만 (로그인 필요)\nscope(시간)와 독립 — 예: ?feed=friends&scope=recent",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "friends"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationsPageDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "피드 목록 · cursor·scope·feed · feed=friends는 로그인",
+        "tags": [
+          "Recommendations"
+        ]
+      },
+      "post": {
+        "operationId": "RecommendationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecommendationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천 등록 (로그인 필요)",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/{id}/comments": {
+      "get": {
+        "operationId": "RecommendationsController_findComments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "댓글 목록(공개)",
+        "tags": [
+          "Recommendations"
+        ]
+      },
+      "post": {
+        "operationId": "RecommendationsController_createComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "댓글 작성(로그인 필요)",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/{id}/comments/{commentId}": {
+      "patch": {
+        "operationId": "RecommendationsController_updateComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "댓글 수정 (사용자만)",
+        "tags": [
+          "Recommendations"
+        ]
+      },
+      "delete": {
+        "operationId": "RecommendationsController_removeComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "댓글 삭제 (사용자만)",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/{id}": {
+      "patch": {
+        "operationId": "RecommendationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecommendationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천 수정 (본인 · 당일 KST만)",
+        "tags": [
+          "Recommendations"
+        ]
+      },
+      "delete": {
+        "operationId": "RecommendationsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천 삭제 (사용자만)",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/{id}/reports": {
+      "post": {
+        "operationId": "RecommendationsController_report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "피드 추천 신고",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/{id}/reactions": {
+      "post": {
+        "operationId": "RecommendationsController_addLike",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LikedResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천 좋아요 (로그인 필요)",
+        "tags": [
+          "Recommendations"
+        ]
+      },
+      "delete": {
+        "operationId": "RecommendationsController_removeLike",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천 좋아요 취소 (로그인 필요)",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/comments/{id}/reports": {
+      "post": {
+        "operationId": "ReportsController_createCommentReport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "댓글 신고",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/rooms/{id}/messages/{messageId}/reports": {
+      "post": {
+        "operationId": "ReportsController_reportRoomMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 메시지 신고",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "operationId": "UsersController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserMeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "내 프로필 조회",
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserMeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "내 프로필 수정",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/me/stats": {
+      "get": {
+        "operationId": "UsersController_getMyStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "내 활동 통계 조회",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/me/withdraw": {
+      "post": {
+        "operationId": "UsersController_withdrawMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "회원 탈퇴 예약 (7일 유예)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/me/withdraw/cancel": {
+      "post": {
+        "operationId": "UsersController_cancelWithdraw",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "회원 탈퇴 예약 취소",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}/block": {
+      "post": {
+        "operationId": "UsersController_block",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "사용자 차단",
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_unblock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "사용자 차단 해제",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}/block-status": {
+      "get": {
+        "operationId": "UsersController_getBlockStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockStatusDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "내가 이 사용자를 차단했는지",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/search": {
+      "get": {
+        "operationId": "UsersController_searchUsers",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "minLength": 2,
+              "maxLength": 40,
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 30,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "가입 유저 닉네임 검색",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findPublicProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicUserDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "공개 프로필 조회",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/saved-cards": {
+      "get": {
+        "operationId": "SavedCardsController_findMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "내 앨범 목록",
+        "tags": [
+          "SavedCards"
+        ]
+      },
+      "post": {
+        "operationId": "SavedCardsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSavedCardDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천을 포토카드로 저장 (본인 글만)",
+        "tags": [
+          "SavedCards"
+        ]
+      }
+    },
+    "/saved-cards/{id}": {
+      "patch": {
+        "operationId": "SavedCardsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSavedCardDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "포토카드 수정 (본인 글만)",
+        "tags": [
+          "SavedCards"
+        ]
+      },
+      "delete": {
+        "operationId": "SavedCardsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "포토카드 삭제 (저장한 본인만)",
+        "tags": [
+          "SavedCards"
+        ]
+      }
+    },
+    "/saved-cards/{id}/shelf": {
+      "patch": {
+        "operationId": "SavedCardsController_updateShelf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShelfDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Top 3 / 책장 자리 (shelfRank)",
+        "tags": [
+          "SavedCards"
+        ]
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "operationId": "AdminStatsController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "관리자 대시보드 통계",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/stats/snapshot": {
+      "post": {
+        "operationId": "AdminStatsController_snapshotStats",
+        "parameters": [
+          {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "통계 일 스냅샷 수동 실행 (기본=어제 KST · ?date=YYYY-MM-DD)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/recommendations": {
+      "get": {
+        "operationId": "AdminRecommendationsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천 전체 목록(숨김 포함)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/recommendations/{id}": {
+      "get": {
+        "operationId": "AdminRecommendationsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천 상세 조회",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminRecommendationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminRecommendationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천 수정 (숨김 등)",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminRecommendationsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "추천 영구 삭제",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/recommendations/{id}/comments/{commentId}": {
+      "delete": {
+        "operationId": "AdminRecommendationsController_removeComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "댓글 운영 삭제 (신고 조치)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/users/withdraw/finalize": {
+      "post": {
+        "operationId": "AdminUsersController_finalizeWithdrawals",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "유예 만료 탈퇴 확정 (cron 수동 실행)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "operationId": "AdminUsersController_findAll",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 80,
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "user",
+                "admin"
+              ]
+            }
+          },
+          {
+            "name": "inactiveDays",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "activeToday",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "사용자 목록 · q·필터·cursor",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/notices": {
+      "get": {
+        "operationId": "AdminNoticesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "공지 목록(숨김 포함)",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminNoticesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdminNoticeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "공지 작성",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/notices/{id}": {
+      "get": {
+        "operationId": "AdminNoticesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "공지 상세",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminNoticesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminNoticeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "공지 수정 · 게시/숨김",
+        "tags": [
+          "Admin"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminNoticesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "공지 삭제",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/rooms": {
+      "get": {
+        "operationId": "AdminRoomsController_list",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 40,
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "closed",
+                "archived"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 목록 (운영) · q·status·cursor",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/rooms/messages/{messageId}": {
+      "get": {
+        "operationId": "AdminRoomsController_getMessage",
+        "parameters": [
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 메시지 상세 (신고 원문)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/rooms/{id}/messages/{messageId}": {
+      "delete": {
+        "operationId": "AdminRoomsController_deleteMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 메시지 운영 삭제 (tombstone)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/rooms/{id}": {
+      "patch": {
+        "operationId": "AdminRoomsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminRoomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 상태 · active/closed/archived · 닫기·보관 시 reason",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/reports": {
+      "get": {
+        "operationId": "AdminReportsController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "resolved",
+                "dismissed"
+              ]
+            }
+          },
+          {
+            "name": "targetType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "comment",
+                "room_message",
+                "recommendation"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "신고 목록 · status·targetType·cursor",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/admin/reports/{id}": {
+      "patch": {
+        "operationId": "AdminReportsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "신고 처리 · resolved | dismissed",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/dms": {
+      "get": {
+        "operationId": "DmsController_listMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "열린 DM 목록",
+        "tags": [
+          "DMs"
+        ]
+      },
+      "post": {
+        "operationId": "DmsController_openOrGet",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenDmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "DM 열기 또는 요청 (없으면 생성)",
+        "tags": [
+          "DMs"
+        ]
+      }
+    },
+    "/dms/requests": {
+      "get": {
+        "operationId": "DmsController_listRequests",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "받은 DM 목록",
+        "tags": [
+          "DMs"
+        ]
+      }
+    },
+    "/dms/{id}": {
+      "get": {
+        "operationId": "DmsController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "DM 상세 (상대·status)",
+        "tags": [
+          "DMs"
+        ]
+      }
+    },
+    "/dms/{id}/accept": {
+      "post": {
+        "operationId": "DmsController_accept",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "DM 요청 수락",
+        "tags": [
+          "DMs"
+        ]
+      }
+    },
+    "/dms/{id}/decline": {
+      "post": {
+        "operationId": "DmsController_decline",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "DM 요청 거절",
+        "tags": [
+          "DMs"
+        ]
+      }
+    },
+    "/dms/{id}/messages": {
+      "get": {
+        "operationId": "DmsController_listMessages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "DM 메시지 목록",
+        "tags": [
+          "DMs"
+        ]
+      },
+      "post": {
+        "operationId": "DmsController_sendMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendDmMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "DM 메시지 전송",
+        "tags": [
+          "DMs"
+        ]
+      }
+    },
+    "/dms/{id}/read": {
+      "post": {
+        "operationId": "DmsController_markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "DM 메시지 읽음 처리",
+        "tags": [
+          "DMs"
+        ]
+      }
+    },
+    "/friends": {
+      "get": {
+        "operationId": "FriendsController_listFriends",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "내 친구 목록 (accepted)",
+        "tags": [
+          "Friends"
+        ]
+      }
+    },
+    "/friends/requests": {
+      "get": {
+        "operationId": "FriendsController_listRequest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "받은·보낸 친구 요청 (pending)",
+        "tags": [
+          "Friends"
+        ]
+      },
+      "post": {
+        "operationId": "FriendsController_createRequest",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFriendRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "친구 요청 보내기",
+        "tags": [
+          "Friends"
+        ]
+      }
+    },
+    "/friends/requests/{id}": {
+      "patch": {
+        "operationId": "FriendsController_respond",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RespondFriendRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "친구 요청 수락·거절",
+        "tags": [
+          "Friends"
+        ]
+      }
+    },
+    "/friends/{userId}": {
+      "delete": {
+        "operationId": "FriendsController_remove",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "요청 취소 또는 친구 삭제",
+        "tags": [
+          "Friends"
+        ]
+      }
+    },
+    "/rooms": {
+      "get": {
+        "operationId": "RoomsController_listPublic",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "공개 방 목록 조회",
+        "tags": [
+          "Rooms"
+        ]
+      },
+      "post": {
+        "operationId": "RoomsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 생성 (생성자=방장)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/mine": {
+      "get": {
+        "operationId": "RoomsController_listMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "내 방 목록(멤버인 방)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/messages": {
+      "get": {
+        "operationId": "RoomsController_listMessages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 메시지 목록 조회",
+        "tags": [
+          "Rooms"
+        ]
+      },
+      "post": {
+        "operationId": "RoomsController_sendMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoomMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 메시지 전송",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}": {
+      "get": {
+        "operationId": "RoomsController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 상세 조회",
+        "tags": [
+          "Rooms"
+        ]
+      },
+      "patch": {
+        "operationId": "RoomsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 설정 수정(방장)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/join": {
+      "post": {
+        "operationId": "RoomsController_join",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinRoomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "공개 방 입장",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/read": {
+      "post": {
+        "operationId": "RoomsController_markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 메시지 읽음 처리",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/leave": {
+      "post": {
+        "operationId": "RoomsController_leave",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 퇴장",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/members/{userId}/kick": {
+      "post": {
+        "operationId": "RoomsController_kick",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "멤버 강퇴(방장)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/close": {
+      "post": {
+        "operationId": "RoomsController_close",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 닫기(방장만)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/transfer": {
+      "post": {
+        "operationId": "RoomsController_transfer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransfreRoomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방장 넘기기",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/members": {
+      "get": {
+        "operationId": "RoomsController_listMembers",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 40,
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 멤버 목록(멤버만)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/messages/{messageId}": {
+      "delete": {
+        "operationId": "RoomsController_deleteMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "메시지 전체에서 삭제(작성자·방장)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/messages/{messageId}/hide": {
+      "post": {
+        "operationId": "RoomsController_hideMessage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "메시지 나에게서만 삭제(멤버)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/theme": {
+      "get": {
+        "operationId": "RoomsController_getChatTheme",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 채팅 테마 조회",
+        "tags": [
+          "Rooms"
+        ]
+      },
+      "patch": {
+        "operationId": "RoomsController_updateChatTheme",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoomChatThemeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "방 채팅 테마 수정",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/rooms/{id}/messages/{messageId}/reactions": {
+      "post": {
+        "operationId": "RoomsController_toggleReaction",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleRoomMessageReactioinDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "메시지 탭백 토글(멤버)",
+        "tags": [
+          "Rooms"
+        ]
+      }
+    },
+    "/saved-lyrics": {
+      "get": {
+        "operationId": "SavedLyricsController_findMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "내 가사 목록 조회",
+        "tags": [
+          "SavedLyrics"
+        ]
+      },
+      "post": {
+        "operationId": "SavedLyricsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSavedLyricDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "가사 소절 저장 (듣다 저장)",
+        "tags": [
+          "SavedLyrics"
+        ]
+      }
+    },
+    "/saved-lyrics/{id}": {
+      "patch": {
+        "operationId": "SavedLyricsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSavedLyricDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "가사 수정 (본인만)",
+        "tags": [
+          "SavedLyrics"
+        ]
+      },
+      "delete": {
+        "operationId": "SavedLyricsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "가사 삭제 (본인만)",
+        "tags": [
+          "SavedLyrics"
+        ]
+      }
+    },
+    "/support/notices": {
+      "get": {
+        "operationId": "SupportController_listNotices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "summary": "게시된 공지 목록 (비로그인 OK)",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/support/notices/{id}": {
+      "get": {
+        "operationId": "SupportController_findNotice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "게시된 공지 상세 (비로그인 OK)",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/support/contact": {
+      "post": {
+        "operationId": "SupportController_createContact",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupportContactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "고객지원 문의 메일 전송 (비로그인 OK)",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/notifications": {
+      "get": {
+        "operationId": "NotificationsController_listMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "내 알림 목록",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "operationId": "NotificationsController_unreadCount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "안 읽은 알림 수",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/read-all": {
+      "patch": {
+        "operationId": "NotificationsController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "전체 읽음",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "operationId": "NotificationsController_markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "알림 하나 읽음",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Music Community API",
+    "description": "Music Community API description",
+    "version": "0.0.1",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "access-token": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "POST /auth/login 또는 /auth/register 후 발급받은 토큰을 사용하세요."
+      }
+    },
+    "schemas": {
+      "AuthUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "example": "test@example.com"
+          },
+          "nickname": {
+            "type": "string",
+            "example": "testuser"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "type": "string"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true,
+            "example": "안녕하세요, 저는 노래가 좋아요."
+          },
+          "deletedAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "탈퇴 예약 시각 — null이면 활성"
+          },
+          "withdrawScheduledAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "실제 정리 예정"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "nickname",
+          "role"
+        ]
+      },
+      "AvailableResponseDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "available"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "이메일",
+            "format": "email",
+            "example": "test@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "비밀번호 — 8자 이상 · 영문 · 특수문자",
+            "example": "Password1!",
+            "minLength": 8
+          },
+          "nickname": {
+            "type": "string",
+            "description": "닉네임",
+            "example": "testuser"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "nickname"
+        ]
+      },
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "user"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "이메일",
+            "format": "email",
+            "example": "test@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "비밀번호 — 최소 8자 이상",
+            "minLength": 8,
+            "example": "password12"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AuthorSnippetDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "nickname"
+        ]
+      },
+      "ReactionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recommendationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "example": "like"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "recommendationId",
+          "type",
+          "userId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "RecommendationCommentCountDto": {
+        "type": "object",
+        "properties": {
+          "comments": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "comments"
+        ]
+      },
+      "RecommendationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "artist": {
+            "type": "string"
+          },
+          "embedUrl": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "moods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "author": {
+            "$ref": "#/components/schemas/AuthorSnippetDto"
+          },
+          "reactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReactionResponseDto"
+            }
+          },
+          "_count": {
+            "$ref": "#/components/schemas/RecommendationCommentCountDto"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "artist",
+          "embedUrl",
+          "reason",
+          "moods",
+          "hidden",
+          "createdAt",
+          "updatedAt",
+          "authorId",
+          "author",
+          "reactions"
+        ]
+      },
+      "RecommendationsPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendationResponseDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "CommentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recommendationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "deletedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/AuthorSnippetDto"
+          }
+        },
+        "required": [
+          "id",
+          "recommendationId",
+          "authorId",
+          "body",
+          "createdAt",
+          "updatedAt",
+          "author"
+        ]
+      },
+      "CreateCommentDto": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "parentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "UpdateRecommendationDto": {
+        "type": "object",
+        "properties": {
+          "moods": {
+            "description": "무드 1~3개 — 프리셋 + free-text (길이만)",
+            "minItems": 1,
+            "maxItems": 3,
+            "example": [
+              "새벽",
+              "출퇴근"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "title": {
+            "type": "string",
+            "description": "곡 제목"
+          },
+          "artist": {
+            "type": "string",
+            "description": "아티스트 이름"
+          },
+          "embedUrl": {
+            "type": "string",
+            "description": "YouTube / Spotify embed URL (http·https)",
+            "format": "uri"
+          },
+          "reason": {
+            "type": "string",
+            "description": "추천 이유 (최대 200자)",
+            "maxLength": 200
+          }
+        }
+      },
+      "CreateRecommendationDto": {
+        "type": "object",
+        "properties": {
+          "moods": {
+            "description": "무드 1~3개 — 프리셋 + free-text (길이만)",
+            "minItems": 1,
+            "maxItems": 3,
+            "example": [
+              "새벽",
+              "출퇴근"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "title": {
+            "type": "string",
+            "description": "곡 제목"
+          },
+          "artist": {
+            "type": "string",
+            "description": "아티스트 이름"
+          },
+          "embedUrl": {
+            "type": "string",
+            "description": "YouTube / Spotify embed URL (http·https)",
+            "format": "uri"
+          },
+          "reason": {
+            "type": "string",
+            "description": "추천 이유 (최대 200자)",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "moods",
+          "title",
+          "artist",
+          "embedUrl",
+          "reason"
+        ]
+      },
+      "CreateReportDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 500,
+            "description": "신고 사유"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "LikedResponseDto": {
+        "type": "object",
+        "properties": {
+          "liked": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "liked"
+        ]
+      },
+      "UserMeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "type": "string"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "deletedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "withdrawScheduledAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "nickname",
+          "role"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string",
+            "example": "노래가 좋아"
+          },
+          "bio": {
+            "type": "string",
+            "example": "안녕하세요, 저는 노래가 좋아요."
+          }
+        }
+      },
+      "WithdrawUserDto": {
+        "type": "object",
+        "properties": {
+          "confirm": {
+            "type": "string",
+            "description": "본인 nickname 또는 email 과 일치해야 함",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "description": "passwordHash 있으면 서비스에서 필수 — 가입 password MinLength(8) 메시지와 분리"
+          }
+        },
+        "required": [
+          "confirm"
+        ]
+      },
+      "BlockStatusDto": {
+        "type": "object",
+        "properties": {
+          "blockedByMe": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "blockedByMe"
+        ]
+      },
+      "PublicUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "nickname"
+        ]
+      },
+      "SavedCardDisplayDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "boolean"
+          },
+          "artist": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "boolean"
+          },
+          "moods": {
+            "type": "boolean"
+          },
+          "postedAt": {
+            "type": "boolean",
+            "description": "추천 올린 날 — `Recommendation.createdAt`"
+          },
+          "savedAt": {
+            "type": "boolean",
+            "description": "앨범에 저장한 날 — `SavedCard.createdAt`"
+          }
+        }
+      },
+      "SavedCardTextColorsDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "artist": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "moods": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "postedAt": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "savedAt": {
+            "type": "string",
+            "maxLength": 32
+          }
+        }
+      },
+      "SavedCardStickerDto": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "rotation": {
+            "type": "number"
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 3
+          }
+        },
+        "required": [
+          "assetId",
+          "x",
+          "y",
+          "rotation",
+          "scale"
+        ]
+      },
+      "SavedCardStrokePointDto": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ]
+      },
+      "SavedCardStrokeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "width": {
+            "type": "number",
+            "minimum": 0.5,
+            "maximum": 24
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SavedCardStrokePointDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "color",
+          "width",
+          "points"
+        ]
+      },
+      "SavedCardCustomizationDto": {
+        "type": "object",
+        "properties": {
+          "display": {
+            "$ref": "#/components/schemas/SavedCardDisplayDto"
+          },
+          "background": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "backgroundImage": {
+            "type": "string",
+            "description": "data URL 또는 https — 투명 PNG·WebP 권장 · `background` 색 위에 덮음",
+            "maxLength": 350000
+          },
+          "backgroundImageOpacity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "layout": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "frame": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "playerBar": {
+            "type": "string",
+            "description": "music-strip — 하단 플레이어 바 배경",
+            "maxLength": 32
+          },
+          "textColor": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "textColors": {
+            "$ref": "#/components/schemas/SavedCardTextColorsDto"
+          },
+          "stickers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SavedCardStickerDto"
+            }
+          },
+          "strokes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SavedCardStrokeDto"
+            }
+          }
+        }
+      },
+      "CreateSavedCardDto": {
+        "type": "object",
+        "properties": {
+          "recommendationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "저장할 Recommendation ID"
+          },
+          "customization": {
+            "example": {
+              "display": {
+                "title": true,
+                "artist": true,
+                "reason": true,
+                "moods": false,
+                "postedAt": true,
+                "savedAt": false
+              },
+              "background": "#f0e6ff",
+              "layout": "poster",
+              "frame": "neobrutal",
+              "stickers": [
+                {
+                  "assetId": "star",
+                  "x": 0.2,
+                  "y": 0.1,
+                  "rotation": 12,
+                  "scale": 1
+                }
+              ]
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SavedCardCustomizationDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "recommendationId",
+          "customization"
+        ]
+      },
+      "UpdateSavedCardDto": {
+        "type": "object",
+        "properties": {
+          "customization": {
+            "description": "포토카드 꾸밈 JSON만 수정",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SavedCardCustomizationDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "customization"
+        ]
+      },
+      "UpdateShelfDto": {
+        "type": "object",
+        "properties": {
+          "shelfRank": {
+            "nullable": true,
+            "enum": [
+              1,
+              2,
+              3
+            ],
+            "type": "number",
+            "description": "Top 3 , null이면 책장으로",
+            "example": 1
+          }
+        },
+        "required": [
+          "shelfRank"
+        ]
+      },
+      "UpdateAdminRecommendationDto": {
+        "type": "object",
+        "properties": {
+          "hidden": {
+            "type": "boolean",
+            "description": "true면 피드에서 숨기기"
+          }
+        }
+      },
+      "CreateAdminNoticeDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "example": "서비스 점검 안내"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "example": "내일 02:00~04:00 점검이 있어요."
+          },
+          "published": {
+            "type": "boolean",
+            "description": "true면 바로 게시",
+            "default": false
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ]
+      },
+      "UpdateAdminNoticeDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "published": {
+            "type": "boolean",
+            "description": "true 게시 · false 숨김"
+          }
+        }
+      },
+      "UpdateAdminRoomDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "active",
+              "closed",
+              "archived"
+            ],
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "방장 통지용 사유 · 닫기·보관 시 필수"
+          }
+        }
+      },
+      "UpdateAdminReportDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "resolved",
+              "dismissed"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "OpenDmDto": {
+        "type": "object",
+        "properties": {
+          "otherUserId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "상대 userId"
+          }
+        },
+        "required": [
+          "otherUserId"
+        ]
+      },
+      "SendDmMessageDto": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "메시지 내용"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "CreateFriendRequestDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "RespondFriendRequestDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "decline"
+            ]
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "CreateRoomDto": {
+        "type": "object",
+        "properties": {
+          "topicTags": {
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 20
+            }
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "public",
+              "private",
+              "invite"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "passwordHint": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "JoinRoomDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      },
+      "UpdateRoomDto": {
+        "type": "object",
+        "properties": {
+          "topicTags": {
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 20
+            }
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 200
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "public",
+              "private",
+              "invite"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "passwordHint": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 40
+          }
+        }
+      },
+      "TransfreRoomDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "새 방장 — 이미 그 방 멤버",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "CreateRoomMessageDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "recommendation",
+              "saved_card",
+              "lyric_quote"
+            ]
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "recommendationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "savedCardId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lyricStartSec": {
+            "type": "number",
+            "description": "선택 — 비우면 검증 스킵 (ValidateIf만 쓰면 undefined에도 IsInt 적용됨)",
+            "minimum": 0
+          },
+          "lyricEndSec": {
+            "type": "number",
+            "minimum": 0
+          },
+          "replyToId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "UpdateRoomChatThemeDto": {
+        "type": "object",
+        "properties": {
+          "presetId": {
+            "enum": [
+              "lp-bar",
+              "cream-paper",
+              "midnight",
+              "fan-pink"
+            ],
+            "type": "string"
+          },
+          "backgroundUrl": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2048
+          }
+        }
+      },
+      "ToggleRoomMessageReactioinDto": {
+        "type": "object",
+        "properties": {
+          "emoji": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "emoji"
+        ]
+      },
+      "CreateSavedLyricDto": {
+        "type": "object",
+        "properties": {
+          "recommendationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "듣고 있던 Recommendation ID"
+          },
+          "lyricsText": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "가사 소절"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 800,
+            "description": "그때의 메모·감정 (선택)"
+          },
+          "startSec": {
+            "type": "number",
+            "minimum": 0
+          },
+          "endSec": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "recommendationId",
+          "lyricsText"
+        ]
+      },
+      "UpdateSavedLyricDto": {
+        "type": "object",
+        "properties": {
+          "lyricsText": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 800
+          },
+          "startSec": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "endSec": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          }
+        }
+      },
+      "CreateSupportContactDto": {
+        "type": "object",
+        "properties": {
+          "fromEmail": {
+            "type": "string",
+            "format": "email"
+          },
+          "nickname": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "fromEmail",
+          "subject",
+          "body"
+        ]
+      },
+      "NotificationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "comment_reply"
+            ]
+          },
+          "recommendationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "readAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/AuthorSnippetDto"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "type",
+          "recommendationId",
+          "commentId",
+          "actorId",
+          "createdAt",
+          "actor"
+        ]
+      },
+      "CountResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "OkResponseDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      }
+    }
+  }
+}

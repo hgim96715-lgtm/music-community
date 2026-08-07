@@ -7,7 +7,8 @@
     "dev:fresh": "rm -rf .next && next dev --port 3031",
     "build": "next build",
     "start": "next start --port 3031",
-    "lint": "eslint"
+    "lint": "eslint",
+    "gen:api": "openapi-typescript ./openapi/openapi.json -o ./lib/generated/api.d.ts"
   },
   "dependencies": {
     "@nivo/bar": "^0.99.0",
@@ -31,6 +32,7 @@
     "@types/youtube": "^0.3.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -15,7 +15,13 @@ import {
 import { RecommendationsService } from './recommendations.service';
 import { CreateRecommendationDto } from './dto/create-recommendation.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { OptionalUserId, UserId } from 'src/auth/decorators/user-id.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -26,6 +32,12 @@ import { ListRecommendationsQueryDto } from './dto/list-recommendations-query.dt
 import { OptionalJwtAuthGuard } from 'src/auth/optional-jwt-auth.guard';
 import { ReportsService } from 'src/reports/reports.service';
 import { CreateReportDto } from 'src/reports/dto/create-report.dto';
+import {
+  RecommendationResponseDto,
+  RecommendationsPageDto,
+} from './dto/recommendation-response.dto';
+import { CommentResponseDto } from './dto/comment-response.dto';
+import { LikedResponseDto } from 'src/common/dto/liked-response.dto';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
@@ -38,6 +50,7 @@ export class RecommendationsController {
   @ApiOperation({
     summary: '피드 목록 · cursor·scope·feed · feed=friends는 로그인',
   })
+  @ApiOkResponse({ type: RecommendationsPageDto })
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
   async findAll(
@@ -48,6 +61,7 @@ export class RecommendationsController {
   }
 
   @ApiOperation({ summary: '댓글 목록(공개)' })
+  @ApiOkResponse({ type: CommentResponseDto, isArray: true })
   @Get(':id/comments')
   async findComments(@Param('id', ParseUUIDPipe) recommendationId: string) {
     return await this.recommendationsService.findComments(recommendationId);
@@ -55,6 +69,7 @@ export class RecommendationsController {
 
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '댓글 작성(로그인 필요)' })
+  @ApiCreatedResponse({ type: CommentResponseDto })
   @Post(':id/comments')
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
@@ -74,6 +89,7 @@ export class RecommendationsController {
 
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '댓글 수정 (사용자만)' })
+  @ApiOkResponse({ type: CommentResponseDto })
   @Patch(':id/comments/:commentId')
   @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')
@@ -111,6 +127,7 @@ export class RecommendationsController {
 
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 수정 (본인 · 당일 KST만)' })
+  @ApiOkResponse({ type: RecommendationResponseDto })
   @Patch(':id')
   @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')
@@ -140,6 +157,7 @@ export class RecommendationsController {
 
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 등록 (로그인 필요)' })
+  @ApiCreatedResponse({ type: RecommendationResponseDto })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
@@ -170,6 +188,7 @@ export class RecommendationsController {
 
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: '추천 좋아요 (로그인 필요)' })
+  @ApiOkResponse({ type: LikedResponseDto })
   @Post(':id/reactions')
   @UseGuards(JwtAuthGuard, ActiveAccountGuard, RolesGuard)
   @Roles('user')

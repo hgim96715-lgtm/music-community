@@ -1,53 +1,72 @@
+/**
+ * API JSON types for the web client.
+ *
+ * OpenAPI-generated schemas (`./generated/api`) cover Auth · Recommendations ·
+ * Notifications · Users (1st slice). Alias those here so domain clients keep
+ * `Api*` names. Rooms/dms/admin/saved-* remain hand-written until schema expands.
+ *
+ * Regenerate: `pnpm gen:api` (root · needs apps/api/.env).
+ */
+import type { components } from './generated/api';
+
+type Schemas = components['schemas'];
+
 /** GET /recommendations 등 — Nest JSON 그대로 (Prisma serialize) */
 
-export type ApiReaction = {
-  id: string;
-  recommendationId: string;
-  type: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-};
+export type ApiReaction = Schemas['ReactionResponseDto'];
 
-export type ApiAuthor = {
-  id: string;
-  nickname: string;
+/** author include — image는 select에 따라 없을 수 있어 클라에서 null로 정규화 */
+export type ApiAuthor = Omit<Schemas['AuthorSnippetDto'], 'image'> & {
   image: string | null;
 };
 
-export type ApiRecommendation = {
-  id: string;
-  title: string;
-  artist: string;
-  embedUrl: string;
-  reason: string;
-  moods: string[];
-  hidden: boolean;
-  createdAt: string;
-  updatedAt: string;
+export type ApiRecommendation = Omit<
+  Schemas['RecommendationResponseDto'],
+  'author' | 'reactions' | '_count'
+> & {
   reactions: ApiReaction[];
-  authorId: string;
   author: ApiAuthor;
   _count?: { comments: number };
 };
 
 /** POST /auth/login · /auth/register — Nest AuthResponseDto */
-
-export type ApiAuthUser = {
-  id: string;
-  email: string;
-  nickname: string;
+export type ApiAuthUser = Schemas['AuthUserDto'] & {
+  /** /auth/me는 미포함일 수 있음 — UI는 null 취급 */
   image: string | null;
-  role: 'user' | 'admin';
-  bio?: string | null;
-  /** 탈퇴 예약 — 있으면 유예 중 */
-  deletedAt?: string | null;
-  withdrawScheduledAt?: string | null;
 };
 
-export type ApiAuthResponse = {
-  accessToken: string;
+export type ApiAuthResponse = Omit<Schemas['AuthResponseDto'], 'user'> & {
   user: ApiAuthUser;
+};
+
+export type ApiComment = Omit<
+  Schemas['CommentResponseDto'],
+  'author' | 'parentId' | 'deletedAt'
+> & {
+  parentId: string | null;
+  deletedAt: string | null;
+  author: ApiAuthor;
+};
+
+export type ApiPublicUser = Omit<Schemas['PublicUserDto'], 'image' | 'bio'> & {
+  image: string | null;
+  bio: string | null;
+};
+
+export type ApiNotificationType = Schemas['NotificationResponseDto']['type'];
+
+export type ApiNotification = Omit<
+  Schemas['NotificationResponseDto'],
+  'actor' | 'readAt'
+> & {
+  readAt: string | null;
+  actor: ApiAuthor;
+};
+
+/** GET /recommendations — cursor page */
+export type ApiRecommendationsPage = {
+  items: ApiRecommendation[];
+  nextCursor: string | null;
 };
 
 // saved-cards
@@ -223,18 +242,6 @@ export type ApiAdminNotice = {
   author: { id: string; nickname: string };
 };
 
-export type ApiComment = {
-  id: string;
-  recommendationId: string;
-  authorId: string;
-  body: string;
-  parentId: string | null;
-  deletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  author: ApiAuthor;
-};
-
 // Friendships
 
 export type ApiUserSearchHit = {
@@ -246,13 +253,6 @@ export type ApiUserSearchHit = {
 export type ApiUserSearchPage = {
   items: ApiUserSearchHit[];
   nextCursor: string | null;
-};
-
-export type ApiPublicUser = {
-  id: string;
-  nickname: string;
-  image: string | null;
-  bio: string | null;
 };
 
 export type ApiFriendshipStatus =
@@ -387,18 +387,4 @@ export type ApiAdminReport = {
 export type ApiAdminReportsPage = {
   items: ApiAdminReport[];
   nextCursor: string | null;
-};
-
-export type ApiNotificationType = 'comment_reply';
-
-export type ApiNotification = {
-  id: string;
-  userId: string;
-  type: ApiNotificationType;
-  recommendationId: string;
-  commentId: string;
-  actorId: string;
-  readAt: string | null;
-  createdAt: string;
-  actor: ApiAuthor;
 };

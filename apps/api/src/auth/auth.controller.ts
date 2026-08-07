@@ -13,6 +13,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -24,6 +25,7 @@ import {
   ActiveAccountGuard,
   AllowWithdrawing,
 } from './active-account.guard';
+import { AvailableResponseDto } from 'src/common/dto/available-response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -40,18 +42,22 @@ export class AuthController {
     return await this.authService.getMe(userId);
   }
 
+  @ApiOperation({ summary: '이메일 사용 가능 여부' })
+  @ApiOkResponse({ type: AvailableResponseDto })
   @Get('email-available')
   async checkEmail(@Query('email') email: string) {
     return await this.authService.checkEmailAvailable(email);
   }
 
+  @ApiOperation({ summary: '닉네임 사용 가능 여부' })
+  @ApiOkResponse({ type: AvailableResponseDto })
   @Get('nickname-available')
   async checkNickname(@Query('nickname') nickname: string) {
     return await this.authService.checkNicknameAvailable(nickname);
   }
 
   @ApiOperation({ summary: '회원가입' })
-  @ApiOkResponse({ type: AuthResponseDto })
+  @ApiCreatedResponse({ type: AuthResponseDto })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: RegisterDto) {

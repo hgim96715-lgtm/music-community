@@ -13,7 +13,10 @@ async function postAuth(
     body: JSON.stringify(body),
   });
   setApiAccessToken(data.accessToken);
-  return data;
+  return {
+    accessToken: data.accessToken,
+    user: { ...data.user, image: data.user.image ?? null },
+  };
 }
 
 export async function login(email: string, password: string) {
@@ -30,7 +33,10 @@ export function register(email: string, password: string, nickname: string) {
 
 /** Nest GET /auth/me — 새로고침 후 user 캐시 갱신 */
 export async function fetchMe(): Promise<ApiAuthUser> {
-  return authFetchApi<ApiAuthUser>('/auth/me');
+  const user = await authFetchApi<Omit<ApiAuthUser, 'image'> & { image?: string | null }>(
+    '/auth/me',
+  );
+  return { ...user, image: user.image ?? null };
 }
 
 /** 로그아웃 · 401 시 */

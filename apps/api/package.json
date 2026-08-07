@@ -14,7 +14,8 @@
     "seed:room-members": "npx tsx scripts/seed-room-members.ts",
     "seed:feed": "npx tsx scripts/seed-feed-recommendations.ts",
     "seed:friends": "npx tsx scripts/seed-friends.ts",
-    "seed:cleanup": "npx tsx scripts/cleanup-seed-users.ts"
+    "seed:cleanup": "npx tsx scripts/cleanup-seed-users.ts",
+    "dump:openapi": "nest build && node -r dotenv/config dist/src/openapi/dump-openapi.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

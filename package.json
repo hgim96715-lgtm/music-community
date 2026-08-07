@@ -5,6 +5,7 @@
     "dev:api": "pnpm --filter api start:dev",
     "dev:web": "pnpm --filter web dev",
     "dev:web:fresh": "pnpm --filter web dev:fresh",
-    "clean:web": "rm -rf apps/web/.next"
+    "clean:web": "rm -rf apps/web/.next",
+    "gen:api": "pnpm --filter api dump:openapi && pnpm --filter web gen:api"
   }
 }
